@@ -1,5 +1,10 @@
 # Payload Toolkit v4
 
+The independent registry web bootstrap lives in `app/`. Run its Bun
+commands from that directory and read its `AGENTS.md` for TanStack Intent guidance,
+Railway configuration and HeroUI setup. Keep web dependencies
+separate from the published toolkit CLI.
+
 The shared verification skill lives in `.agents/skills/verify-payload-toolkit`.
 Other agent skills, pstack configuration, `.claude` and `.cursor` folders are
 personal tooling and are ignored. Contributor checks require no personal skill
