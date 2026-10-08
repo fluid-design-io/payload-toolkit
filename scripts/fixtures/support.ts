@@ -119,18 +119,20 @@ export async function launch(
     ]
     for (const directory of directories) {
       const candidates: string[] = []
-      candidates.push(
-        path.join(
-          directory,
-          commandName === 'npm'
-            ? 'node_modules/npm/bin/npm-cli.js'
-            : 'node_modules/pnpm/bin/pnpm.cjs',
-        ),
-        path.join(directory, `node_modules/corepack/dist/${commandName}.js`),
-      )
       const wrapper = await Bun.file(path.join(directory, `${commandName}.cmd`))
         .text()
         .catch(() => '')
+      if (wrapper)
+        candidates.push(
+          path.join(
+            directory,
+            commandName === 'npm'
+              ? 'node_modules/npm/bin/npm-cli.js'
+              : 'node_modules/pnpm/bin/pnpm.cjs',
+          ),
+          path.join(directory, `node_modules/corepack/dist/${commandName}.js`),
+        )
+
       for (const match of wrapper.matchAll(
         /(?:%~dp0|%dp0%)[\\/]?([^"\r\n]*?(?:npm-cli\.js|pnpm\.(?:cjs|js)))"/gi,
       )) {
