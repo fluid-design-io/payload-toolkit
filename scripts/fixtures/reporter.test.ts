@@ -1,4 +1,3 @@
-import { nodeExecutable } from '../../tests/node-runtime.js'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { promises as fs } from 'node:fs'
@@ -138,21 +137,23 @@ async function drive(
     ],
   }
   try {
-    await fs.writeFile(
+    await Bun.write(
       path.join(directory, 'fixture.json'),
       JSON.stringify({
         responses,
         zip: zip(options.filename ?? 'proof/evidence.json', JSON.stringify(artifact), options.size),
       }),
+      { createPath: false },
     )
-    await fs.writeFile(
+    await Bun.write(
       path.join(directory, 'event.json'),
       JSON.stringify({ workflow_run: { id: 7 } }),
+      { createPath: false },
     )
     const child = spawn(
-      nodeExecutable,
+      process.execPath,
       [
-        '--import',
+        '--preload',
         path.join(root, 'scripts/fixtures/mock-github.mjs'),
         path.join(root, 'scripts/trusted-report.mjs'),
       ],
@@ -173,8 +174,8 @@ async function drive(
       stderr += data.toString()
     })
     const code = await new Promise((resolve) => child.on('close', resolve))
-    const output = await fs
-      .readFile(path.join(directory, 'comment.json'), 'utf8')
+    const output = await Bun.file(path.join(directory, 'comment.json'))
+      .text()
       .then(JSON.parse, () => null)
     return { code, output, stderr }
   } finally {
@@ -313,20 +314,26 @@ test('selected source hashes symlink identity without traversing its outside dir
   const directory = await fs.mkdtemp(path.join(tmpdir(), 'toolkit-source-test-'))
   try {
     await fs.mkdir(path.join(directory, 'outside'))
-    await fs.writeFile(path.join(directory, 'outside/private.txt'), 'first outside value')
+    await Bun.write(path.join(directory, 'outside/private.txt'), 'first outside value', {
+      createPath: false,
+    })
     await fs.mkdir(path.join(directory, 'repository'))
     await fs.symlink(
       '../outside',
       path.join(directory, 'repository/link'),
       process.platform === 'win32' ? 'junction' : 'dir',
     )
-    await fs.writeFile(path.join(directory, 'repository/source.ts'), 'export const value = 1\n')
+    await Bun.write(path.join(directory, 'repository/source.ts'), 'export const value = 1\n', {
+      createPath: false,
+    })
     const original = await selectedSourceHash(path.join(directory, 'repository'), [
       'link',
       'source.ts',
       'deleted.ts',
     ])
-    await fs.writeFile(path.join(directory, 'outside/private.txt'), 'changed outside value')
+    await Bun.write(path.join(directory, 'outside/private.txt'), 'changed outside value', {
+      createPath: false,
+    })
     assert.equal(
       await selectedSourceHash(path.join(directory, 'repository'), [
         'link',
@@ -335,7 +342,9 @@ test('selected source hashes symlink identity without traversing its outside dir
       ]),
       original,
     )
-    await fs.writeFile(path.join(directory, 'repository/source.ts'), 'export const value = 2\n')
+    await Bun.write(path.join(directory, 'repository/source.ts'), 'export const value = 2\n', {
+      createPath: false,
+    })
     assert.notEqual(
       await selectedSourceHash(path.join(directory, 'repository'), [
         'link',
@@ -361,7 +370,7 @@ test.skipIf(process.platform === 'win32')(
     const wrapper = `const {spawn}=require('node:child_process'); process.on('SIGTERM',()=>{}); spawn(process.execPath,['-e',${JSON.stringify(grandchild)}],{stdio:'inherit'}); setInterval(()=>{},1000);`
     try {
       await assert.rejects(
-        command(nodeExecutable, ['-e', wrapper], {
+        command(process.execPath, ['-e', wrapper], {
           cwd: directory,
           directory,
           evidence,
@@ -369,12 +378,12 @@ test.skipIf(process.platform === 'win32')(
         }),
         /failed \(timeout\)/,
       )
-      assert.ok(Number(await fs.readFile(pidFile, 'utf8')) > 0)
-      const before = await fs.readFile(heartbeat, 'utf8')
+      assert.ok(Number(await Bun.file(pidFile).text()) > 0)
+      const before = await Bun.file(heartbeat).text()
       assert.ok(before.length > 0, 'the real descendant produced a heartbeat before cancellation')
       await new Promise((resolve) => setTimeout(resolve, 150))
       assert.equal(
-        await fs.readFile(heartbeat, 'utf8'),
+        await Bun.file(heartbeat).text(),
         before,
         'the descendant stopped writing after the timeout',
       )
@@ -396,17 +405,17 @@ test.skipIf(process.platform === 'win32')(
     const heartbeat = path.join(directory, 'heartbeat.txt')
     const grandchild = `const fs=require('node:fs'); process.on('SIGTERM',()=>{}); setInterval(()=>fs.appendFileSync(${JSON.stringify(heartbeat)}, 'beat\\n'),20);`
     const wrapper = `require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(grandchild)}],{stdio:'inherit'}); setInterval(()=>{},1000);`
-    const child = spawn(nodeExecutable, ['-e', wrapper], { detached: true, stdio: 'ignore' })
+    const child = spawn(process.execPath, ['-e', wrapper], { detached: true, stdio: 'ignore' })
     try {
       for (let attempt = 0; attempt < 100; attempt++) {
         if (await fs.stat(heartbeat).catch(() => null)) break
         await new Promise((resolve) => setTimeout(resolve, 20))
       }
-      assert.ok((await fs.readFile(heartbeat, 'utf8')).length > 0)
+      assert.ok((await Bun.file(heartbeat).text()).length > 0)
       await stop(child)
-      const before = await fs.readFile(heartbeat, 'utf8')
+      const before = await Bun.file(heartbeat).text()
       await new Promise((resolve) => setTimeout(resolve, 150))
-      assert.equal(await fs.readFile(heartbeat, 'utf8'), before)
+      assert.equal(await Bun.file(heartbeat).text(), before)
       await assert.rejects(stop(child), /already exited/)
     } finally {
       if (child.exitCode === null && child.signalCode === null) await stop(child)

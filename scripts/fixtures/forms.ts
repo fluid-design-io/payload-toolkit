@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { chromium, type Page } from '@playwright/test'
+import { expect, chromium, type Page } from '@playwright/test'
 import { hasSubmissionNotification } from './notification.js'
 import { Blocked, type Evidence, exists, hash, sanitize, waitUntil } from './support.js'
 
@@ -16,11 +16,11 @@ export async function integrateForms(project: string, framework: string, evidenc
     await Promise.all(candidates.map(async (file) => ((await exists(file)) ? file : null)))
   ).find(Boolean)
   if (!actualGuide) throw new Error('Installed forms guide is missing')
-  const contents = await fs.readFile(actualGuide, 'utf8')
+  const contents = await Bun.file(actualGuide).text()
   assert.match(contents, /formsPlugin/)
   evidence.identities.guide = hash(contents)
   const config = path.join(project, 'src/payload.config.ts')
-  const source = await fs.readFile(config, 'utf8')
+  const source = await Bun.file(config).text()
   // This is a known official fixture host, not an arbitrary application transformation.
   assert.equal(
     (source.match(/plugins: \[mcpPlugin\(\{\}\)\]/g) ?? []).length,
@@ -30,7 +30,7 @@ export async function integrateForms(project: string, framework: string, evidenc
   const wired =
     `import { formsPlugin } from '../payload-toolkit/forms/plugin'\n` +
     source.replace('plugins: [mcpPlugin({})]', 'plugins: [mcpPlugin({}), formsPlugin]')
-  await fs.writeFile(config, wired)
+  await Bun.write(config, wired, { createPath: false })
   const route =
     framework === 'next'
       ? 'src/app/(frontend)/toolkit-forms/page.tsx'
@@ -41,13 +41,14 @@ export async function integrateForms(project: string, framework: string, evidenc
     .split(path.sep)
     .join('/')
   await fs.mkdir(path.dirname(filename), { recursive: true })
-  await fs.writeFile(
+  await Bun.write(
     filename,
     framework === 'next'
       ? `import { ExampleForm } from '${imported}'\nexport default async function Page({ searchParams }: { searchParams: Promise<{ formId?: string }> }) { const { formId = '' } = await searchParams; return <ExampleForm formId={formId} /> }\n`
       : `import { createFileRoute } from '@tanstack/react-router'\nimport { ExampleForm } from '${imported}'\nexport const Route = createFileRoute('/_frontend/toolkit-forms')({ validateSearch: (search: Record<string, unknown>) => ({ formId: String(search.formId ?? '') }), component: Page })\nfunction Page() { const { formId } = Route.useSearch(); return <ExampleForm formId={formId} /> }\n`,
+    { createPath: false },
   )
-  evidence.identities.fixtureIntegration = hash(wired + (await fs.readFile(filename, 'utf8')))
+  evidence.identities.fixtureIntegration = hash(wired + (await Bun.file(filename).text()))
 }
 async function request(
   base: string,
@@ -219,6 +220,7 @@ export async function verifyForms(
     const page = await browser.newPage()
     observe(page, 'form')
     await page.goto(`${base}/toolkit-forms?formId=${encodeURIComponent(formId)}`)
+    await expect(page.getByRole('button', { name: 'Send', exact: true })).toBeEnabled()
     await page.getByLabel('Name', { exact: true }).fill('Toolkit contributor')
     await page.getByLabel('Email', { exact: true }).fill('browser@example.test')
     await page.getByLabel('Message', { exact: true }).fill('Persist this browser submission')
@@ -257,6 +259,7 @@ export async function verifyForms(
     evidence.identities.savedSubmission = String(doc.id)
     evidence.checks.push({ name: 'forms-browser-persistence-notification', status: 'passed' })
     await page.goto(`${base}/toolkit-forms?formId=${encodeURIComponent(formId)}`)
+    await expect(page.getByRole('button', { name: 'Send', exact: true })).toBeEnabled()
     await page.route('**/api/form-submissions', (route) =>
       route.fulfill({
         status: 500,
@@ -329,7 +332,9 @@ export async function verifyForms(
       }
     throw error
   } finally {
-    await fs.writeFile(path.join(directory, 'browser.log'), browserEvents.join('\n') + '\n')
+    await Bun.write(path.join(directory, 'browser.log'), browserEvents.join('\n') + '\n', {
+      createPath: false,
+    })
     await browser.close()
   }
 }

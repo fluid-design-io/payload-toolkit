@@ -7,7 +7,7 @@ import { files, hash, type Evidence } from './support.js'
 export async function sourceSnapshot(project: string) {
   const entries: Record<string, string> = {}
   for (const name of await files(project))
-    entries[name] = hash(await fs.readFile(path.join(project, name)))
+    entries[name] = hash(await Bun.file(path.join(project, name)).bytes())
   return entries
 }
 export function validateRuntimeChanges(
@@ -44,18 +44,18 @@ export async function verifyRuntimeSource(
         project,
         'node_modules/next/dist/server/lib/generate-agent-files.js',
       )
-      evidence.identities.runtimeAgentRulesGenerator = hash(await fs.readFile(generator))
+      evidence.identities.runtimeAgentRulesGenerator = hash(await Bun.file(generator).bytes())
       const reference = await fs.mkdtemp(path.join(directory, 'next-generated-reference-'))
       try {
         if (previous.agents !== null)
-          await fs.writeFile(path.join(reference, 'AGENTS.md'), previous.agents)
+          await Bun.write(path.join(reference, 'AGENTS.md'), previous.agents, { createPath: false })
         // Test-only use of the installed pinned Next generator produces an exact
         // reference. Arbitrary additions outside its managed block cannot pass.
         const module = await import(pathToFileURL(generator).href)
         const writeAgentFiles = module.writeAgentFiles ?? module.default?.writeAgentFiles
         assert.equal(typeof writeAgentFiles, 'function')
         await writeAgentFiles(reference)
-        generated['AGENTS.md'] = hash(await fs.readFile(path.join(reference, 'AGENTS.md')))
+        generated['AGENTS.md'] = hash(await Bun.file(path.join(reference, 'AGENTS.md')).bytes())
       } finally {
         await fs.rm(reference, { recursive: true, force: true })
       }
@@ -81,7 +81,7 @@ export async function verifyRuntimeSource(
   const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])]
     .filter((name) => before[name] !== after[name])
     .toSorted()
-  await fs.writeFile(
+  await Bun.write(
     path.join(directory, 'runtime-source-changes.json'),
     JSON.stringify(
       {
@@ -99,6 +99,7 @@ export async function verifyRuntimeSource(
       null,
       2,
     ),
+    { createPath: false },
   )
   validateRuntimeChanges(before, after, generated)
   evidence.checks.push({ name: 'fixture-runtime-source-integrity', status: 'passed' })

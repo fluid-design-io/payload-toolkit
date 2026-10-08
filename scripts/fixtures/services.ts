@@ -1,4 +1,3 @@
-import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import { Blocked, command, type Evidence, hash, waitUntil } from './support.js'
 
@@ -18,10 +17,10 @@ export async function service(
       throw new Blocked(
         'Supplied services require TOOLKIT_TEST_DISPOSABLE=yes. Fixtures write test data; borrowed services are never dropped.',
       )
-    const previous = await fs
-      .readFile(path.join(directory, 'resources.json'), 'utf8')
+    const previous = await Bun.file(path.join(directory, 'resources.json'))
+      .text()
       .then(JSON.parse, () => ({}))
-    await fs.writeFile(
+    await Bun.write(
       path.join(directory, 'resources.json'),
       JSON.stringify(
         {
@@ -32,6 +31,7 @@ export async function service(
         null,
         2,
       ),
+      { createPath: false },
     )
     evidence.identities.databaseOwnership = 'borrowed'
     evidence.identities.databaseURLHash = hash(supplied)
@@ -49,12 +49,13 @@ export async function service(
   const name = `payload-toolkit-${database}-${runId}`
   evidence.identities.databaseOwnership = 'owned'
   // Record ownership before creation so interrupted attempts can remove only their resources.
-  const previous = await fs
-    .readFile(path.join(directory, 'resources.json'), 'utf8')
+  const previous = await Bun.file(path.join(directory, 'resources.json'))
+    .text()
     .then(JSON.parse, () => ({}))
-  await fs.writeFile(
+  await Bun.write(
     path.join(directory, 'resources.json'),
     JSON.stringify({ ...previous, runId, services: [{ name, ownership: 'owned' }] }, null, 2),
+    { createPath: false },
   )
   const args = [
     'run',
@@ -164,8 +165,8 @@ export async function service(
   }
 }
 export async function cleanupServices(directory: string, runId: string, evidence?: Evidence) {
-  const record = await fs
-    .readFile(path.join(directory, 'resources.json'), 'utf8')
+  const record = await Bun.file(path.join(directory, 'resources.json'))
+    .text()
     .then(JSON.parse, () => ({ services: [] }))
   const removed: string[] = []
   for (const resource of record.services) {

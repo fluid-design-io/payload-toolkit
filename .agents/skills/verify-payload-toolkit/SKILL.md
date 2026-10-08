@@ -5,7 +5,7 @@ description: Verify the packed Payload Toolkit CLI and Forms through isolated of
 
 # Verify Payload Toolkit
 
-Read the repository's `AGENTS.md`. Use Node 24.21.0 and Bun 1.4.2. Commands run from the repository root and use the installed contributor scripts, never private installer adapters. No personal skill installation or paid model account is needed. Node runs the delivered CLI. Generated-project installation supports npm, pnpm and Bun independently; fixtures default to pnpm 10.34.6, which must be installed for the default checks.
+Read the repository's `AGENTS.md`. Use Node 24.21.0 and Bun 1.4.2. Commands run from the repository root and use the installed contributor scripts, never private installer adapters. No personal skill installation or paid model account is needed. Bun runs the delivered CLI; Node is retained for official Payload tooling. Generated-project installation supports npm, pnpm and Bun independently; fixtures default to pnpm 10.34.6, which must be installed for the default checks.
 
 ## Launch
 

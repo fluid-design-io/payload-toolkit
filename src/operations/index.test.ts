@@ -1,7 +1,6 @@
-import { nodeExecutable } from '../../tests/node-runtime.js'
 import { test } from 'bun:test'
 import assert from 'node:assert/strict'
-import { chmod, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, rm, symlink } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -25,18 +24,18 @@ test('identical installed feature is repeatable and agent failure only changes s
     await symlink(gitExecutable, path.join(root, 'git'))
     await mkdir(project)
     const item = JSON.parse(
-      await readFile(new URL('../../assets/registry/forms.json', import.meta.url), 'utf8'),
+      await Bun.file(new URL('../../assets/registry/forms.json', import.meta.url)).text(),
     ) as { files: { target: string; content: string }[] }
     const catalog = JSON.parse(
-      await readFile(new URL('../../assets/registry/catalog.json', import.meta.url), 'utf8'),
+      await Bun.file(new URL('../../assets/registry/catalog.json', import.meta.url)).text(),
     ) as { items: { name: string; files: { path: string; sha256: string }[] }[] }
     // Use the actual qualified item bytes and fail if transformations need a fixture.
     for (const file of item.files) {
       const target = path.join(project, file.target.slice(2))
       await mkdir(path.dirname(target), { recursive: true })
-      await writeFile(target, file.content)
+      await Bun.write(target, file.content, { createPath: false })
     }
-    await writeFile(
+    await Bun.write(
       path.join(project, 'package.json'),
       JSON.stringify({
         name: 'fixture',
@@ -49,19 +48,23 @@ test('identical installed feature is repeatable and agent failure only changes s
           '@payloadcms/plugin-form-builder': '4.0.0-canary.38',
         },
       }),
+      { createPath: false },
     )
     const installed = path.join(project, 'node_modules/@payloadcms/plugin-form-builder')
     await mkdir(installed, { recursive: true })
-    await writeFile(
+    await Bun.write(
       path.join(installed, 'package.json'),
       JSON.stringify({
         name: '@payloadcms/plugin-form-builder',
         version: '4.0.0-canary.38',
         main: 'index.js',
       }),
+      { createPath: false },
     )
-    await writeFile(path.join(installed, 'index.js'), '')
-    await writeFile(path.join(root, 'codex'), `#!${nodeExecutable}\nprocess.exit(7)\n`)
+    await Bun.write(path.join(installed, 'index.js'), '', { createPath: false })
+    await Bun.write(path.join(root, 'codex'), `#!${process.execPath}\nprocess.exit(7)\n`, {
+      createPath: false,
+    })
     await chmod(path.join(root, 'codex'), 0o700)
     const request = {
       directory: project,
@@ -93,37 +96,40 @@ test('identical installed feature is repeatable and agent failure only changes s
     if (missing.agent.status === 'not-started')
       assert.match(missing.agent.prompt || '', /GUIDE\.md/)
     const capturedClaude = path.join(root, 'claude-input.json')
-    await writeFile(
+    await Bun.write(
       path.join(root, 'claude'),
-      `#!${nodeExecutable}\nlet input='';process.stdin.on('data',x=>input+=x);process.stdin.on('end',()=>{require('fs').writeFileSync(${JSON.stringify(capturedClaude)},JSON.stringify({args:process.argv.slice(2),input})); console.log(JSON.stringify({type:'result',subtype:'success',is_error:false,permission_denials:[]}));});\n`,
+      `#!${process.execPath}\nlet input='';process.stdin.on('data',x=>input+=x);process.stdin.on('end',()=>{require('fs').writeFileSync(${JSON.stringify(capturedClaude)},JSON.stringify({args:process.argv.slice(2),input})); console.log(JSON.stringify({type:'result',subtype:'success',is_error:false,permission_denials:[]}));});\n`,
+      { createPath: false },
     )
     await chmod(path.join(root, 'claude'), 0o700)
     const claude = await add({ ...request, agent: 'claude', requireAgentSuccess: true })
     assert.equal(claude.agent.status, 'completed')
     assert.equal(claude.exitCode, 0)
-    const invocation = JSON.parse(await readFile(capturedClaude, 'utf8')) as {
+    const invocation = JSON.parse(await Bun.file(capturedClaude).text()) as {
       args: string[]
       input: string
     }
     assert.deepEqual(invocation.args, ['--print', '--verbose', '--output-format', 'stream-json'])
     assert.match(invocation.input, /GUIDE\.md.*SHA-256/)
-    await writeFile(
+    await Bun.write(
       path.join(root, 'claude'),
-      `#!${nodeExecutable}\nprocess.stdin.resume();process.stdin.on('end',()=>console.log(JSON.stringify({type:'result',subtype:'success',is_error:true,permission_denials:[{tool_name:'Edit',tool_input:{secret:'do-not-journal-this'}}]})));\n`,
+      `#!${process.execPath}\nprocess.stdin.resume();process.stdin.on('end',()=>console.log(JSON.stringify({type:'result',subtype:'success',is_error:true,permission_denials:[{tool_name:'Edit',tool_input:{secret:'do-not-journal-this'}}]})));\n`,
+      { createPath: false },
     )
     const denied = await add({ ...request, agent: 'claude', requireAgentSuccess: true })
     assert.equal(denied.installation.status, 'complete')
     assert.equal(denied.agent.status, 'failed')
     assert.equal(denied.exitCode, 1)
     assert.equal(
-      (await readFile(path.join(path.dirname(denied.receipt), 'journal.jsonl'), 'utf8')).includes(
+      (await Bun.file(path.join(path.dirname(denied.receipt), 'journal.jsonl')).text()).includes(
         'do-not-journal-this',
       ),
       false,
     )
-    await writeFile(
+    await Bun.write(
       path.join(root, 'codex'),
-      `#!${nodeExecutable}\nconsole.log(JSON.stringify({type:'turn.failed',error:{message:'private-failure-message'}}));\n`,
+      `#!${process.execPath}\nconsole.log(JSON.stringify({type:'turn.failed',error:{message:'private-failure-message'}}));\n`,
+      { createPath: false },
     )
     await chmod(path.join(root, 'codex'), 0o700)
     const terminalFailure = await add({ ...request, agent: 'codex', requireAgentSuccess: true })
@@ -131,15 +137,16 @@ test('identical installed feature is repeatable and agent failure only changes s
     assert.equal(terminalFailure.exitCode, 1)
     assert.equal(
       (
-        await readFile(path.join(path.dirname(terminalFailure.receipt), 'journal.jsonl'), 'utf8')
+        await Bun.file(path.join(path.dirname(terminalFailure.receipt), 'journal.jsonl')).text()
       ).includes('private-failure-message'),
       false,
     )
     for (const selectedAgent of ['codex', 'claude'] as const) {
       const childPid = path.join(root, selectedAgent + '-child.pid')
-      await writeFile(
+      await Bun.write(
         path.join(root, selectedAgent),
-        `#!${nodeExecutable}\nrequire('fs').writeFileSync(${JSON.stringify(childPid)},String(process.pid));process.stdin.resume();setInterval(()=>{},1000);\n`,
+        `#!${process.execPath}\nrequire('fs').writeFileSync(${JSON.stringify(childPid)},String(process.pid));process.stdin.resume();setInterval(()=>{},1000);\n`,
+        { createPath: false },
       )
       await chmod(path.join(root, selectedAgent), 0o700)
       const controller = new AbortController()
@@ -159,29 +166,32 @@ test('identical installed feature is repeatable and agent failure only changes s
       assert.equal(cancelled.exitCode, 1)
       if (cancelled.agent.status === 'interrupted')
         assert.match(cancelled.agent.prompt, /GUIDE\.md/)
-      const recordedPid = Number(await readFile(childPid, 'utf8'))
+      const recordedPid = Number(await Bun.file(childPid).text())
       assert.throws(() => process.kill(recordedPid, 0))
     }
-    const beforeUnknown = await readFile(path.join(project, 'package.json'), 'utf8')
+    const beforeUnknown = await Bun.file(path.join(project, 'package.json')).text()
     const unknown = await add({ ...request, features: ['unknown'] })
     assert.equal(unknown.installation.status, 'blocked')
-    assert.equal(await readFile(path.join(project, 'package.json'), 'utf8'), beforeUnknown)
+    assert.equal(await Bun.file(path.join(project, 'package.json')).text(), beforeUnknown)
     const manifestValue = JSON.parse(beforeUnknown) as { dependencies: Record<string, string> }
     manifestValue.dependencies.payload = '3.90.2'
-    await writeFile(path.join(project, 'package.json'), JSON.stringify(manifestValue))
+    await Bun.write(path.join(project, 'package.json'), JSON.stringify(manifestValue), {
+      createPath: false,
+    })
     const incompatible = await add(request)
     assert.equal(incompatible.installation.status, 'blocked')
     assert.equal(
-      JSON.parse(await readFile(path.join(project, 'package.json'), 'utf8')).dependencies.payload,
+      JSON.parse(await Bun.file(path.join(project, 'package.json')).text()).dependencies.payload,
       '3.90.2',
     )
-    await writeFile(path.join(project, 'package.json'), beforeUnknown)
+    await Bun.write(path.join(project, 'package.json'), beforeUnknown, { createPath: false })
     execFileSync(gitExecutable, ['init', '--initial-branch=main', '--quiet', project])
     execFileSync(gitExecutable, ['-C', project, 'add', 'package.json'])
-    await writeFile(path.join(project, 'package.json'), beforeUnknown + '\n')
-    await writeFile(
+    await Bun.write(path.join(project, 'package.json'), beforeUnknown + '\n', { createPath: false })
+    await Bun.write(
       path.join(root, 'codex'),
-      `#!${nodeExecutable}\nrequire('child_process').execFileSync(${JSON.stringify(gitExecutable)},['add','docs/payload-toolkit/forms/GUIDE.md'],{cwd:process.cwd()});console.log(JSON.stringify({type:'turn.completed'}));\n`,
+      `#!${process.execPath}\nrequire('child_process').execFileSync(${JSON.stringify(gitExecutable)},['add','docs/payload-toolkit/forms/GUIDE.md'],{cwd:process.cwd()});console.log(JSON.stringify({type:'turn.completed'}));\n`,
+      { createPath: false },
     )
     const stagedByInvocation = await add({
       ...request,
@@ -204,10 +214,10 @@ test('identical installed feature is repeatable and agent failure only changes s
     const guide = catalog.items
       .find((entry) => entry.name === 'forms')!
       .files.find((file) => file.path.endsWith('GUIDE.md'))!
-    await writeFile(path.join(project, guide.path), 'developer edit')
+    await Bun.write(path.join(project, guide.path), 'developer edit', { createPath: false })
     const collision = await add({ ...request, allowDirty: true })
     assert.equal(collision.installation.status, 'blocked')
-    assert.equal(await readFile(path.join(project, guide.path), 'utf8'), 'developer edit')
+    assert.equal(await Bun.file(path.join(project, guide.path)).text(), 'developer edit')
   } finally {
     if (oldState) process.env.PAYLOAD_TOOLKIT_STATE_DIR = oldState
     else delete process.env.PAYLOAD_TOOLKIT_STATE_DIR
@@ -223,7 +233,7 @@ test('init refuses an existing target without modifying its source', async () =>
   try {
     const target = path.join(root, 'app')
     await mkdir(target)
-    await writeFile(path.join(target, 'owned.txt'), 'developer')
+    await Bun.write(path.join(target, 'owned.txt'), 'developer', { createPath: false })
     const result = await init({
       directory: target,
       framework: 'next',
@@ -236,7 +246,7 @@ test('init refuses an existing target without modifying its source', async () =>
       requireAgentSuccess: false,
     })
     assert.equal(result.installation.status, 'blocked')
-    assert.equal(await readFile(path.join(target, 'owned.txt'), 'utf8'), 'developer')
+    assert.equal(await Bun.file(path.join(target, 'owned.txt')).text(), 'developer')
   } finally {
     if (oldState) process.env.PAYLOAD_TOOLKIT_STATE_DIR = oldState
     else delete process.env.PAYLOAD_TOOLKIT_STATE_DIR

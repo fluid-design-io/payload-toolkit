@@ -2,7 +2,7 @@
 
 Use Node 24.21.0 and Bun 1.4.2. The package name is `payload-toolkit`; the initial version is `0.1.0-alpha.0`. Publish prereleases with the `alpha` tag. Package configuration also defaults publishing to public access and the alpha channel on the npm registry.
 
-Generated-project fixtures retain npm/pnpm/Bun coverage and default to pnpm 10.34.6. Node remains the CLI runtime; Bun installs and checks this repository.
+Generated-project fixtures retain npm/pnpm/Bun coverage and default to pnpm 10.34.6. Bun runs the CLI; Node is retained for official Payload tooling; Bun installs and checks this repository.
 
 Run `bun install --frozen-lockfile`, `bun run check` and `bun run format`. Run the applicable packed CLI/runtime fixtures for behavior changes. Keep model invocation results separate from independent build/browser results. Review the package contents, release version and retained evidence before publishing.
 

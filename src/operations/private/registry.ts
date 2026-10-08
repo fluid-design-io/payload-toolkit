@@ -1,6 +1,6 @@
 import { fork } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { lstat, readFile, realpath } from 'node:fs/promises'
+import { lstat, realpath } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { dirname, join, resolve, toNamespacedPath } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -16,7 +16,7 @@ import { ToolkitError, type Feature, type FileIdentity, type Host } from '../mod
 import { terminateWindowsTree } from './attempts.js'
 
 const assetDirectory = fileURLToPath(new URL('../../../assets/registry/', import.meta.url))
-const digest = (bytes: Buffer | string) => createHash('sha256').update(bytes).digest('hex')
+const digest = (bytes: Uint8Array | string) => createHash('sha256').update(bytes).digest('hex')
 const hash = z.string().regex(/^[a-f0-9]{64}$/)
 const featureName = z.string().regex(/^[a-z][a-z0-9-]*$/)
 const expectedFile = z
@@ -73,7 +73,7 @@ function projectPath(value: string): string {
 async function catalog() {
   try {
     const parsed = catalogSchema.parse(
-      JSON.parse(await readFile(join(assetDirectory, 'catalog.json'), 'utf8')),
+      JSON.parse(await Bun.file(join(assetDirectory, 'catalog.json')).text()),
     )
     if (new Set(parsed.items.map((item) => item.name)).size !== parsed.items.length)
       invalid('Duplicate registry item names')
@@ -100,7 +100,7 @@ export async function prepareFeatures(
     const entry = entries.find((item) => item.name === name)
     if (!entry) invalid(`Unknown feature: ${name}`)
     const itemPath = join(assetDirectory, `${entry.name}.json`)
-    if (digest(await readFile(itemPath)) !== entry.itemSha256)
+    if (digest(await Bun.file(itemPath).bytes()) !== entry.itemSha256)
       invalid(`Bundled item identity mismatch: ${name}`)
     // Keep fetched metadata. The aggregate returned by resolveRegistryItems omits it.
     // Namespaced Windows paths prevent shadcn from fetching a drive-letter URL.
@@ -218,7 +218,7 @@ async function dependenciesPresent(
   dependencies: Readonly<Record<string, string>>,
 ): Promise<boolean> {
   const manifest: { dependencies?: Record<string, string> } = JSON.parse(
-    await readFile(join(project, 'package.json'), 'utf8'),
+    await Bun.file(join(project, 'package.json')).text(),
   )
   const require = createRequire(pathToFileURL(join(project, 'package.json')))
   for (const [name, version] of Object.entries(dependencies)) {
@@ -229,7 +229,7 @@ async function dependenciesPresent(
       while (directory !== dirname(directory)) {
         try {
           const installed: { name?: string; version?: string } = JSON.parse(
-            await readFile(join(directory, 'package.json'), 'utf8'),
+            await Bun.file(join(directory, 'package.json')).text(),
           )
           if (installed.name === name) {
             found = installed.version === version
@@ -258,7 +258,7 @@ export async function inspectFeatures(
     for (const file of feature.files) {
       const target = await safeFile(project, file.path)
       try {
-        const sha256 = digest(await readFile(target))
+        const sha256 = digest(await Bun.file(target).bytes())
         if (sha256 !== file.sha256)
           throw new ToolkitError(
             'collision',
@@ -286,9 +286,7 @@ async function installInWorker(
   signal?.throwIfAborted()
   await new Promise<void>((resolvePromise, reject) => {
     const modulePath = fileURLToPath(import.meta.url)
-    const execArgv = modulePath.endsWith('.ts')
-      ? ['--import', pathToFileURL(createRequire(import.meta.url).resolve('tsx')).href]
-      : []
+    const execArgv: string[] = []
     const environment = { ...process.env }
     for (const key of Object.keys(environment))
       if (key.toLowerCase() === 'npm_config_save_exact') delete environment[key]
@@ -394,7 +392,7 @@ export async function installFeatures(
   const before = await inspectFeatures(project, features)
   if (before.complete) return before.files
   for (const feature of features)
-    if (digest(await readFile(feature.itemPath)) !== feature.itemSha256)
+    if (digest(await Bun.file(feature.itemPath).bytes()) !== feature.itemSha256)
       invalid(`Bundled item changed before install: ${feature.name}`)
   await installInWorker(project, features, signal)
   const after = await inspectFeatures(project, features)
@@ -415,7 +413,7 @@ if (
     try {
       await inspectFeatures(input.project, input.features)
       for (const feature of input.features)
-        if (digest(await readFile(feature.itemPath)) !== feature.itemSha256)
+        if (digest(await Bun.file(feature.itemPath).bytes()) !== feature.itemSha256)
           invalid(`Bundled item changed: ${feature.name}`)
       const config = await getRegistriesConfig(input.project)
       await addRegistryItems(

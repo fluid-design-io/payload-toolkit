@@ -1,4 +1,3 @@
-import { nodeExecutable } from './node-runtime.js'
 import assert from 'node:assert/strict'
 import { test } from 'bun:test'
 const {
@@ -157,7 +156,7 @@ test('actual npm package allowlist includes the shipped source maps', async () =
 
 test('publication gates precede writes and matching publication can resume safely', async () => {
   const { execFileSync } = await import('node:child_process')
-  const { mkdtemp, mkdir, writeFile, rm } = await import('node:fs/promises')
+  const { mkdtemp, mkdir, rm } = await import('node:fs/promises')
   const { tmpdir } = await import('node:os')
   const { join } = await import('node:path')
   const { createHash } = await import('node:crypto')
@@ -179,13 +178,13 @@ test('publication gates precede writes and matching publication can resume safel
     try {
       const release = join(cwd, '.scratch/release')
       await mkdir(release, { recursive: true })
-      await writeFile(join(cwd, 'package.json'), JSON.stringify(manifest))
+      await Bun.write(join(cwd, 'package.json'), JSON.stringify(manifest), { createPath: false })
       const bytes = Buffer.from('qualified-fixture-tarball')
       const sha256 = createHash('sha256').update(bytes).digest('hex')
       const integrity = `sha512-${createHash('sha512').update(bytes).digest('base64')}`
-      await writeFile(join(release, pack.filename), bytes)
-      await writeFile(join(release, 'pack.json'), JSON.stringify(pack))
-      await writeFile(
+      await Bun.write(join(release, pack.filename), bytes, { createPath: false })
+      await Bun.write(join(release, 'pack.json'), JSON.stringify(pack), { createPath: false })
+      await Bun.write(
         join(release, 'artifact.json'),
         JSON.stringify({
           name: manifest.name,
@@ -195,18 +194,19 @@ test('publication gates precede writes and matching publication can resume safel
           sha256: scenario === 'bad-artifact' ? 'different' : sha256,
           integrity,
         }),
+        { createPath: false },
       )
-      await writeFile(
+      await Bun.write(
         join(release, 'verification.json'),
         JSON.stringify(
           receipts.map((entry) => ({ ...entry, identities: { packedPackage: sha256 } })),
         ),
+        { createPath: false },
       )
       const code = `
         import fs from 'node:fs';
         import path from 'node:path';
         import childProcess from 'node:child_process';
-        import { syncBuiltinESMExports } from 'node:module';
         const events = [];
         const scenario = ${JSON.stringify(scenario)};
         const sha = ${JSON.stringify(sha)};
@@ -229,7 +229,6 @@ test('publication gates precede writes and matching publication can resume safel
           }
           return { status: args.includes('unknown-command') ? 2 : 0, stdout: 'init add', stderr: '' };
         };
-        syncBuiltinESMExports();
         globalThis.fetch = async (url, options = {}) => {
           const method = options.method ?? 'GET';
           let status = 200; let body = {};
@@ -252,7 +251,7 @@ test('publication gates precede writes and matching publication can resume safel
         console.log(JSON.stringify({ events, error }));
       `
       const result = JSON.parse(
-        execFileSync(nodeExecutable, ['--input-type=module', '--eval', code], {
+        execFileSync(process.execPath, ['--input-type=module', '--eval', code], {
           cwd,
           encoding: 'utf8',
           env: {

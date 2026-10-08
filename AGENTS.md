@@ -13,8 +13,8 @@ repository. The architecture contract and decision record are under
 
 Use Node 24.21.0 and Bun 1.4.2 for reproducible contributor checks. Start with
 `bun install --frozen-lockfile`, `bun run check` and `bun run agent:doctor`. Tests use
-`bun:test`; Node remains the CLI runtime. Generated-project installers remain
-npm, pnpm and Bun; verification fixtures default to pnpm 10.34.6. For user
+`bun:test`. Bun runs the CLI; Node is retained for official Payload tooling.
+Generated-project installers remain npm, pnpm and Bun; verification fixtures default to pnpm 10.34.6. For user
 behavior and runtime work, read `.agents/skills/verify-payload-toolkit/SKILL.md`.
 Run the mapped checks, retain failed evidence, and clean up only resources your
 run owns. Report static, installer, agent-process, database and browser proof

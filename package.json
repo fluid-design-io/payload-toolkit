@@ -33,20 +33,20 @@
     "tag": "alpha"
   },
   "scripts": {
-    "registry:build": "tsx scripts/registry-build.ts",
-    "build": "bun run registry:build && tsc -p tsconfig.build.json && node scripts/finish-build.mjs",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "lint": "oxlint src scripts tests registry/forms && tsx scripts/check-boundaries.ts",
+    "registry:build": "bun scripts/registry-build.ts",
+    "build": "bun run registry:build && bun ./node_modules/typescript/bin/tsc -p tsconfig.build.json && bun scripts/finish-build.mjs",
+    "typecheck": "bun ./node_modules/typescript/bin/tsc --noEmit -p tsconfig.json",
+    "lint": "oxlint src scripts tests registry/forms && bun scripts/check-boundaries.ts",
     "format": "oxfmt --check src scripts tests registry catalog package.json tsconfig.json tsconfig.build.json",
     "format:fix": "oxfmt src scripts tests registry catalog package.json tsconfig.json tsconfig.build.json",
     "test": "bun test ./src ./tests ./scripts/fixtures",
     "check": "bun run build && bun run typecheck && bun run lint && bun run test",
-    "dev": "tsx src/cli.ts",
-    "agent:setup": "tsx scripts/agent.ts setup",
-    "agent:doctor": "tsx scripts/agent.ts doctor",
-    "agent:verify": "tsx scripts/agent.ts verify",
-    "agent:evidence": "tsx scripts/agent.ts evidence",
-    "agent:cleanup": "tsx scripts/agent.ts cleanup",
+    "dev": "bun src/cli.ts",
+    "agent:setup": "bun scripts/agent.ts setup",
+    "agent:doctor": "bun scripts/agent.ts doctor",
+    "agent:verify": "bun scripts/agent.ts verify",
+    "agent:evidence": "bun scripts/agent.ts evidence",
+    "agent:cleanup": "bun scripts/agent.ts cleanup",
     "prepack": "bun run build"
   },
   "dependencies": {
@@ -65,14 +65,11 @@
     "@types/validate-npm-package-name": "4.0.2",
     "oxfmt": "0.72.0",
     "oxlint": "1.87.0",
-    "tsx": "4.23.15",
     "typescript": "6.0.3"
   },
   "engines": {
-    "node": ">=24.15.0"
+    "bun": ">=1.4.2"
   },
   "packageManager": "bun@1.4.2",
-  "trustedDependencies": [
-    "esbuild"
-  ]
+  "trustedDependencies": []
 }

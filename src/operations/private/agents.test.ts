@@ -1,7 +1,7 @@
 import { test } from 'bun:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import type { Feature } from '../model.js'
@@ -11,9 +11,9 @@ test('handoff pins installed guidance and instructs preservation of existing Git
   const directory = await mkdtemp(path.join(tmpdir(), 'toolkit-guide-test-'))
   try {
     const guide = 'GUIDE.md'
-    await writeFile(path.join(directory, guide), 'Qualified guide bytes')
+    await Bun.write(path.join(directory, guide), 'Qualified guide bytes', { createPath: false })
     const sha256 = createHash('sha256')
-      .update(await readFile(path.join(directory, guide)))
+      .update(await Bun.file(path.join(directory, guide)).bytes())
       .digest('hex')
     const feature: Feature = {
       name: 'forms',
@@ -28,7 +28,9 @@ test('handoff pins installed guidance and instructs preservation of existing Git
     assert.match(prompt || '', new RegExp(sha256))
     assert.ok(prompt?.includes(path.join(directory, guide)))
     assert.match(prompt || '', /Do not stash, reset, stage, commit/)
-    await writeFile(path.join(directory, guide), 'Developer changed guidance')
+    await Bun.write(path.join(directory, guide), 'Developer changed guidance', {
+      createPath: false,
+    })
     await assert.rejects(integrationPrompt(directory, [feature]), /Installed guide differs/)
   } finally {
     await rm(directory, { recursive: true, force: true })

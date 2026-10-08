@@ -2,22 +2,22 @@
 
 A CLI for official Payload starters and developer-owned features. This repository builds the v4 experience on `main`. The existing v3 starter remains in [payload-better-auth-starter](https://github.com/fluid-design-io/payload-better-auth-starter).
 
-The package and command name is `payload-toolkit`. Alpha releases use the `alpha` tag and target the exact Payload v4 canary tuple below. Use Node 24.15 or newer:
+The package and command name is `payload-toolkit`. Alpha releases use the `alpha` tag and target the exact Payload v4 canary tuple below. Use Bun 1.4.2 or newer to run the CLI. Creating a project also requires Node 24.15 or newer for the official Payload generator:
 
 ```sh
-npx payload-toolkit@alpha --help
-npx payload-toolkit@alpha init acme --framework next --database postgres --template minimal --package-manager pnpm
+bunx --bun payload-toolkit@alpha --help
+bunx --bun payload-toolkit@alpha init acme --framework next --database postgres --template minimal --package-manager pnpm
 ```
 
-For source development, use Node 24.21.0 and Bun 1.4.2 to install and build. Node runs the delivered CLI; generated projects support npm, pnpm and Bun:
+For source development, use Node 24.21.0 and Bun 1.4.2 to install and build. Bun runs the delivered CLI, while Node supports official Payload tooling. Generated projects support npm, pnpm and Bun:
 
 ```sh
 bun install --frozen-lockfile
 bun run build
-node dist/cli.js --help
-node dist/cli.js init acme --framework next --database postgres --template minimal --package-manager pnpm
-node dist/cli.js init acme --framework tanstack --database mongodb --template custom --features forms --package-manager pnpm
-node dist/cli.js add forms --cwd ../existing-payload-project --codex
+bun dist/cli.js --help
+bun dist/cli.js init acme --framework next --database postgres --template minimal --package-manager pnpm
+bun dist/cli.js init acme --framework tanstack --database mongodb --template custom --features forms --package-manager pnpm
+bun dist/cli.js add forms --cwd ../existing-payload-project --codex
 ```
 
 Run `init` without all choices in a terminal for prompts. For unattended execution, supply the directory, framework, database, template and package manager. `--json` returns one result and disables prompts. PostgreSQL uses Payload's Drizzle adapter. MongoDB is the other initial database choice.

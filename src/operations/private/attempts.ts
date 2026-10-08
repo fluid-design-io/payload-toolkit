@@ -1,4 +1,4 @@
-import { appendFile, mkdir, open, readFile, stat, writeFile } from 'node:fs/promises'
+import { appendFile, mkdir, open, stat, writeFile } from 'node:fs/promises'
 import { createHash, randomUUID } from 'node:crypto'
 import { homedir } from 'node:os'
 import path from 'node:path'
@@ -7,7 +7,7 @@ import { promisify } from 'node:util'
 import type { Event, Result, RunOptions } from '../model.js'
 import { ToolkitError } from '../model.js'
 
-export function digest(value: string | Buffer): string {
+export function digest(value: string | Uint8Array): string {
   return createHash('sha256').update(value).digest('hex')
 }
 export function stateDirectory(): string {
@@ -132,7 +132,7 @@ export async function resolveWindowsCommand(
   command: string,
   args: readonly string[],
   env: NodeJS.ProcessEnv = process.env,
-  nodeExecutable = process.execPath,
+  nodeExecutable = Bun.which('node', { PATH: env.PATH || env.Path }) ?? 'node',
 ): Promise<{ executable: string; args: readonly string[] }> {
   if (command !== 'npm' && command !== 'pnpm') return { executable: command, args }
   const directories = [
@@ -153,7 +153,9 @@ export async function resolveWindowsCommand(
       ),
       path.join(directory, `node_modules/corepack/dist/${command}.js`),
     )
-    const wrapper = await readFile(path.join(directory, `${command}.cmd`), 'utf8').catch(() => '')
+    const wrapper = await Bun.file(path.join(directory, `${command}.cmd`))
+      .text()
+      .catch(() => '')
     for (const match of wrapper.matchAll(
       /(?:%~dp0|%dp0%)[\\/]?([^"\r\n]*?(?:npm-cli\.js|pnpm\.(?:cjs|js)))"/gi,
     )) {
@@ -191,7 +193,9 @@ export async function runProcess(
   options.signal?.throwIfAborted()
   const secrets = [...(options.secrets || [])]
   for (const name of ['.env', '.env.local']) {
-    const environment = await readFile(path.join(options.cwd, name), 'utf8').catch(() => '')
+    const environment = await Bun.file(path.join(options.cwd, name))
+      .text()
+      .catch(() => '')
     for (const line of environment.split('\n')) {
       const match = /^\s*(?:export\s+)?([A-Za-z_][\w]*)\s*=\s*(.*)$/.exec(line)
       if (match && /TOKEN|SECRET|PASSWORD|KEY|DATABASE.*URL/i.test(match[1]!))

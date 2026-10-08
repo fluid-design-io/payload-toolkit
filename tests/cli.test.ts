@@ -1,7 +1,6 @@
-import { nodeExecutable } from './node-runtime.js'
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
@@ -12,7 +11,7 @@ const exec = promisify(execFile)
 const bin = resolve('dist/cli.js')
 async function invoke(args: string[], cwd?: string) {
   try {
-    const result = await exec(nodeExecutable, [bin, ...args], { cwd, timeout: 20000 })
+    const result = await exec(process.execPath, [bin, ...args], { cwd, timeout: 20000 })
     return { ...result, code: 0 }
   } catch (error) {
     if (error instanceof Error && 'stdout' in error && 'stderr' in error && 'code' in error) {
@@ -50,7 +49,7 @@ test('delivered CLI exposes init/add and rejects missing unattended choices with
 test('conflicting agent flags and strict mode without an agent refuse before installation', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'payload-flags-'))
   try {
-    await writeFile(join(directory, 'marker'), 'developer work')
+    await Bun.write(join(directory, 'marker'), 'developer work', { createPath: false })
     for (const flags of [['--codex', '--claude'], ['--require-agent-success']]) {
       const result = await invoke(['add', 'forms', '--cwd', directory, '--json', ...flags])
       assert.equal(result.code, 2)
@@ -61,7 +60,7 @@ test('conflicting agent flags and strict mode without an agent refuse before ins
         flags.length === 2 ? /either --codex or --claude/ : /requires --codex or --claude/,
       )
     }
-    assert.equal(await readFile(join(directory, 'marker'), 'utf8'), 'developer work')
+    assert.equal(await Bun.file(join(directory, 'marker')).text(), 'developer work')
     assert.deepEqual(await readdir(directory), ['marker'])
   } finally {
     await rm(directory, { recursive: true, force: true })
@@ -92,4 +91,13 @@ test('minimal explains upstream ownership and refuses a feature/agent mismatch',
     report.parse(JSON.parse(failure.stdout)).installation.reason,
     /requires --template custom/,
   )
+})
+
+test('delivered CLI runs in Bun with no Node binary on PATH', async () => {
+  const result = await exec(process.execPath, [bin, '--help'], {
+    env: { ...process.env, PATH: '', Path: '' },
+    timeout: 20_000,
+  })
+  assert.match(result.stdout, /init/)
+  assert.match(result.stdout, /add/)
 })

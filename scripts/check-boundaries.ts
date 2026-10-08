@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises'
+import { readdir } from 'node:fs/promises'
 import { dirname, relative, resolve } from 'node:path'
 import ts from 'typescript'
 import { z } from 'zod'
@@ -25,7 +25,7 @@ for (const file of (await Promise.all(['src', 'scripts', 'tests'].map(sources)))
   const label = relative(root, file).replaceAll('\\', '/')
   const source = ts.createSourceFile(
     file,
-    await readFile(file, 'utf8'),
+    await Bun.file(file).text(),
     ts.ScriptTarget.Latest,
     true,
   )
@@ -66,7 +66,7 @@ for (const file of (await Promise.all(['src', 'scripts', 'tests'].map(sources)))
 }
 const registry = z
   .object({ items: z.array(z.object({ name: z.string() })) })
-  .parse(JSON.parse(await readFile('registry/registry.json', 'utf8')))
+  .parse(JSON.parse(await Bun.file('registry/registry.json').text()))
 const names = registry.items.map((item) => item.name).toSorted()
 if (new Set(names).size !== names.length)
   violations.push('Registry contains duplicate feature names')

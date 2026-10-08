@@ -1,7 +1,6 @@
-import { nodeExecutable } from '../../../tests/node-runtime.js'
 import { test } from 'bun:test'
 import assert from 'node:assert/strict'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
@@ -19,18 +18,20 @@ test('failed process evidence keeps useful diagnostics while removing credential
   process.env.PAYLOAD_TOOLKIT_STATE_DIR = path.join(directory, 'state')
   try {
     const secret = 'credential-for-owner-test'
-    await writeFile(path.join(directory, '.env'), `PAYLOAD_SECRET=${secret}\n`)
+    await Bun.write(path.join(directory, '.env'), `PAYLOAD_SECRET=${secret}\n`, {
+      createPath: false,
+    })
     const attempt = new Attempt()
     await attempt.start('add', directory)
     await assert.rejects(
       runProcess(
-        nodeExecutable,
+        process.execPath,
         ['-e', `console.error('codegen failed ${secret}'); process.exit(1)`],
         { cwd: directory, attempt },
       ),
       /codegen failed \[redacted\]/,
     )
-    const journal = await readFile(path.join(attempt.directory, 'journal.jsonl'), 'utf8')
+    const journal = await Bun.file(path.join(attempt.directory, 'journal.jsonl')).text()
     assert.match(journal, /codegen failed/)
     assert.equal(journal.includes(secret), false)
     assert.equal(
@@ -46,7 +47,7 @@ test('failed process evidence keeps useful diagnostics while removing credential
 
 test('abort terminates an owned process and records interruption', async () => {
   const controller = new AbortController()
-  const started = runProcess(nodeExecutable, ['-e', 'setInterval(() => {}, 1000)'], {
+  const started = runProcess(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
     cwd: tmpdir(),
     signal: controller.signal,
   })
@@ -66,11 +67,13 @@ test.skipIf(process.platform === 'win32')(
       const parent = `process.on('SIGTERM',()=>process.exit(0));require('child_process').spawn(process.execPath,['-e',${JSON.stringify(grandchild)}],{stdio:'ignore'});setInterval(()=>{},1000);`
       const controller = new AbortController()
       const rejected = assert.rejects(
-        runProcess(nodeExecutable, ['-e', parent], { cwd: directory, signal: controller.signal }),
+        runProcess(process.execPath, ['-e', parent], { cwd: directory, signal: controller.signal }),
         /interrupted/,
       )
       for (let tries = 0; tries < 250; tries++) {
-        const recorded = await readFile(pidFile, 'utf8').catch(() => '')
+        const recorded = await Bun.file(pidFile)
+          .text()
+          .catch(() => '')
         if (recorded) {
           pid = Number(recorded)
           break
@@ -80,9 +83,9 @@ test.skipIf(process.platform === 'win32')(
       assert.ok(pid, 'grandchild started before cancellation')
       controller.abort()
       await rejected
-      const stopped = await readFile(heartbeat, 'utf8')
+      const stopped = await Bun.file(heartbeat).text()
       await delay(2250)
-      assert.equal(await readFile(heartbeat, 'utf8'), stopped)
+      assert.equal(await Bun.file(heartbeat).text(), stopped)
     } finally {
       if (pid) {
         try {
@@ -99,10 +102,11 @@ test('Windows package manager wrappers resolve to JavaScript without shell argum
   try {
     const cli = path.join(directory, 'node_modules/pnpm/bin/pnpm.cjs')
     await mkdir(path.dirname(cli), { recursive: true })
-    await writeFile(cli, '')
-    await writeFile(
+    await Bun.write(cli, '', { createPath: false })
+    await Bun.write(
       path.join(directory, 'pnpm.cmd'),
       '@echo off\r\n"%dp0%\\node_modules\\pnpm\\bin\\pnpm.cjs" %*\r\n',
+      { createPath: false },
     )
     const args = ['install', 'value & echo unsafe']
     assert.deepEqual(
@@ -124,7 +128,7 @@ test('Windows package manager wrappers resolve to JavaScript without shell argum
 })
 
 test('Windows tree termination refuses both failed execution and a missing taskkill launcher', async () => {
-  await assert.rejects(terminateWindowsTree(process.pid, nodeExecutable), {
+  await assert.rejects(terminateWindowsTree(process.pid, process.execPath), {
     code: 'termination-unconfirmed',
     message: /Could not confirm termination/,
   })
