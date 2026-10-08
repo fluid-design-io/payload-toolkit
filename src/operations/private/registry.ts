@@ -302,7 +302,9 @@ async function installInWorker(
     let succeeded = false
     let termination: Promise<void> | undefined
     let terminationFailure: ToolkitError | undefined
-    worker.stdout?.resume()
+    worker.stdout?.on('data', (chunk: Buffer) => {
+      errorMessage = (errorMessage + chunk.toString()).slice(-4000)
+    })
     worker.stderr?.on('data', (chunk: Buffer) => {
       errorMessage = (errorMessage + chunk.toString()).slice(-4000)
     })
@@ -374,7 +376,7 @@ async function installInWorker(
         reject(
           new ToolkitError(
             'registry-install-failed',
-            `Registry installation failed. Partial files may remain.${errorMessage ? ` ${errorMessage.trim()}` : ''}`,
+            `Registry installation failed (exit ${code}, acknowledged ${succeeded}). Partial files may remain.${errorMessage ? ` ${errorMessage.trim()}` : ''}`,
           ),
         )
     })
@@ -404,11 +406,18 @@ export async function installFeatures(
   return after.files
 }
 
-if (
-  process.argv[2] === workerFlag &&
-  process.send &&
-  resolve(process.argv[1] ?? '') === fileURLToPath(import.meta.url)
+if (process.argv.includes(workerFlag) && !process.send) {
+  console.error('Registry worker requires an IPC channel')
+  process.exitCode = 1
+} else if (
+  process.argv.includes(workerFlag) &&
+  resolve(process.argv[1] ?? '') !== fileURLToPath(import.meta.url)
 ) {
+  console.error(
+    `Registry worker entrypoint mismatch: ${JSON.stringify(process.argv.slice(1))} versus ${fileURLToPath(import.meta.url)}`,
+  )
+  process.exitCode = 1
+} else if (process.argv.includes(workerFlag) && process.send) {
   process.once('message', async (input: { project: string; features: Feature[] }) => {
     try {
       await inspectFeatures(input.project, input.features)
