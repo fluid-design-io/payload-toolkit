@@ -92,9 +92,10 @@ jobs:
         run: |
           bun run build
           bun test src/operations/private/registry.test.ts --test-name-pattern 'public API installs the qualified'
-      - run: bun run agent:verify --installation-only
+      - id: installation
+        run: bun run agent:verify --installation-only
       - run: bun run agent:cleanup
-        if: always()
+        if: always() && steps.installation.outcome != 'skipped'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
