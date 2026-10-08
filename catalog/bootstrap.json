@@ -1,0 +1,7 @@
+{
+  "generator": "create-payload-app@4.0.0-canary.38",
+  "payload": "4.0.0-canary.38",
+  "templateCommit": "a3e91f11d020907600ba27f199368869f1bb6daa",
+  "nodeMinimum": "24.15.0",
+  "templates": { "next": "blank", "tanstack": "blank-tanstack" }
+}

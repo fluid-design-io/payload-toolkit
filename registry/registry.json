@@ -1,0 +1,42 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "payload-toolkit",
+  "homepage": "https://github.com/fluid-design-io/payload-starter",
+  "items": [
+    {
+      "name": "forms",
+      "type": "registry:item",
+      "title": "Payload forms",
+      "description": "Native Payload forms, persisted submissions, a React example and console notifications.",
+      "dependencies": ["@payloadcms/plugin-form-builder@4.0.0-canary.38"],
+      "meta": {
+        "payloadToolkit": {
+          "schemaVersion": 1,
+          "version": "0.1.0",
+          "payloadVersions": ["4.0.0-canary.38"],
+          "frameworks": ["next", "tanstack"],
+          "databases": ["postgres", "mongodb"],
+          "auth": "native-payload",
+          "guide": "docs/payload-toolkit/forms/GUIDE.md"
+        }
+      },
+      "files": [
+        {
+          "path": "registry/forms/plugin.ts",
+          "type": "registry:file",
+          "target": "~/payload-toolkit/forms/plugin.ts"
+        },
+        {
+          "path": "registry/forms/example-form.tsx",
+          "type": "registry:file",
+          "target": "~/payload-toolkit/forms/example-form.tsx"
+        },
+        {
+          "path": "registry/forms/GUIDE.md",
+          "type": "registry:file",
+          "target": "~/docs/payload-toolkit/forms/GUIDE.md"
+        }
+      ]
+    }
+  ]
+}

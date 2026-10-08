@@ -1,0 +1,132 @@
+name: Verify Payload Toolkit
+on:
+  workflow_call:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: toolkit-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          {
+            ref: '${{ github.event.pull_request.head.sha || github.sha }}',
+            persist-credentials: false,
+          }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.34.6 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24.21.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check
+      - run: pnpm run agent:verify -- --cli-only
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: toolkit-cli-evidence, path: '.scratch/verification/', retention-days: 7 }
+  runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        framework: [next, tanstack]
+        database: [postgres, mongodb]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          {
+            ref: '${{ github.event.pull_request.head.sha || github.sha }}',
+            persist-credentials: false,
+          }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.34.6 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24.21.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run agent:verify -- --framework ${{ matrix.framework }} --database ${{ matrix.database }}
+      - run: pnpm run agent:cleanup
+        if: always()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: toolkit-evidence-${{ matrix.framework }}-${{ matrix.database }}
+          path: |
+            .scratch/verification/*/evidence.json
+            .scratch/verification/*/*.log
+            .scratch/verification/*/*.png
+            .scratch/verification/*/installation-results.json
+            .scratch/verification/*/installed-dependencies.json
+            .scratch/verification/*/runtime-source-changes.json
+          retention-days: 14
+  cli:
+    strategy:
+      fail-fast: false
+      matrix: { os: [windows-latest, macos-latest] }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          {
+            ref: '${{ github.event.pull_request.head.sha || github.sha }}',
+            persist-credentials: false,
+          }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.34.6 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24.21.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run agent:verify -- --installation-only
+      - run: pnpm run agent:cleanup
+        if: always()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: toolkit-installation-${{ matrix.os }}
+          path: |
+            .scratch/verification/*/evidence.json
+            .scratch/verification/*/*.log
+            .scratch/verification/*/installation-results.json
+            .scratch/verification/*/installed-dependencies.json
+          retention-days: 14
+
+  installation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix: { package-manager: [npm, bun] }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          {
+            ref: '${{ github.event.pull_request.head.sha || github.sha }}',
+            persist-credentials: false,
+          }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.34.6 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24.21.0, cache: pnpm }
+      - uses: oven-sh/setup-bun@v2
+        if: matrix.package-manager == 'bun'
+        with: { bun-version: 1.4.2 }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run agent:verify -- --installation-only --package-manager ${{ matrix.package-manager }}
+      - run: pnpm run agent:cleanup
+        if: always()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: toolkit-installation-${{ matrix.package-manager }}
+          path: |
+            .scratch/verification/*/evidence.json
+            .scratch/verification/*/*.log
+            .scratch/verification/*/installation-results.json
+            .scratch/verification/*/installed-dependencies.json
+          retention-days: 14

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Payload documentation
+    url: https://payloadcms.com/docs
+    about: Official Payload documentation
+  - name: Toolkit documentation
+    url: https://github.com/fluid-design-io/payload-starter#readme
+    about: CLI usage, contributor verification and release instructions

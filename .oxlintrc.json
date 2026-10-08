@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "unicorn"],
+  "categories": { "correctness": "error", "suspicious": "error" },
+  "rules": { "no-unused-vars": "error", "react/react-in-jsx-scope": "off" },
+  "overrides": [
+    {
+      "files": ["registry/forms/example-form.tsx"],
+      "rules": { "react/set-state-in-effect": "off" }
+    }
+  ],
+  "env": { "builtin": true },
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "assets",
+    ".scratch",
+    ".agents",
+    ".claude",
+    ".cursor",
+    "docs"
+  ]
+}

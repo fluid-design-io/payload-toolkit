@@ -1,0 +1,60 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "baseBranchPatterns": ["main"],
+  "automerge": false,
+  "packageRules": [
+    {
+      "matchPackageNames": ["payload", "@payloadcms/**", "create-payload-app"],
+      "groupName": "Payload v4 tuple",
+      "ignoreUnstable": false,
+      "allowedVersions": "/^4\\./",
+      "respectLatest": false,
+      "prBodyNotes": [
+        "Catalog and registry pins form a tested Payload tuple. Grouping does not prove compatibility. Deliberately qualify templateCommit against the generator release and run every supported runtime cell before manual merge."
+      ]
+    },
+    {
+      "matchPackageNames": ["shadcn", "@shadcn/**"],
+      "groupName": "shadcn registry contract"
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "groupName": "contributor tooling"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^catalog\\/bootstrap\\.json$/"],
+      "matchStrings": [
+        "\"generator\"\\s*:\\s*\"(?<depName>create-payload-app)@(?<currentValue>4\\.[^\"]+)\""
+      ],
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^catalog\\/bootstrap\\.json$/",
+        "/^registry\\/registry\\.json$/",
+        "/^registry\\/forms\\/GUIDE\\.md$/"
+      ],
+      "matchStrings": [
+        "\"payload\"\\s*:\\s*\"(?<currentValue>4\\.[^\"]+)\"",
+        "\"payloadVersions\"\\s*:\\s*\\[\\s*\"(?<currentValue>4\\.[^\"]+)\"\\s*\\]",
+        "^# [^\\r\\n]+\\r?\\n\\r?\\nGuide version [0-9.]+\\. This item targets Payload (?<currentValue>4\\.[0-9A-Za-z.-]+),"
+      ],
+      "depNameTemplate": "payload",
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^registry\\/registry\\.json$/"],
+      "matchStrings": ["\"(?<depName>@payloadcms/[a-z0-9-]+)@(?<currentValue>4\\.[^\"]+)\""],
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "npm"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+name: Release alpha
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact committed package version (for example 0.1.0-alpha.1)
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+env:
+  RELEASE_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+concurrency:
+  group: toolkit-alpha-release
+  cancel-in-progress: false
+jobs:
+  source:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '${{ github.sha }}', persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24.21.0 }
+      - run: node scripts/release.mjs source
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+  verification:
+    needs: source
+    uses: ./.github/workflows/verify.yml
+    permissions:
+      contents: read
+  prepare:
+    needs: verification
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '${{ github.sha }}', persist-credentials: false }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.34.6 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24.21.0 }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format
+      - run: pnpm build
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: toolkit-*
+          path: .scratch/release-verification
+          merge-multiple: true
+      - run: node scripts/release.mjs prepare
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: alpha-release-package
+          path: .scratch/release/
+          if-no-files-found: error
+          retention-days: 30
+  publish:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    environment: npm-release
+    permissions:
+      contents: write
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: '${{ github.sha }}', persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24.21.0 }
+      - run: npm install --global npm@12.2.0 --ignore-scripts --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with: { name: alpha-release-package, path: .scratch/release/ }
+      - run: node scripts/release.mjs publish
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: alpha-release-result
+          path: .scratch/release/
+          retention-days: 30

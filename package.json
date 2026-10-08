@@ -1,0 +1,79 @@
+{
+  "name": "payload-toolkit",
+  "version": "0.1.0-alpha.0",
+  "description": "Install developer-owned Payload starter features with contextual agent integration",
+  "homepage": "https://github.com/fluid-design-io/payload-starter#readme",
+  "bugs": {
+    "url": "https://github.com/fluid-design-io/payload-starter/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Oliver",
+    "url": "https://oliverpan.vercel.app"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fluid-design-io/payload-starter.git"
+  },
+  "bin": {
+    "payload-toolkit": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "assets/registry",
+    "catalog/bootstrap.json",
+    "LICENSE.md",
+    "README.md"
+  ],
+  "type": "module",
+  "exports": {},
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/",
+    "tag": "alpha"
+  },
+  "scripts": {
+    "registry:build": "tsx scripts/registry-build.ts",
+    "build": "pnpm registry:build && tsc -p tsconfig.build.json && node scripts/finish-build.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "oxlint src scripts tests registry/forms && tsx scripts/check-boundaries.ts",
+    "format": "oxfmt --check src scripts tests registry catalog package.json tsconfig.json tsconfig.build.json",
+    "format:fix": "oxfmt src scripts tests registry catalog package.json tsconfig.json tsconfig.build.json",
+    "test": "node scripts/test.mjs",
+    "check": "pnpm build && pnpm typecheck && pnpm lint && pnpm test",
+    "dev": "tsx src/cli.ts",
+    "agent:setup": "tsx scripts/agent.ts setup",
+    "agent:doctor": "tsx scripts/agent.ts doctor",
+    "agent:verify": "tsx scripts/agent.ts verify",
+    "agent:evidence": "tsx scripts/agent.ts evidence",
+    "agent:cleanup": "tsx scripts/agent.ts cleanup",
+    "prepack": "pnpm build"
+  },
+  "dependencies": {
+    "@clack/prompts": "1.8.1",
+    "commander": "15.0.0",
+    "semver": "7.8.5",
+    "shadcn": "4.21.4",
+    "validate-npm-package-name": "8.0.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "@types/node": "24.12.3",
+    "@types/semver": "7.8.0",
+    "@types/validate-npm-package-name": "4.0.2",
+    "oxfmt": "0.72.0",
+    "oxlint": "1.87.0",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "packageManager": "pnpm@10.34.6",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
