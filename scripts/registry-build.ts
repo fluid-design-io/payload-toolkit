@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, resolve, toNamespacedPath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { addRegistryItems, getRegistriesConfig, getRegistryItems } from 'shadcn/registry'
 import { registryItemSchema, registrySchema } from 'shadcn/schema'
@@ -38,7 +38,9 @@ try {
     if (!/^[a-z][a-z0-9-]*$/.test(declared.name))
       throw new Error('Registry names must be safe filenames')
     const itemPath = join(output, `${declared.name}.json`)
-    const [raw] = await getRegistryItems([itemPath], { useCache: false })
+    // shadcn treats drive letters as URL schemes. Windows namespaced paths stay local,
+    // including when the registry and the qualification project live on different drives.
+    const [raw] = await getRegistryItems([toNamespacedPath(itemPath)], { useCache: false })
     const item = registryItemSchema.parse(raw)
     const meta: unknown = item.meta?.payloadToolkit
     if (
@@ -103,7 +105,12 @@ try {
         JSON.stringify({ name: 'registry-file-qualification', private: true, type: 'module' }),
       )
       const config = await getRegistriesConfig(project)
-      await addRegistryItems([sourceOnly], { cwd: project, config, overwrite: false, silent: true })
+      await addRegistryItems([toNamespacedPath(sourceOnly)], {
+        cwd: project,
+        config,
+        overwrite: false,
+        silent: true,
+      })
       for (const file of files) {
         const bytes = await readFile(join(project, file.path))
         const installed = sha256(bytes)

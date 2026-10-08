@@ -2,7 +2,7 @@ import { fork } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { lstat, readFile, realpath } from 'node:fs/promises'
 import { createRequire } from 'node:module'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, resolve, toNamespacedPath } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import {
   addRegistryItems,
@@ -103,7 +103,9 @@ export async function prepareFeatures(
     if (digest(await readFile(itemPath)) !== entry.itemSha256)
       invalid(`Bundled item identity mismatch: ${name}`)
     // Keep fetched metadata. The aggregate returned by resolveRegistryItems omits it.
-    const [raw] = await getRegistryItems([itemPath], { useCache: false })
+    // Namespaced Windows paths prevent shadcn from fetching a drive-letter URL.
+    const itemReference = toNamespacedPath(itemPath)
+    const [raw] = await getRegistryItems([itemReference], { useCache: false })
     const parsed = registryItemSchema.safeParse(raw)
     if (!parsed.success) invalid(`Invalid shadcn item: ${name}`)
     const item = parsed.data
@@ -170,7 +172,7 @@ export async function prepareFeatures(
         invalid(`Payload dependency tuple mismatch: ${dependency}`)
       dependencies[packageName] = version
     }
-    await resolveRegistryItems([itemPath], { useCache: false })
+    await resolveRegistryItems([itemReference], { useCache: false })
     features.push(
       Object.freeze({
         name,
@@ -417,7 +419,7 @@ if (
           invalid(`Bundled item changed: ${feature.name}`)
       const config = await getRegistriesConfig(input.project)
       await addRegistryItems(
-        input.features.map((feature) => feature.itemPath),
+        input.features.map((feature) => toNamespacedPath(feature.itemPath)),
         { cwd: input.project, config, overwrite: false, silent: true },
       )
       process.send?.({ ok: true })
