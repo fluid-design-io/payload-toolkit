@@ -137,3 +137,33 @@ test('Windows tree termination refuses both failed execution and a missing taskk
     { code: 'termination-unconfirmed' },
   )
 })
+
+test('Windows launcher honors PATH before Node-adjacent and later package managers', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'toolkit-path-order-'))
+  try {
+    const selected = path.join(directory, 'selected')
+    const nodeDirectory = path.join(directory, 'node')
+    const selectedScript = path.join(selected, 'node_modules/pnpm/bin/pnpm.cjs')
+    const adjacentScript = path.join(nodeDirectory, 'node_modules/pnpm/bin/pnpm.cjs')
+    for (const script of [selectedScript, adjacentScript]) {
+      await mkdir(path.dirname(script), { recursive: true })
+      await Bun.write(script, '', { createPath: false })
+    }
+    const node = path.join(nodeDirectory, 'node.exe')
+    const args = ['--version']
+    const env = { PATH: [selected, nodeDirectory].join(path.delimiter) }
+    assert.deepEqual(await resolveWindowsCommand('pnpm', args, env, node), {
+      executable: node,
+      args: [selectedScript, ...args],
+    })
+    await rm(selectedScript)
+    const standalone = path.join(selected, 'pnpm.exe')
+    await Bun.write(standalone, '', { createPath: false })
+    assert.deepEqual(await resolveWindowsCommand('pnpm', args, env, node), {
+      executable: standalone,
+      args,
+    })
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+})
