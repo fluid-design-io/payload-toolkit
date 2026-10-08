@@ -367,15 +367,24 @@ async function installInWorker(
     })
     let errorMessage = ''
     let succeeded = false
+    let ready = false
     let termination: Promise<void> | undefined
     let terminationFailure: ToolkitError | undefined
-    worker.stdout?.resume()
+    worker.stdout?.on('data', (chunk: Buffer) => {
+      errorMessage = (errorMessage + chunk.toString()).slice(-4000)
+    })
     worker.stderr?.on('data', (chunk: Buffer) => {
       errorMessage = (errorMessage + chunk.toString()).slice(-4000)
     })
     worker.on('message', (message: unknown) => {
-      if (typeof message === 'object' && message !== null && 'ok' in message)
-        succeeded = message.ok === true
+      if (typeof message !== 'object' || message === null || signal?.aborted) return
+      if ('ready' in message && message.ready === true && !ready) {
+        ready = true
+        worker.send({ project, features })
+      } else if ('ok' in message && message.ok === true) {
+        succeeded = true
+        worker.send({ received: true })
+      }
     })
     const forceClose = () => {
       if (worker.exitCode === null && worker.signalCode === null) worker.kill('SIGKILL')
@@ -441,11 +450,10 @@ async function installInWorker(
         reject(
           new ToolkitError(
             'registry-install-failed',
-            `Registry installation failed. Partial files may remain.${errorMessage ? ` ${errorMessage.trim()}` : ''}`,
+            `Registry installation failed (exit ${code}, ready ${ready}, acknowledged ${succeeded}). Partial files may remain.${errorMessage ? ` ${errorMessage.trim()}` : ''}`,
           ),
         )
     })
-    worker.send({ project, features })
     if (signal?.aborted) abort()
   })
 }
@@ -471,12 +479,22 @@ export async function installFeatures(
   return after.files
 }
 
-if (
-  process.argv[2] === workerFlag &&
-  process.send &&
-  resolve(process.argv[1] ?? '') === fileURLToPath(import.meta.url)
+if (process.argv.includes(workerFlag) && !process.send) {
+  console.error('Registry worker requires an IPC channel')
+  process.exitCode = 1
+} else if (
+  process.argv.includes(workerFlag) &&
+  resolve(process.argv[1] ?? '') !== fileURLToPath(import.meta.url)
 ) {
-  process.once('message', async (input: { project: string; features: Feature[] }) => {
+  console.error(
+    `Registry worker entrypoint mismatch: ${JSON.stringify(process.argv.slice(1))} versus ${fileURLToPath(import.meta.url)}`,
+  )
+  process.exitCode = 1
+} else if (process.argv.includes(workerFlag) && process.send) {
+  let installing = false
+  const install = async (input: { project: string; features: Feature[] }) => {
+    if (installing) return
+    installing = true
     try {
       await inspectFeatures(input.project, input.features)
       for (const feature of input.features)
@@ -489,12 +507,20 @@ if (
         input.features.map((feature) => toNamespacedPath(feature.itemPath)),
         { cwd: input.project, config, overwrite: false, silent: true },
       )
-      process.send?.({ ok: true })
+      await new Promise<void>((received) => {
+        process.once('message', received)
+        process.send?.({ ok: true })
+      })
+      process.off('message', install)
       process.disconnect()
     } catch (error) {
       console.error(error instanceof Error ? error.message : 'Registry installation failed')
       process.exitCode = 1
+      process.off('message', install)
       process.disconnect()
     }
-  })
+  }
+  // A persistent listener keeps IPC referenced while the asynchronous installation runs.
+  process.on('message', install)
+  process.send({ ready: true })
 }

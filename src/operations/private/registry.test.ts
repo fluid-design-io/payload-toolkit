@@ -380,3 +380,22 @@ test.skipIf(process.platform === 'win32')(
     }
   },
 )
+
+test('registry worker refuses an invocation without its required IPC channel', async () => {
+  const project = await fixture()
+  try {
+    const child = Bun.spawn(
+      [
+        process.execPath,
+        fileURLToPath(new URL('./registry.ts', import.meta.url)),
+        '--payload-toolkit-registry-worker',
+      ],
+      { cwd: project, stdout: 'pipe', stderr: 'pipe' },
+    )
+    const stderr = await new Response(child.stderr).text()
+    assert.equal(await child.exited, 1)
+    assert.match(stderr, /requires an IPC channel/)
+  } finally {
+    await rm(project, { recursive: true, force: true })
+  }
+})

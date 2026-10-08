@@ -88,9 +88,14 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: 1.4.2 }
       - run: bun install --frozen-lockfile
-      - run: bun run agent:verify --installation-only
+      - name: Verify registry worker before full project installation
+        run: |
+          bun run build
+          bun test src/operations/private/registry.test.ts --test-name-pattern 'public API installs the qualified'
+      - id: installation
+        run: bun run agent:verify --installation-only
       - run: bun run agent:cleanup
-        if: always()
+        if: always() && steps.installation.outcome != 'skipped'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
