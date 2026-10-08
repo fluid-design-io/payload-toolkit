@@ -1,6 +1,6 @@
 {
   "name": "payload-toolkit",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "Install developer-owned Payload starter features with contextual agent integration",
   "homepage": "https://github.com/fluid-design-io/payload-toolkit#readme",
   "bugs": {
