@@ -149,9 +149,14 @@ test('Windows launcher honors PATH before Node-adjacent and later package manage
       await mkdir(path.dirname(script), { recursive: true })
       await Bun.write(script, '', { createPath: false })
     }
+    await Bun.write(
+      path.join(selected, 'pnpm.cmd'),
+      '"%dp0%\\node_modules\\pnpm\\bin\\pnpm.cjs" %*',
+      { createPath: false },
+    )
     const node = path.join(nodeDirectory, 'node.exe')
     const args = ['--version']
-    const env = { PATH: [selected, nodeDirectory].join(path.delimiter) }
+    const env = { PATH: [nodeDirectory, selected].join(path.delimiter) }
     assert.deepEqual(await resolveWindowsCommand('pnpm', args, env, node), {
       executable: node,
       args: [selectedScript, ...args],

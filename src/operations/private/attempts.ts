@@ -154,16 +154,18 @@ export async function resolveWindowsCommand(
     return { executable: nodeExecutable, args: [env.npm_execpath, ...args] }
   for (const directory of new Set(directories)) {
     const candidates: string[] = []
-    candidates.push(
-      path.join(
-        directory,
-        command === 'npm' ? 'node_modules/npm/bin/npm-cli.js' : 'node_modules/pnpm/bin/pnpm.cjs',
-      ),
-      path.join(directory, `node_modules/corepack/dist/${command}.js`),
-    )
     const wrapper = await Bun.file(path.join(directory, `${command}.cmd`))
       .text()
       .catch(() => '')
+    if (wrapper)
+      candidates.push(
+        path.join(
+          directory,
+          command === 'npm' ? 'node_modules/npm/bin/npm-cli.js' : 'node_modules/pnpm/bin/pnpm.cjs',
+        ),
+        path.join(directory, `node_modules/corepack/dist/${command}.js`),
+      )
+
     for (const match of wrapper.matchAll(
       /(?:%~dp0|%dp0%)[\\/]?([^"\r\n]*?(?:npm-cli\.js|pnpm\.(?:cjs|js)))"/gi,
     )) {
