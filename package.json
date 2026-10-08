@@ -47,6 +47,7 @@
     "agent:setup": "bun scripts/agent.ts setup",
     "agent:doctor": "bun scripts/agent.ts doctor",
     "agent:verify": "bun scripts/agent.ts verify",
+    "agent:verify:external": "bun scripts/external-registry-verify.ts",
     "agent:evidence": "bun scripts/agent.ts evidence",
     "agent:cleanup": "bun scripts/agent.ts cleanup",
     "prepack": "bun run build"
