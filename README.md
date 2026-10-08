@@ -62,19 +62,3 @@ The portable [contributor workflow](docs/contributing.md) and [verification skil
 CI starts on standard public GitHub runners. A separate trusted workflow reports actual run and tested-revision conclusions. Maintainers retain merge and release authority. Renovate proposes grouped dependency updates with tests and manual merging. The runner benchmark can follow once fixture costs are measurable.
 
 The [release instructions](docs/releasing.md) describe preparing and publishing an alpha from the reviewed package tarball.
-
-## Dependency choices
-
-| Package                     | Purpose                                            | Initial use                              |
-| --------------------------- | -------------------------------------------------- | ---------------------------------------- |
-| `@clack/prompts`            | Terminal prompts, selection menus and cancellation | Interactive choices                      |
-| `chalk`                     | Terminal text colors                               | Clack covers current presentation        |
-| `chokidar`                  | Watch files and directories for changes            | No watch command yet                     |
-| `commander`                 | Parse commands, flags and help                     | `init` and `add`                         |
-| `diff`                      | Compute text/file differences                      | Future upgrade review                    |
-| `semver`                    | Parse and compare versions/ranges                  | Runtime and compatibility checks         |
-| `tempy`                     | Create temporary paths                             | Node's `mkdtemp` covers current staging  |
-| `validate-npm-package-name` | Validate npm package names                         | New project names                        |
-| `zod`                       | Parse external data into validated types           | Requests, registry metadata and evidence |
-
-`shadcn` owns registry resolution, transformations and dependency/source installation. No private shadcn module is imported.
