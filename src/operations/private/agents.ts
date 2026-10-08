@@ -146,6 +146,8 @@ export async function invokeAgent(
   await attempt.fact('agent-before', before)
   await attempt.event('agent', 'started', `Invoking installed ${agent}`)
   const observation = observeAgentStatus(agent)
+  let stderrTail = ''
+  let untrustedDirectory = false
   try {
     const args =
       agent === 'codex'
@@ -158,6 +160,13 @@ export async function invokeAgent(
       attempt,
       agentOutput: true,
       onStdout: observation.consume,
+      onStderr(chunk) {
+        if (agent !== 'codex') return
+        stderrTail = (stderrTail + chunk).slice(-512)
+        untrustedDirectory ||= stderrTail.includes(
+          'Not inside a trusted directory and --skip-git-repo-check was not specified.',
+        )
+      },
     })
     observation.finish()
     await attempt.fact('agent-status-counts', observation.counts)
@@ -205,7 +214,12 @@ export async function invokeAgent(
     const interrupted =
       (signal?.aborted || (error instanceof ToolkitError && error.code === 'interrupted')) &&
       !(error instanceof ToolkitError && error.code === 'termination-unconfirmed')
-    const reason = error instanceof Error ? error.message : String(error)
+    const reason =
+      untrustedDirectory && error instanceof ToolkitError && error.code === 'process-failed'
+        ? 'Codex refused this directory because it is not a trusted Git project. Initialize or select a Git repository that you trust, then rerun the command with --codex. Installed files are retained; toolkit does not change Git or Codex trust settings.'
+        : error instanceof Error
+          ? error.message
+          : String(error)
     await attempt.event('agent', 'failed', reason)
     if (error instanceof ToolkitError && error.code === 'process-unavailable')
       return { status: 'not-started', reason, prompt }

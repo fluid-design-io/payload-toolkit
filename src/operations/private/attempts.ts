@@ -127,6 +127,7 @@ export type ProcessOptions = {
   env?: NodeJS.ProcessEnv
   agentOutput?: boolean
   onStdout?: (chunk: string) => void
+  onStderr?: (chunk: string) => void
 }
 export async function resolveWindowsCommand(
   command: string,
@@ -263,7 +264,10 @@ export async function runProcess(
       observe(chunk)
       options.onStdout?.(chunk.toString('utf8'))
     })
-    child.stderr?.on('data', observe)
+    child.stderr?.on('data', (chunk: Buffer) => {
+      observe(chunk)
+      options.onStderr?.(chunk.toString('utf8'))
+    })
     child.stdin?.on('error', () => {})
     child.stdin?.end(options.input || '')
     let spawnError: Error | undefined

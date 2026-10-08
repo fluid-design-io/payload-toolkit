@@ -30,7 +30,7 @@ Registry dependencies receive the same checks as the root item. Repeated install
 
 An installed guide contributes item-specific instructions when present. Without a guide, the prompt identifies installed files and asks the developer or agent to inspect imports, upstream documentation, host configuration, and required checks. Payload block registration and renderer integration belong to this contextual step.
 
-`--codex` and `--claude` remain optional. Without either flag, installation returns the same copyable integration prompt. Agent invocations use the contributor's existing account and permission settings. An agent's exit status is separate from source installation and observed runtime verification.
+`--codex` and `--claude` remain optional. Without either flag, installation returns the same copyable integration prompt. Agent invocations use the contributor's existing account and permission settings. An agent's exit status is separate from source installation and observed runtime verification. Codex's trusted-directory rejection produces an actionable handoff failure while retaining the source. The toolkit does not initialize application repositories or bypass the agent's trust check.
 
 ## Community discovery
 
