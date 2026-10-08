@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "payload-toolkit",
-  "homepage": "https://github.com/fluid-design-io/payload-starter",
+  "homepage": "https://github.com/fluid-design-io/payload-toolkit",
   "items": [
     {
       "name": "forms",

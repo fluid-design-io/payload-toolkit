@@ -1,6 +1,6 @@
 # Payload Toolkit v4 architecture and implementation
 
-Current repository: `fluid-design-io/payload-starter`, default branch `main`.
+Current repository: `fluid-design-io/payload-toolkit`, default branch `main`.
 
 Development originated on `codex/payload-toolkit-v4` in the v3 repository. The initial design and grounding documents below preserve that historical context. The maintainer authorized a separate public repository and the v4 push on October 7, 2026.
 
@@ -31,7 +31,7 @@ Main still points to `2883d2bfdb9e468939c844bd27e5497905cb4bbf`. The branch incl
 
 ## Agreed scope
 
-Build `payload-toolkit` in the `payload-starter` repository on `main`. The separate `payload-better-auth-starter` repository retains the Payload v3 application and its existing main branch. Repository creation and the initial v4 push are authorized; subsequent publishing still requires maintainer authorization.
+Build `payload-toolkit` in the `payload-toolkit` repository on `main`. The separate `payload-better-auth-starter` repository retains the Payload v3 application and its existing main branch. Repository creation and the initial v4 push are authorized; subsequent publishing still requires maintainer authorization.
 
 The CLI supports `init` and `add`. Minimal delegates a verified pinned official Payload generator/template/version tuple. Custom starts with that same base. Verified combinations cover Next.js and TanStack Start with MongoDB or PostgreSQL. Native Payload authentication remains available; Better Auth is unavailable until its v4 support is proven. Forms is the first catalog item, with persistence, admin access, a working example and console notifications. Additional blocks, upgrades, discovery and skills commands are future directions.
 
