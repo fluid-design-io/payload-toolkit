@@ -1,6 +1,6 @@
-import { test } from 'node:test'
+import { test } from 'bun:test'
 import assert from 'node:assert/strict'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
@@ -18,7 +18,9 @@ test('failed process evidence keeps useful diagnostics while removing credential
   process.env.PAYLOAD_TOOLKIT_STATE_DIR = path.join(directory, 'state')
   try {
     const secret = 'credential-for-owner-test'
-    await writeFile(path.join(directory, '.env'), `PAYLOAD_SECRET=${secret}\n`)
+    await Bun.write(path.join(directory, '.env'), `PAYLOAD_SECRET=${secret}\n`, {
+      createPath: false,
+    })
     const attempt = new Attempt()
     await attempt.start('add', directory)
     await assert.rejects(
@@ -29,7 +31,7 @@ test('failed process evidence keeps useful diagnostics while removing credential
       ),
       /codegen failed \[redacted\]/,
     )
-    const journal = await readFile(path.join(attempt.directory, 'journal.jsonl'), 'utf8')
+    const journal = await Bun.file(path.join(attempt.directory, 'journal.jsonl')).text()
     assert.match(journal, /codegen failed/)
     assert.equal(journal.includes(secret), false)
     assert.equal(
@@ -53,9 +55,8 @@ test('abort terminates an owned process and records interruption', async () => {
   await assert.rejects(started, /interrupted/)
 })
 
-test(
+test.skipIf(process.platform === 'win32')(
   'abort kills an ignoring grandchild even when its parent closes its pipes',
-  { skip: process.platform === 'win32' },
   async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'toolkit-tree-test-'))
     const pidFile = path.join(directory, 'grandchild.pid')
@@ -70,7 +71,9 @@ test(
         /interrupted/,
       )
       for (let tries = 0; tries < 250; tries++) {
-        const recorded = await readFile(pidFile, 'utf8').catch(() => '')
+        const recorded = await Bun.file(pidFile)
+          .text()
+          .catch(() => '')
         if (recorded) {
           pid = Number(recorded)
           break
@@ -80,9 +83,9 @@ test(
       assert.ok(pid, 'grandchild started before cancellation')
       controller.abort()
       await rejected
-      const stopped = await readFile(heartbeat, 'utf8')
+      const stopped = await Bun.file(heartbeat).text()
       await delay(2250)
-      assert.equal(await readFile(heartbeat, 'utf8'), stopped)
+      assert.equal(await Bun.file(heartbeat).text(), stopped)
     } finally {
       if (pid) {
         try {
@@ -99,10 +102,11 @@ test('Windows package manager wrappers resolve to JavaScript without shell argum
   try {
     const cli = path.join(directory, 'node_modules/pnpm/bin/pnpm.cjs')
     await mkdir(path.dirname(cli), { recursive: true })
-    await writeFile(cli, '')
-    await writeFile(
+    await Bun.write(cli, '', { createPath: false })
+    await Bun.write(
       path.join(directory, 'pnpm.cmd'),
       '@echo off\r\n"%dp0%\\node_modules\\pnpm\\bin\\pnpm.cjs" %*\r\n',
+      { createPath: false },
     )
     const args = ['install', 'value & echo unsafe']
     assert.deepEqual(
@@ -132,4 +136,39 @@ test('Windows tree termination refuses both failed execution and a missing taskk
     terminateWindowsTree(process.pid, path.join(tmpdir(), 'missing-toolkit-taskkill')),
     { code: 'termination-unconfirmed' },
   )
+})
+
+test('Windows launcher honors PATH before Node-adjacent and later package managers', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'toolkit-path-order-'))
+  try {
+    const selected = path.join(directory, 'selected')
+    const nodeDirectory = path.join(directory, 'node')
+    const selectedScript = path.join(selected, 'node_modules/pnpm/bin/pnpm.cjs')
+    const adjacentScript = path.join(nodeDirectory, 'node_modules/pnpm/bin/pnpm.cjs')
+    for (const script of [selectedScript, adjacentScript]) {
+      await mkdir(path.dirname(script), { recursive: true })
+      await Bun.write(script, '', { createPath: false })
+    }
+    await Bun.write(
+      path.join(selected, 'pnpm.cmd'),
+      '"%dp0%\\node_modules\\pnpm\\bin\\pnpm.cjs" %*',
+      { createPath: false },
+    )
+    const node = path.join(nodeDirectory, 'node.exe')
+    const args = ['--version']
+    const env = { PATH: [nodeDirectory, selected].join(path.delimiter) }
+    assert.deepEqual(await resolveWindowsCommand('pnpm', args, env, node), {
+      executable: node,
+      args: [selectedScript, ...args],
+    })
+    await rm(selectedScript)
+    const standalone = path.join(selected, 'pnpm.exe')
+    await Bun.write(standalone, '', { createPath: false })
+    assert.deepEqual(await resolveWindowsCommand('pnpm', args, env, node), {
+      executable: standalone,
+      args,
+    })
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
 })

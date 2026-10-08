@@ -56,7 +56,7 @@ const valid = (value: string, allowed: string[], label: string) => {
   if (!allowed.includes(value)) throw new Error(`Unsupported ${label}: ${value}`)
 }
 async function doctor() {
-  const pnpm = await command('pnpm', ['--version'], { cwd: root, allowFailure: true }).catch(
+  const bun = await command('bun', ['--version'], { cwd: root, allowFailure: true }).catch(
     () => null,
   )
   const docker = await command('docker', ['info', '--format', '{{.ServerVersion}}'], {
@@ -65,21 +65,27 @@ async function doctor() {
     timeout: 15_000,
   }).catch(() => null)
   const browser = await exists(chromium.executablePath())
+  const node = await command('node', ['-p', 'process.versions.node'], {
+    cwd: root,
+    allowFailure: true,
+  }).catch(() => null)
+  const nodeVersion = node?.code === 0 ? node.stdout.trim() : null
   const runtime =
-    Number(process.versions.node.split('.')[0]) === 24 &&
-    Number(process.versions.node.split('.')[1]) >= 15
+    !!nodeVersion &&
+    Number(nodeVersion.split('.')[0]) === 24 &&
+    Number(nodeVersion.split('.')[1]) >= 15
   return {
-    node: process.version,
+    node: nodeVersion,
     nodeSupported: runtime,
-    pnpm: pnpm?.stdout.trim() ?? null,
-    pnpmPinned: pnpm?.stdout.trim() === '10.34.6',
+    bun: bun?.stdout.trim() ?? null,
+    bunPinned: bun?.stdout.trim() === '1.4.2',
     builtCLI: await exists(path.join(root, 'dist/cli.js')),
     browser,
     docker: docker?.code === 0,
     suppliedServices: !!(
       process.env.TOOLKIT_TEST_POSTGRES_URL || process.env.TOOLKIT_TEST_MONGODB_URL
     ),
-    ready: runtime && pnpm?.stdout.trim() === '10.34.6',
+    ready: runtime && bun?.stdout.trim() === '1.4.2',
   }
 }
 async function selectedRun() {
@@ -87,15 +93,15 @@ async function selectedRun() {
     if (!/^\d+-[a-f0-9]{8}$/.test(values.run)) throw new Error('Invalid run identity')
     return path.join(storage, values.run)
   }
-  const latest = await fs.readFile(path.join(storage, 'latest'), 'utf8')
+  const latest = await Bun.file(path.join(storage, 'latest')).text()
   if (!/^\d+-[a-f0-9]{8}$/.test(latest.trim())) throw new Error('Invalid latest run identity')
   return path.join(storage, latest.trim())
 }
 async function cleanupWorkspace(directory: string, id: string) {
   const record = await readJson(path.join(directory, 'resources.json')).catch(() => null)
   if (!record?.workspace) return
-  const owner = await fs
-    .readFile(path.join(record.workspace, '.payload-toolkit-owner'), 'utf8')
+  const owner = await Bun.file(path.join(record.workspace, '.payload-toolkit-owner'))
+    .text()
     .catch(() => null)
   if (owner !== id || !path.basename(record.workspace).startsWith(`payload-toolkit-${id}-`))
     throw new Error('Workspace ownership is uncertain; retained for manual inspection')
@@ -109,7 +115,9 @@ async function cleanupWorkspace(directory: string, id: string) {
   }
   await fs.rm(record.workspace, { recursive: true })
   record.workspaceRemoved = true
-  await fs.writeFile(path.join(directory, 'resources.json'), JSON.stringify(record, null, 2))
+  await Bun.write(path.join(directory, 'resources.json'), JSON.stringify(record, null, 2), {
+    createPath: false,
+  })
 }
 async function sourceDigest() {
   const sourceFiles = await command('git', ['ls-files', '-c', '-o', '--exclude-standard', '-z'], {
@@ -134,7 +142,7 @@ async function verify() {
   const id = runId()
   const directory = path.join(storage, id)
   await fs.mkdir(directory, { recursive: true })
-  await fs.writeFile(path.join(storage, 'latest'), id)
+  await Bun.write(path.join(storage, 'latest'), id, { createPath: false })
   const git = await command('git', ['rev-parse', 'HEAD'], { cwd: root })
   const status = await command('git', ['status', '--porcelain'], { cwd: root })
   const evidence: Evidence = {
@@ -151,7 +159,8 @@ async function verify() {
       : values['installation-only']
         ? 'installation-only'
         : 'runtime',
-    node: process.version,
+    node: (await doctor()).node ?? 'unavailable',
+    bun: Bun.version,
     startedAt: new Date().toISOString(),
     status: 'running',
     checks: [],
@@ -160,16 +169,19 @@ async function verify() {
     cleanup: { status: 'pending', resources: [] },
   }
   const workspace = await fs.mkdtemp(path.join(tmpdir(), `payload-toolkit-${id}-`))
-  await fs.writeFile(path.join(workspace, '.payload-toolkit-owner'), id)
-  await fs.writeFile(
+  await Bun.write(path.join(workspace, '.payload-toolkit-owner'), id, { createPath: false })
+  await Bun.write(
     path.join(directory, 'resources.json'),
     JSON.stringify({ runId: id, workspace, services: [] }, null, 2),
+    { createPath: false },
   )
   let server: ChildProcess | undefined
   let serverLog = ''
   let serviceURL: string | undefined
   const save = () =>
-    fs.writeFile(path.join(directory, 'evidence.json'), JSON.stringify(evidence, null, 2))
+    Bun.write(path.join(directory, 'evidence.json'), JSON.stringify(evidence, null, 2), {
+      createPath: false,
+    })
   const run = (
     name: string,
     argv: string[],
@@ -183,8 +195,8 @@ async function verify() {
     await save()
     const health = await doctor()
     if (!health.ready)
-      throw new Blocked('Use Node >=24.15 within major 24 and pnpm 10.34.6; run agent:doctor')
-    await run('pnpm', ['run', 'build'])
+      throw new Blocked('Use Node >=24.15 within major 24 and Bun 1.4.2; run agent:doctor')
+    await run('bun', ['run', 'build'])
     const pack = await run('npm', [
       'pack',
       '--ignore-scripts',
@@ -194,7 +206,7 @@ async function verify() {
     ])
     const packed = JSON.parse(pack.stdout)[0]
     const tarball = path.join(directory, packed.filename)
-    evidence.identities.packedPackage = hash(await fs.readFile(tarball))
+    evidence.identities.packedPackage = hash(await Bun.file(tarball).bytes())
     evidence.identities.sourceAtPack = await sourceDigest()
     assert.equal(
       evidence.identities.sourceAtPack,
@@ -202,12 +214,14 @@ async function verify() {
       'Source changed while building/packing; this attempt is unstable and must not be reported green',
     )
     evidence.identities.bootstrap = hash(
-      await fs.readFile(path.join(root, 'catalog/bootstrap.json')),
+      await Bun.file(path.join(root, 'catalog/bootstrap.json')).bytes(),
     )
-    evidence.identities.catalog = hash(await fs.readFile(path.join(root, 'registry/registry.json')))
+    evidence.identities.catalog = hash(
+      await Bun.file(path.join(root, 'registry/registry.json')).bytes(),
+    )
     const item = await readJson(path.join(root, `assets/registry/${options.feature}.json`))
     evidence.identities.registryItem = hash(
-      await fs.readFile(path.join(root, `assets/registry/${options.feature}.json`)),
+      await Bun.file(path.join(root, `assets/registry/${options.feature}.json`)).bytes(),
     )
     for (const file of item.files)
       evidence.identities[`registrySource:${file.target}`] = hash(file.content)
@@ -216,13 +230,15 @@ async function verify() {
       allowFailure: true,
     })
     if (inherited.code === 0) throw new Error('Fixture workspace inherited a Git repository')
-    const managerVersion = await run(options.packageManager, ['--version'])
+    // Query the output installer outside the repository's Bun package-manager policy.
+    const managerVersion = await run(options.packageManager, ['--version'], workspace)
     evidence.identities.packageManagerVersion = managerVersion.stdout.trim()
     const consumer = path.join(workspace, 'consumer')
     await fs.mkdir(consumer)
-    await fs.writeFile(
+    await Bun.write(
       path.join(consumer, 'package.json'),
       JSON.stringify({ name: 'toolkit-artifact-consumer', private: true, type: 'module' }),
+      { createPath: false },
     )
     await run('npm', ['install', '--no-audit', '--no-fund', '--ignore-scripts', tarball], consumer)
     const cli = path.join(consumer, 'node_modules/payload-toolkit/dist/cli.js')
@@ -244,7 +260,7 @@ async function verify() {
     }
     if (!values['installation-only'] && !health.browser)
       throw new Blocked(
-        'Chromium is missing. Run pnpm exec playwright install chromium; Linux may need --with-deps.',
+        'Chromium is missing. Run bun x playwright install chromium; Linux may need --with-deps.',
       )
     if (values['installation-only']) {
       // Code generation needs a config URL, but this mode never connects or drives runtime.
@@ -292,9 +308,10 @@ async function verify() {
     )
     const add = JSON.parse(added.stdout)
     assert.equal(add.installation.status, 'complete')
-    await fs.writeFile(
+    await Bun.write(
       path.join(directory, 'installation-results.json'),
       sanitize(JSON.stringify({ init, add }, null, 2)),
+      { createPath: false },
     )
     evidence.checks.push({ name: 'packed-cli-forms-installation', status: 'passed' })
     const installationLock =
@@ -304,7 +321,7 @@ async function verify() {
           ? 'bun.lock'
           : 'package-lock.json'
     evidence.identities.fixtureLockfile = hash(
-      await fs.readFile(path.join(project, installationLock)),
+      await Bun.file(path.join(project, installationLock)).bytes(),
     )
     const installedVersions: Record<string, string> = {}
     for (const name of ['payload', '@payloadcms/plugin-form-builder']) {
@@ -312,9 +329,10 @@ async function verify() {
       assert.equal(typeof dependency.version, 'string', `${name} must be installed`)
       installedVersions[name] = dependency.version
     }
-    await fs.writeFile(
+    await Bun.write(
       path.join(directory, 'installed-dependencies.json'),
       JSON.stringify(installedVersions, null, 2),
+      { createPath: false },
     )
     evidence.identities.installedDependencies = hash(JSON.stringify(installedVersions))
     evidence.checks.push({
@@ -338,12 +356,16 @@ async function verify() {
         : options.packageManager === 'bun'
           ? 'bun.lock'
           : 'package-lock.json'
-    evidence.identities.fixtureLockfile = hash(await fs.readFile(path.join(project, lock)))
+    evidence.identities.fixtureLockfile = hash(await Bun.file(path.join(project, lock)).bytes())
     evidence.identities.fixtureSource = await treeHash(project)
     const preRuntimeSource = await sourceSnapshot(project)
     const previousGenerated = {
-      agents: await fs.readFile(path.join(project, 'AGENTS.md'), 'utf8').catch(() => null),
-      nextEnv: await fs.readFile(path.join(project, 'next-env.d.ts'), 'utf8').catch(() => null),
+      agents: await Bun.file(path.join(project, 'AGENTS.md'))
+        .text()
+        .catch(() => null),
+      nextEnv: await Bun.file(path.join(project, 'next-env.d.ts'))
+        .text()
+        .catch(() => null),
     }
     const port = await freePort()
     const base = `http://${options.framework === 'next' ? 'localhost' : '127.0.0.1'}:${port}`
@@ -355,7 +377,7 @@ async function verify() {
         ? ['-p', String(port)]
         : ['--port', String(port), '--host', '127.0.0.1']),
     ]
-    server = launch(options.packageManager, serverArgs, {
+    server = await launch(options.packageManager, serverArgs, {
       cwd: project,
       env: { ...process.env, ...env, PORT: String(port) },
       detached: process.platform !== 'win32',
@@ -367,9 +389,10 @@ async function verify() {
     }
     server.stdout?.on('data', log)
     server.stderr?.on('data', log)
-    await fs.writeFile(
+    await Bun.write(
       path.join(directory, 'server.json'),
       JSON.stringify({ pid: server.pid, runId: id, project: 'project', port }),
+      { createPath: false },
     )
     await waitUntil('Payload database-backed REST', async () => {
       if (server?.exitCode !== null) throw new Error('Server exited before readiness')
@@ -415,7 +438,9 @@ async function verify() {
     if (cleanupErrors.length) {
       const record = await readJson(path.join(directory, 'resources.json'))
       record.unsafeProcess = true
-      await fs.writeFile(path.join(directory, 'resources.json'), JSON.stringify(record, null, 2))
+      await Bun.write(path.join(directory, 'resources.json'), JSON.stringify(record, null, 2), {
+        createPath: false,
+      })
     }
     let resources: string[] = []
     if (server) {
@@ -425,10 +450,15 @@ async function verify() {
         cleanupErrors.push(sanitize(String(error)))
         const record = await readJson(path.join(directory, 'resources.json'))
         record.unsafeProcess = true
-        await fs.writeFile(path.join(directory, 'resources.json'), JSON.stringify(record, null, 2))
+        await Bun.write(path.join(directory, 'resources.json'), JSON.stringify(record, null, 2), {
+          createPath: false,
+        })
       }
     }
-    if (serverLog) await fs.writeFile(path.join(directory, 'server.log'), sanitize(serverLog))
+    if (serverLog)
+      await Bun.write(path.join(directory, 'server.log'), sanitize(serverLog), {
+        createPath: false,
+      })
     try {
       resources = await cleanupServices(directory, id, evidence)
     } catch (error) {
@@ -471,10 +501,10 @@ try {
       process.exitCode = 2
   } else if (verb === 'setup') {
     const result = await doctor()
-    if (!result.nodeSupported || !result.pnpmPinned)
-      throw new Blocked('Select Node 24.21.0 and pnpm 10.34.6 first')
-    await command('pnpm', ['install', '--frozen-lockfile'], { cwd: root })
-    await command('pnpm', ['run', 'build'], { cwd: root })
+    if (!result.nodeSupported || !result.bunPinned)
+      throw new Blocked('Select Node 24.21.0 and Bun 1.4.2 first')
+    await command('bun', ['install', '--frozen-lockfile'], { cwd: root })
+    await command('bun', ['run', 'build'], { cwd: root })
     json(await doctor())
   } else if (verb === 'verify') await verify()
   else if (verb === 'evidence')
@@ -490,7 +520,9 @@ try {
       )
     if (!record.workspaceRemoved) await cleanupWorkspace(directory, evidence.runId)
     evidence.cleanup = { status: 'complete', resources }
-    await fs.writeFile(path.join(directory, 'evidence.json'), JSON.stringify(evidence, null, 2))
+    await Bun.write(path.join(directory, 'evidence.json'), JSON.stringify(evidence, null, 2), {
+      createPath: false,
+    })
     json(evidence.cleanup)
   } else throw new Error(`Unknown contributor command: ${verb}`)
 } catch (error) {

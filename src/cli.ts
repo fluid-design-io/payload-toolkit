@@ -1,5 +1,5 @@
-#!/usr/bin/env node
-import { readFile } from 'node:fs/promises'
+#!/usr/bin/env bun
+
 import { resolve } from 'node:path'
 import { Command, CommanderError, Option } from 'commander'
 import { cancel, multiselect, select, text } from '@clack/prompts'
@@ -86,11 +86,10 @@ function common(command: Command) {
 }
 
 async function main() {
-  if (!satisfies(process.version, '>=24.15.0'))
-    throw new Error('Payload Toolkit requires Node >=24.15.0')
+  if (!satisfies(Bun.version, '>=1.4.2')) throw new Error('Payload Toolkit requires Bun >=1.4.2')
   const metadata = z
     .object({ version: z.string() })
-    .parse(JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')))
+    .parse(JSON.parse(await Bun.file(new URL('../package.json', import.meta.url)).text()))
   const program = new Command()
     .name('payload-toolkit')
     .description('Install Payload templates and developer-owned features')

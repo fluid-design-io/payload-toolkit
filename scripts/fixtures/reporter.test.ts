@@ -4,7 +4,7 @@ import { promises as fs } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import test from 'node:test'
+import { test } from 'bun:test'
 import { validateRuntimeChanges } from './runtime-source.js'
 import { hasSubmissionNotification } from './notification.js'
 import { command, type Evidence, selectedSourceHash, stop } from './support.js'
@@ -137,21 +137,23 @@ async function drive(
     ],
   }
   try {
-    await fs.writeFile(
+    await Bun.write(
       path.join(directory, 'fixture.json'),
       JSON.stringify({
         responses,
         zip: zip(options.filename ?? 'proof/evidence.json', JSON.stringify(artifact), options.size),
       }),
+      { createPath: false },
     )
-    await fs.writeFile(
+    await Bun.write(
       path.join(directory, 'event.json'),
       JSON.stringify({ workflow_run: { id: 7 } }),
+      { createPath: false },
     )
     const child = spawn(
       process.execPath,
       [
-        '--import',
+        '--preload',
         path.join(root, 'scripts/fixtures/mock-github.mjs'),
         path.join(root, 'scripts/trusted-report.mjs'),
       ],
@@ -172,8 +174,8 @@ async function drive(
       stderr += data.toString()
     })
     const code = await new Promise((resolve) => child.on('close', resolve))
-    const output = await fs
-      .readFile(path.join(directory, 'comment.json'), 'utf8')
+    const output = await Bun.file(path.join(directory, 'comment.json'))
+      .text()
       .then(JSON.parse, () => null)
     return { code, output, stderr }
   } finally {
@@ -312,20 +314,26 @@ test('selected source hashes symlink identity without traversing its outside dir
   const directory = await fs.mkdtemp(path.join(tmpdir(), 'toolkit-source-test-'))
   try {
     await fs.mkdir(path.join(directory, 'outside'))
-    await fs.writeFile(path.join(directory, 'outside/private.txt'), 'first outside value')
+    await Bun.write(path.join(directory, 'outside/private.txt'), 'first outside value', {
+      createPath: false,
+    })
     await fs.mkdir(path.join(directory, 'repository'))
     await fs.symlink(
       '../outside',
       path.join(directory, 'repository/link'),
       process.platform === 'win32' ? 'junction' : 'dir',
     )
-    await fs.writeFile(path.join(directory, 'repository/source.ts'), 'export const value = 1\n')
+    await Bun.write(path.join(directory, 'repository/source.ts'), 'export const value = 1\n', {
+      createPath: false,
+    })
     const original = await selectedSourceHash(path.join(directory, 'repository'), [
       'link',
       'source.ts',
       'deleted.ts',
     ])
-    await fs.writeFile(path.join(directory, 'outside/private.txt'), 'changed outside value')
+    await Bun.write(path.join(directory, 'outside/private.txt'), 'changed outside value', {
+      createPath: false,
+    })
     assert.equal(
       await selectedSourceHash(path.join(directory, 'repository'), [
         'link',
@@ -334,7 +342,9 @@ test('selected source hashes symlink identity without traversing its outside dir
       ]),
       original,
     )
-    await fs.writeFile(path.join(directory, 'repository/source.ts'), 'export const value = 2\n')
+    await Bun.write(path.join(directory, 'repository/source.ts'), 'export const value = 2\n', {
+      createPath: false,
+    })
     assert.notEqual(
       await selectedSourceHash(path.join(directory, 'repository'), [
         'link',
@@ -349,9 +359,8 @@ test('selected source hashes symlink identity without traversing its outside dir
   }
 })
 
-test(
+test.skipIf(process.platform === 'win32')(
   'timed-out command kills its TERM-resistant heartbeat grandchild and retains failure evidence',
-  { skip: process.platform === 'win32' },
   async () => {
     const directory = await fs.mkdtemp(path.join(tmpdir(), 'toolkit-command-test-'))
     const heartbeat = path.join(directory, 'heartbeat.txt')
@@ -369,12 +378,12 @@ test(
         }),
         /failed \(timeout\)/,
       )
-      assert.ok(Number(await fs.readFile(pidFile, 'utf8')) > 0)
-      const before = await fs.readFile(heartbeat, 'utf8')
+      assert.ok(Number(await Bun.file(pidFile).text()) > 0)
+      const before = await Bun.file(heartbeat).text()
       assert.ok(before.length > 0, 'the real descendant produced a heartbeat before cancellation')
       await new Promise((resolve) => setTimeout(resolve, 150))
       assert.equal(
-        await fs.readFile(heartbeat, 'utf8'),
+        await Bun.file(heartbeat).text(),
         before,
         'the descendant stopped writing after the timeout',
       )
@@ -389,9 +398,8 @@ test(
   },
 )
 
-test(
+test.skipIf(process.platform === 'win32')(
   'server stop kills the live owned group including a TERM-resistant grandchild',
-  { skip: process.platform === 'win32' },
   async () => {
     const directory = await fs.mkdtemp(path.join(tmpdir(), 'toolkit-server-stop-test-'))
     const heartbeat = path.join(directory, 'heartbeat.txt')
@@ -403,11 +411,11 @@ test(
         if (await fs.stat(heartbeat).catch(() => null)) break
         await new Promise((resolve) => setTimeout(resolve, 20))
       }
-      assert.ok((await fs.readFile(heartbeat, 'utf8')).length > 0)
+      assert.ok((await Bun.file(heartbeat).text()).length > 0)
       await stop(child)
-      const before = await fs.readFile(heartbeat, 'utf8')
+      const before = await Bun.file(heartbeat).text()
       await new Promise((resolve) => setTimeout(resolve, 150))
-      assert.equal(await fs.readFile(heartbeat, 'utf8'), before)
+      assert.equal(await Bun.file(heartbeat).text(), before)
       await assert.rejects(stop(child), /already exited/)
     } finally {
       if (child.exitCode === null && child.signalCode === null) await stop(child)

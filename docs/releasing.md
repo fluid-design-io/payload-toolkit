@@ -1,13 +1,15 @@
 # Alpha releases
 
-Use Node 24.21.0 and pnpm 10.34.6. The package name is `payload-toolkit`; the initial version is `0.1.0-alpha.0`. Publish prereleases with the `alpha` tag. Package configuration also defaults publishing to public access and the alpha channel on the npm registry.
+Use Node 24.21.0 and Bun 1.4.2. The package name is `payload-toolkit`; the initial version is `0.1.0-alpha.0`. Publish prereleases with the `alpha` tag. Package configuration also defaults publishing to public access and the alpha channel on the npm registry.
 
-Run `pnpm install --frozen-lockfile`, `pnpm check` and `pnpm format`. Run the applicable packed CLI/runtime fixtures for behavior changes. Keep model invocation results separate from independent build/browser results. Review the package contents, release version and retained evidence before publishing.
+Generated-project fixtures retain npm/pnpm/Bun coverage and default to pnpm 10.34.6. Bun runs the CLI; Node is retained for official Payload tooling; Bun installs and checks this repository.
+
+Run `bun install --frozen-lockfile`, `bun run check` and `bun run format`. Run the applicable packed CLI/runtime fixtures for behavior changes. Keep model invocation results separate from independent build/browser results. Review the package contents, release version and retained evidence before publishing.
 
 Build once and pack without rerunning lifecycle scripts:
 
 ```sh
-pnpm build
+bun run build
 mkdir -p .scratch/releases/0.1.0-alpha.0
 npm pack --ignore-scripts --json --pack-destination .scratch/releases/0.1.0-alpha.0
 ```
@@ -54,7 +56,7 @@ Browser interaction may be needed for npm account authentication/2FA and publish
 ### Each release
 
 1. Review upstream compatibility and the change scope. Commit a new alpha version in `package.json` and the lockfile if needed, with the source changes and applicable PR labels. Published versions are immutable; the already published `0.1.0-alpha.0` must not be reused for different source.
-2. Open **Actions → Release alpha → Run workflow**, select the default branch and enter that exact version. Review all verification results and the `alpha-release-package` artifact before approving the `npm-release` deployment. The workflow checks formatting in addition to `pnpm check`.
+2. Open **Actions → Release alpha → Run workflow**, select the default branch and enter that exact version. Review all verification results and the `alpha-release-package` artifact before approving the `npm-release` deployment. The workflow checks formatting in addition to `bun run check`.
 3. After approval, inspect the public npm version, alpha tag, integrity and GitHub prerelease. Evidence is available in `alpha-release-package` and `alpha-release-result`. Ordinary verification artifacts retain their existing shorter lifetimes. Download evidence if it must outlive retention.
 
 ### Recovery

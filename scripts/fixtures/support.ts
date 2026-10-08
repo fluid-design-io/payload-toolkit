@@ -15,6 +15,7 @@ export type Evidence = {
   packageManager: string
   mode: 'cli-only' | 'installation-only' | 'runtime'
   node: string
+  bun: string
   startedAt: string
   finishedAt?: string
   status: 'running' | 'passed' | 'failed' | 'blocked'
@@ -31,8 +32,8 @@ export type Evidence = {
   cleanup: { status: string; resources: string[] }
 }
 export class Blocked extends Error {}
-export const hash = (value: string | Buffer) => createHash('sha256').update(value).digest('hex')
-export const readJson = async (file: string) => JSON.parse(await fs.readFile(file, 'utf8'))
+export const hash = (value: string | Uint8Array) => createHash('sha256').update(value).digest('hex')
+export const readJson = async (file: string) => JSON.parse(await Bun.file(file).text())
 export async function exists(file: string) {
   return fs.stat(file).then(
     () => true,
@@ -103,15 +104,49 @@ export function sanitize(text: string) {
     .replace(/(Bearer\s+)[\w.-]+/gi, '$1[redacted]')
     .replace(/("?(?:password|token|secret|apiKey)"?\s*[:=]\s*)"?[^\s",}]+/gi, '$1[redacted]')
 }
-export function launch(commandName: string, args: string[], options: Parameters<typeof spawn>[2]) {
+export async function launch(
+  commandName: string,
+  args: string[],
+  options: Parameters<typeof spawn>[2],
+) {
   if (process.platform === 'win32' && ['npm', 'pnpm'].includes(commandName)) {
-    const script =
-      commandName === 'pnpm'
-        ? process.env.npm_execpath
-        : path.join(path.dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')
-    if (!script)
-      throw new Blocked(`Cannot locate the ${commandName} JavaScript launcher on Windows`)
-    return spawn(process.execPath, [script, ...args], { ...options, shell: false })
+    const env = options?.env ?? process.env
+    const searchPath = env.PATH || env.Path
+    const node = Bun.which('node', { PATH: searchPath })
+    if (!node) throw new Blocked('Node is required by the output package manager on Windows')
+    const directories = [
+      ...new Set([...(searchPath || '').split(path.delimiter).filter(Boolean), path.dirname(node)]),
+    ]
+    for (const directory of directories) {
+      const candidates: string[] = []
+      const wrapper = await Bun.file(path.join(directory, `${commandName}.cmd`))
+        .text()
+        .catch(() => '')
+      if (wrapper)
+        candidates.push(
+          path.join(
+            directory,
+            commandName === 'npm'
+              ? 'node_modules/npm/bin/npm-cli.js'
+              : 'node_modules/pnpm/bin/pnpm.cjs',
+          ),
+          path.join(directory, `node_modules/corepack/dist/${commandName}.js`),
+        )
+
+      for (const match of wrapper.matchAll(
+        /(?:%~dp0|%dp0%)[\\/]?([^"\r\n]*?(?:npm-cli\.js|pnpm\.(?:cjs|js)))"/gi,
+      )) {
+        if (!match[1]!.includes('%'))
+          candidates.push(path.resolve(directory, match[1]!.replaceAll('\\', path.sep)))
+      }
+      for (const script of candidates)
+        if (await Bun.file(script).exists())
+          return spawn(node, [script, ...args], { ...options, shell: false })
+      const executable = path.join(directory, `${commandName}.exe`)
+      if (await Bun.file(executable).exists())
+        return spawn(executable, args, { ...options, shell: false })
+    }
+    throw new Blocked(`Cannot locate the ${commandName} JavaScript launcher on Windows`)
   }
   return spawn(commandName, args, { ...options, shell: false })
 }
@@ -127,7 +162,7 @@ export async function command(
     allowFailure?: boolean
   },
 ): Promise<{ code: number; stdout: string; stderr: string }> {
-  const child = launch(commandName, args, {
+  const child = await launch(commandName, args, {
     cwd: options.cwd,
     env: { ...process.env, ...options.env },
     shell: false,
@@ -173,7 +208,9 @@ export async function command(
     const log = `command-${options.evidence.commands.length}.log`
     const portable = (text: string) =>
       sanitize(text).replaceAll(options.directory!, '<evidence>').replaceAll(options.cwd, '<cwd>')
-    await fs.writeFile(path.join(options.directory, log), portable(stdout + '\n' + stderr))
+    await Bun.write(path.join(options.directory, log), portable(stdout + '\n' + stderr), {
+      createPath: false,
+    })
     options.evidence.commands.push({
       command: path.basename(commandName),
       args: args.map(portable),

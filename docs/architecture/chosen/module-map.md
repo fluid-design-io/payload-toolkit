@@ -1,7 +1,7 @@
 # Module map
 
 ```text
-package.json                         payload-toolkit; pnpm owns repo checks
+package.json                         payload-toolkit; Bun owns repo installation/checks; Bun runs CLI; Node supports official Payload tooling
 src/cli.ts                           arguments, prompts, output and exit projection
 src/operations/index.ts              init/add and all operation state decisions
 src/operations/model.ts              schema-derived domain requests and outcomes

@@ -1,16 +1,15 @@
 import assert from 'node:assert/strict'
-import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import test from 'node:test'
+import { test } from 'bun:test'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 test('Renovate discovers and updates the complete source Payload tuple without changing the template SHA', async () => {
-  const config = JSON.parse(await fs.readFile(path.join(root, 'renovate.json'), 'utf8'))
+  const config = JSON.parse(await Bun.file(path.join(root, 'renovate.json')).text())
   const sources: Record<string, string> = Object.fromEntries(
     await Promise.all(
       ['catalog/bootstrap.json', 'registry/registry.json', 'registry/forms/GUIDE.md'].map(
-        async (name) => [name, await fs.readFile(path.join(root, name), 'utf8')],
+        async (name) => [name, await Bun.file(path.join(root, name)).text()],
       ),
     ),
   )
@@ -50,9 +49,9 @@ test('Renovate discovers and updates the complete source Payload tuple without c
     }
   }
   const originalBootstrap = JSON.parse(
-    await fs.readFile(path.join(root, 'catalog/bootstrap.json'), 'utf8'),
+    await Bun.file(path.join(root, 'catalog/bootstrap.json')).text(),
   )
-  const registry = JSON.parse(await fs.readFile(path.join(root, 'registry/registry.json'), 'utf8'))
+  const registry = JSON.parse(await Bun.file(path.join(root, 'registry/registry.json')).text())
   assert.equal(
     extracted.length,
     2 + registry.items.length * 3,

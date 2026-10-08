@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve, toNamespacedPath } from 'node:path'
@@ -10,13 +10,13 @@ import { registryItemSchema, registrySchema } from 'shadcn/schema'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const output = join(root, 'assets/registry')
-const sha256 = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex')
+const sha256 = (bytes: string | Uint8Array) => createHash('sha256').update(bytes).digest('hex')
 const authored = registrySchema.parse(
-  JSON.parse(await readFile(join(root, 'registry/registry.json'), 'utf8')),
+  JSON.parse(await Bun.file(join(root, 'registry/registry.json')).text()),
 )
 const executable = createRequire(import.meta.url).resolve('shadcn')
 const installedShadcn = JSON.parse(
-  await readFile(join(dirname(executable), '../package.json'), 'utf8'),
+  await Bun.file(join(dirname(executable), '../package.json')).text(),
 )
 if (installedShadcn.version !== '4.21.4')
   throw new Error('Registry qualification requires shadcn 4.21.4')
@@ -63,7 +63,9 @@ try {
     }
     // Exercise the exact file bytes through shadcn. Dependency installation has its own fixtures.
     const sourceOnly = join(temporary, `${item.name}.json`)
-    await writeFile(sourceOnly, JSON.stringify({ ...item, dependencies: [] }))
+    await Bun.write(sourceOnly, JSON.stringify({ ...item, dependencies: [] }), {
+      createPath: false,
+    })
     const files = []
     for (const source of item.files ?? []) {
       if (
@@ -100,9 +102,10 @@ try {
     for (const withSrc of [false, true]) {
       const project = join(temporary, `${item.name}-${withSrc ? 'src' : 'root'}`)
       await mkdir(withSrc ? join(project, 'src') : project, { recursive: true })
-      await writeFile(
+      await Bun.write(
         join(project, 'package.json'),
         JSON.stringify({ name: 'registry-file-qualification', private: true, type: 'module' }),
+        { createPath: false },
       )
       const config = await getRegistriesConfig(project)
       await addRegistryItems([toNamespacedPath(sourceOnly)], {
@@ -112,13 +115,16 @@ try {
         silent: true,
       })
       for (const file of files) {
-        const bytes = await readFile(join(project, file.path))
+        const bytes = await Bun.file(join(project, file.path)).bytes()
         const installed = sha256(bytes)
         if (file.sha256 && installed !== file.sha256)
           throw new Error(`Layout-dependent output: ${file.path}`)
         if (file.role === 'guide' && installed !== file.sourceSha256)
           throw new Error(`shadcn altered guide: ${file.path}`)
-        if (file.path.endsWith('.tsx') && !/^["']use client["']/.test(bytes.toString()))
+        if (
+          file.path.endsWith('.tsx') &&
+          !/^["']use client["']/.test(new TextDecoder().decode(bytes))
+        )
           throw new Error(`Client directive was removed: ${file.path}`)
         file.sha256 = installed
       }
@@ -126,13 +132,14 @@ try {
     entries.push({
       name: item.name,
       description: item.description ?? item.name,
-      itemSha256: sha256(await readFile(itemPath)),
+      itemSha256: sha256(await Bun.file(itemPath).bytes()),
       files,
     })
   }
-  await writeFile(
+  await Bun.write(
     join(output, 'catalog.json'),
     `${JSON.stringify({ schemaVersion: 1, shadcn: '4.21.4', items: entries }, null, 2)}\n`,
+    { createPath: false },
   )
   console.log(
     `Built and qualified ${entries.length} registry item(s). File transforms only; dependency/runtime checks are separate.`,

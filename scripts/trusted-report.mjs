@@ -1,5 +1,5 @@
 // Run this only from the default branch's trusted workflow_run checkout.
-import { readFile } from 'node:fs/promises'
+
 import { inflateRawSync } from 'node:zlib'
 
 const marker = '<!-- payload-toolkit-proof -->'
@@ -7,7 +7,7 @@ const token = process.env.GITHUB_TOKEN
 const repository = process.env.GITHUB_REPOSITORY
 if (!token || !repository || !/^[\w.-]+\/[\w.-]+$/.test(repository))
   throw new Error('Trusted GitHub context is required')
-const event = JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH, 'utf8'))
+const event = JSON.parse(await Bun.file(process.env.GITHUB_EVENT_PATH).text())
 const id = event.workflow_run?.id
 if (!Number.isSafeInteger(id) || id <= 0) throw new Error('Missing workflow run identity')
 async function api(endpoint, options = {}) {

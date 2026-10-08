@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { z } from 'zod'
@@ -91,7 +91,7 @@ async function operate(
         ? { kind: 'init' as const, request: initRequestSchema.parse(raw) }
         : { kind: 'add' as const, request: addRequestSchema.parse(raw) }
     request = input.request
-    requireNode()
+    if (kind === 'init') requireNode()
     options.signal?.throwIfAborted()
     target = await canonicalTarget(request.directory)
     release = await acquireLease(target, attempt.id)
@@ -182,7 +182,10 @@ async function operate(
       const pkg = await manifest(target)
       await attempt.fact('base-manifest', { sha256: digest(JSON.stringify(pkg)) })
       files = [
-        { path: 'package.json', sha256: digest(await readFile(path.join(target, 'package.json'))) },
+        {
+          path: 'package.json',
+          sha256: digest(await Bun.file(path.join(target, 'package.json')).bytes()),
+        },
       ]
     }
     const postInstall = await snapshot(target)

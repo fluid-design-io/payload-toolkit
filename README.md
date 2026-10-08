@@ -2,22 +2,22 @@
 
 A CLI for official Payload starters and developer-owned features. This repository builds the v4 experience on `main`. The existing v3 starter remains in [payload-better-auth-starter](https://github.com/fluid-design-io/payload-better-auth-starter).
 
-The package and command name is `payload-toolkit`. Alpha releases use the `alpha` tag and target the exact Payload v4 canary tuple below. Use Node 24.15 or newer:
+The package and command name is `payload-toolkit`. Alpha releases use the `alpha` tag and target the exact Payload v4 canary tuple below. Use Bun 1.4.2 or newer to run the CLI. Creating a project also requires Node 24.15 or newer for the official Payload generator:
 
 ```sh
-npx payload-toolkit@alpha --help
-npx payload-toolkit@alpha init acme --framework next --database postgres --template minimal --package-manager pnpm
+bunx --bun payload-toolkit@alpha --help
+bunx --bun payload-toolkit@alpha init acme --framework next --database postgres --template minimal --package-manager pnpm
 ```
 
-For source development, build and run the local binary with pnpm 10.34.6:
+For source development, use Node 24.21.0 and Bun 1.4.2 to install and build. Bun runs the delivered CLI, while Node supports official Payload tooling. Generated projects support npm, pnpm and Bun:
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm build
-node dist/cli.js --help
-node dist/cli.js init acme --framework next --database postgres --template minimal --package-manager pnpm
-node dist/cli.js init acme --framework tanstack --database mongodb --template custom --features forms --package-manager pnpm
-node dist/cli.js add forms --cwd ../existing-payload-project --codex
+bun install --frozen-lockfile
+bun run build
+bun dist/cli.js --help
+bun dist/cli.js init acme --framework next --database postgres --template minimal --package-manager pnpm
+bun dist/cli.js init acme --framework tanstack --database mongodb --template custom --features forms --package-manager pnpm
+bun dist/cli.js add forms --cwd ../existing-payload-project --codex
 ```
 
 Run `init` without all choices in a terminal for prompts. For unattended execution, supply the directory, framework, database, template and package manager. `--json` returns one result and disables prompts. PostgreSQL uses Payload's Drizzle adapter. MongoDB is the other initial database choice.
@@ -48,11 +48,13 @@ Contributions add an item, ordinary exports, a contextual guide and an executabl
 
 ## Verification and contributions
 
+Repository tests use `bun:test` through `bun run test`. Verification fixtures default to pnpm 10.34.6; install that separately for the default runtime checks, or select an available output installer with `--package-manager npm` or `--package-manager bun`.
+
 ```sh
-pnpm check
-pnpm agent:doctor
-pnpm agent:verify -- --cli-only
-pnpm agent:verify -- --feature forms --framework next --database postgres --package-manager pnpm
+bun run check
+bun run agent:doctor
+bun run agent:verify --cli-only
+bun run agent:verify --feature forms --framework next --database postgres --package-manager pnpm
 ```
 
 The portable [contributor workflow](docs/contributing.md) and [verification skill](.agents/skills/verify-payload-toolkit/SKILL.md) describe isolated fixtures, proofs and cleanup. Contributors may use their own local or cloud agent accounts. Deterministic CI uses no paid-model credentials. Runtime checks require disposable databases and a browser. Missing capabilities produce blocked results, not passes. Evidence survives cleanup and records failed attempts.
@@ -60,19 +62,3 @@ The portable [contributor workflow](docs/contributing.md) and [verification skil
 CI starts on standard public GitHub runners. A separate trusted workflow reports actual run and tested-revision conclusions. Maintainers retain merge and release authority. Renovate proposes grouped dependency updates with tests and manual merging. The runner benchmark can follow once fixture costs are measurable.
 
 The [release instructions](docs/releasing.md) describe preparing and publishing an alpha from the reviewed package tarball.
-
-## Dependency choices
-
-| Package                     | Purpose                                            | Initial use                              |
-| --------------------------- | -------------------------------------------------- | ---------------------------------------- |
-| `@clack/prompts`            | Terminal prompts, selection menus and cancellation | Interactive choices                      |
-| `chalk`                     | Terminal text colors                               | Clack covers current presentation        |
-| `chokidar`                  | Watch files and directories for changes            | No watch command yet                     |
-| `commander`                 | Parse commands, flags and help                     | `init` and `add`                         |
-| `diff`                      | Compute text/file differences                      | Future upgrade review                    |
-| `semver`                    | Parse and compare versions/ranges                  | Runtime and compatibility checks         |
-| `tempy`                     | Create temporary paths                             | Node's `mkdtemp` covers current staging  |
-| `validate-npm-package-name` | Validate npm package names                         | New project names                        |
-| `zod`                       | Parse external data into validated types           | Requests, registry metadata and evidence |
-
-`shadcn` owns registry resolution, transformations and dependency/source installation. No private shadcn module is imported.

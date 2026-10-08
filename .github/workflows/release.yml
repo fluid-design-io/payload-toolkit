@@ -23,7 +23,9 @@ jobs:
         with: { ref: '${{ github.sha }}', persist-credentials: false }
       - uses: actions/setup-node@v4
         with: { node-version: 24.21.0 }
-      - run: node scripts/release.mjs source
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
+      - run: bun scripts/release.mjs source
         env:
           RELEASE_VERSION: ${{ inputs.version }}
           GH_TOKEN: ${{ github.token }}
@@ -38,19 +40,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { ref: '${{ github.sha }}', persist-credentials: false }
-      - uses: pnpm/action-setup@v4
-        with: { version: 10.34.6 }
       - uses: actions/setup-node@v4
         with: { node-version: 24.21.0 }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm format
-      - run: pnpm build
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
+      - run: bun install --frozen-lockfile
+      - run: bun run format
+      - run: bun run build
       - uses: actions/download-artifact@v4
         with:
           pattern: toolkit-*
           path: .scratch/release-verification
           merge-multiple: true
-      - run: node scripts/release.mjs prepare
+      - run: bun scripts/release.mjs prepare
         env:
           RELEASE_VERSION: ${{ inputs.version }}
       - uses: actions/upload-artifact@v4
@@ -73,10 +75,12 @@ jobs:
         with: { ref: '${{ github.sha }}', persist-credentials: false }
       - uses: actions/setup-node@v4
         with: { node-version: 24.21.0 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
       - run: npm install --global npm@12.2.0 --ignore-scripts --no-audit --no-fund
       - uses: actions/download-artifact@v4
         with: { name: alpha-release-package, path: .scratch/release/ }
-      - run: node scripts/release.mjs publish
+      - run: bun scripts/release.mjs publish
         env:
           RELEASE_VERSION: ${{ inputs.version }}
           GH_TOKEN: ${{ github.token }}

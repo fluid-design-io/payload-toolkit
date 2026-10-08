@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
 import { promisify } from 'node:util'
-import { lstat, mkdir, open, readFile, readdir, readlink, realpath, rm } from 'node:fs/promises'
+import { lstat, mkdir, open, readdir, readlink, realpath, rm } from 'node:fs/promises'
 import { hostname } from 'node:os'
 import path from 'node:path'
 import semver from 'semver'
@@ -22,7 +22,7 @@ export async function exists(filename: string): Promise<boolean> {
 }
 export async function manifest(directory: string): Promise<ProjectManifest> {
   return projectManifestSchema.parse(
-    JSON.parse(await readFile(path.join(directory, 'package.json'), 'utf8')),
+    JSON.parse(await Bun.file(path.join(directory, 'package.json')).text()),
   )
 }
 export async function canonicalTarget(directory: string): Promise<string> {
@@ -149,10 +149,12 @@ export async function snapshot(target: string): Promise<Snapshot> {
   }
   const indexPath = gitRoot ? await git(root, ['rev-parse', '--git-path', 'index']) : null
   const indexBytes = indexPath
-    ? await readFile(path.resolve(root, indexPath)).catch((error) => {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
-        throw new ToolkitError('git-unavailable', `Could not read Git index: ${String(error)}`)
-      })
+    ? await Bun.file(path.resolve(root, indexPath))
+        .bytes()
+        .catch((error) => {
+          if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
+          throw new ToolkitError('git-unavailable', `Could not read Git index: ${String(error)}`)
+        })
     : null
   const indexEntries = gitRoot ? (await git(root, ['ls-files', '--stage', '-z'])) || '' : ''
   if (gitRoot && (!indexPath || (indexEntries && !indexBytes)))
@@ -248,7 +250,12 @@ export async function acquireLease(
       await file.close()
     }
     return async (recoveryReason) => {
-      if ((await readFile(filename, 'utf8').catch(() => null)) !== value) return
+      if (
+        (await Bun.file(filename)
+          .text()
+          .catch(() => null)) !== value
+      )
+        return
       if (recoveryReason) {
         const retained = await open(filename, 'r+')
         try {
@@ -264,7 +271,7 @@ export async function acquireLease(
     }
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error
-    const old = await readFile(filename, 'utf8')
+    const old = await Bun.file(filename).text()
     let owner: { attempt?: string; recoveryRequired?: boolean }
     try {
       owner = JSON.parse(old)
@@ -332,7 +339,7 @@ export async function inspectHost(
     /(^|[/\\])payload\.config\.[cm]?[jt]s$/.test(file),
   )
   const config = (
-    await Promise.all(configs.map((file) => readFile(path.join(directory, file), 'utf8')))
+    await Promise.all(configs.map((file) => Bun.file(path.join(directory, file)).text()))
   ).join('\n')
   const imported = (['postgres', 'mongodb'] as const).filter((database) =>
     config.includes(`@payloadcms/db-${database}`),
@@ -349,7 +356,7 @@ export async function inspectHost(
   const installed = path.join(directory, 'node_modules', 'payload', 'package.json')
   if (await exists(installed))
     payloadVersion = installedPackageSchema.parse(
-      JSON.parse(await readFile(installed, 'utf8')),
+      JSON.parse(await Bun.file(installed).text()),
     ).version
   if (!payloadVersion || !semver.valid(payloadVersion))
     throw new ToolkitError(

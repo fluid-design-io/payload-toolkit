@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { z } from 'zod'
 import type { Agent, AgentOutcome, Feature } from '../model.js'
@@ -84,7 +83,9 @@ export async function integrationPrompt(
   if (!features.length) {
     const readme = path.join(project, 'README.md')
     if (!(await exists(readme))) return null
-    return `Inspect this project's rules and the installed official README at ${readme} (SHA-256 ${digest(await readFile(readme))}). Finish configuring the generated Payload application. Preserve native admin authentication. ${gitInstruction} Infrastructure configuration remains the developer's responsibility. Run and report applicable checks; installation is not runtime verification.`
+    return `Inspect this project's rules and the installed official README at ${readme} (SHA-256 ${digest(
+      await Bun.file(readme).bytes(),
+    )}). Finish configuring the generated Payload application. Preserve native admin authentication. ${gitInstruction} Infrastructure configuration remains the developer's responsibility. Run and report applicable checks; installation is not runtime verification.`
   }
   const guides: string[] = []
   for (const feature of features) {
@@ -97,7 +98,7 @@ export async function integrationPrompt(
         `Feature ${feature.name} has no qualified guide identity`,
       )
     const full = path.join(project, feature.guide)
-    if (digest(await readFile(full)) !== file.sha256)
+    if (digest(await Bun.file(full).bytes()) !== file.sha256)
       throw new ToolkitError(
         'collision',
         `Installed guide differs from the qualified guide: ${feature.guide}`,

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { spawnSync } from 'node:child_process'
-import { mkdtemp, readFile, readdir, mkdir, rm, writeFile } from 'node:fs/promises'
+import childProcess from 'node:child_process'
+import { mkdtemp, readdir, mkdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -10,12 +10,14 @@ const directory = path.resolve('.scratch/release')
 const registry = 'https://registry.npmjs.org'
 const digest = (bytes, algorithm, encoding = 'hex') =>
   createHash(algorithm).update(bytes).digest(encoding)
-const json = async (file) => JSON.parse(await readFile(file, 'utf8'))
+const json = async (file) => JSON.parse(await Bun.file(file).text())
 const save = (name, value) =>
-  writeFile(path.join(directory, name), `${JSON.stringify(value, null, 2)}\n`)
+  Bun.write(path.join(directory, name), `${JSON.stringify(value, null, 2)}\n`, {
+    createPath: false,
+  })
 
 function command(executable, args, cwd = process.cwd(), expected = 0) {
-  const result = spawnSync(executable, args, {
+  const result = childProcess.spawnSync(executable, args, {
     cwd,
     encoding: 'utf8',
     timeout: 180_000,
@@ -176,9 +178,10 @@ async function filesBelow(root) {
 async function smoke(specifier, label) {
   const consumer = await mkdtemp(path.join(tmpdir(), 'toolkit-release-'))
   try {
-    await writeFile(
+    await Bun.write(
       path.join(consumer, 'package.json'),
       '{"name":"toolkit-release-consumer","private":true}',
+      { createPath: false },
     )
     const install = command(
       'npm',
@@ -221,7 +224,7 @@ async function prepare() {
   )
   await save('pack.json', pack)
   validatePack(pack, identity.version)
-  const bytes = await readFile(path.join(directory, pack.filename))
+  const bytes = await Bun.file(path.join(directory, pack.filename)).bytes()
   const sha256 = digest(bytes, 'sha256')
   const integrity = `sha512-${digest(bytes, 'sha512', 'base64')}`
   assert.equal(integrity, pack.integrity)
@@ -284,7 +287,7 @@ export async function publish() {
     assert.equal(artifact[key], identity[key])
   validatePack(await json(path.join(directory, 'pack.json')), identity.version)
   const tarball = path.join(directory, `payload-toolkit-${identity.version}.tgz`)
-  const bytes = await readFile(tarball)
+  const bytes = await Bun.file(tarball).bytes()
   assert.equal(digest(bytes, 'sha256'), artifact.sha256)
   assert.equal(`sha512-${digest(bytes, 'sha512', 'base64')}`, artifact.integrity)
   validateReceipts(
@@ -380,9 +383,10 @@ export async function publish() {
     release: publishedRelease.html_url,
   })
   if (process.env.GITHUB_STEP_SUMMARY)
-    await writeFile(
+    await Bun.write(
       process.env.GITHUB_STEP_SUMMARY,
       `Published ${identity.name}@${identity.version} under alpha.\n\nSource: ${identity.sha}\n\nSHA-256: ${artifact.sha256}\n\n[GitHub prerelease](${publishedRelease.html_url})\n`,
+      { createPath: false },
     )
 }
 

@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, readdir } from 'node:fs/promises'
+import { cp, mkdir, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import semver from 'semver'
 import validatePackageName from 'validate-npm-package-name'
@@ -17,13 +17,18 @@ export const bootstrap = z
     templates: z.object({ next: z.string(), tanstack: z.string() }),
   })
   .parse(
-    JSON.parse(await readFile(new URL('../../../catalog/bootstrap.json', import.meta.url), 'utf8')),
+    JSON.parse(await Bun.file(new URL('../../../catalog/bootstrap.json', import.meta.url)).text()),
   )
+// Payload's official generator and generated scripts still require an actual Node binary.
+// Bun's process.versions.node describes compatibility, not the installed Node runtime.
 export function requireNode(): void {
-  if (!semver.gte(process.versions.node, bootstrap.nodeMinimum))
+  const node = Bun.which('node', { PATH: process.env.PATH || process.env.Path || '' })
+  const result = node ? Bun.spawnSync([node, '-p', 'process.versions.node']) : null
+  const version = result?.success ? result.stdout.toString().trim() : null
+  if (!version || !semver.valid(version) || !semver.gte(version, bootstrap.nodeMinimum))
     throw new ToolkitError(
       'node-version',
-      `Payload v4 requires Node >=${bootstrap.nodeMinimum}; current Node is ${process.versions.node}`,
+      `Payload's official generator requires Node >=${bootstrap.nodeMinimum}; installed Node is ${version ?? 'unavailable'}`,
     )
 }
 export function projectName(directory: string): string {
@@ -118,7 +123,7 @@ export async function inspectOfficialSource(project: string, request: InitReques
   const configPath = files.find((file) => /(^|[/\\])payload\.config\.ts$/.test(file))
   if (
     !configPath ||
-    !(await readFile(path.join(project, configPath), 'utf8')).includes(
+    !(await Bun.file(path.join(project, configPath)).text()).includes(
       `@payloadcms/db-${request.database}`,
     )
   )
@@ -127,7 +132,7 @@ export async function inspectOfficialSource(project: string, request: InitReques
       'Generated config does not use the requested database adapter',
     )
   const users = files.find((file) => /(^|[/\\])Users\.ts$/.test(file))
-  if (!users || !/auth\s*:\s*true/.test(await readFile(path.join(project, users), 'utf8')))
+  if (!users || !/auth\s*:\s*true/.test(await Bun.file(path.join(project, users)).text()))
     throw new ToolkitError(
       'official-postcondition',
       'Generated native Users authentication is missing',
@@ -165,7 +170,7 @@ export async function completeOfficialProject(
     (packageName) => packageName === 'payload' || packageName.startsWith('@payloadcms/'),
   )) {
     const installed = installedPackageSchema.parse(
-      JSON.parse(await readFile(path.join(project, 'node_modules', name, 'package.json'), 'utf8')),
+      JSON.parse(await Bun.file(path.join(project, 'node_modules', name, 'package.json')).text()),
     )
     if (installed.version !== bootstrap.payload)
       throw new ToolkitError(
