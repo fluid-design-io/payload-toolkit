@@ -25,6 +25,7 @@ const pack = {
   files: [
     'dist/cli.js',
     'assets/registry/forms.json',
+    'assets/registry/community-registries.json',
     'catalog/bootstrap.json',
     'package.json',
     'README.md',
@@ -87,6 +88,17 @@ test('release package inspection rejects credentials, unrelated source and missi
   ])
     assert.throws(() => validatePack({ ...pack, files: [...pack.files, { path }] }, version))
   assert.throws(() => validatePack({ ...pack, files: pack.files.slice(1) }, version))
+  assert.throws(() =>
+    validatePack(
+      {
+        ...pack,
+        files: pack.files.filter(
+          (file) => file.path !== 'assets/registry/community-registries.json',
+        ),
+      },
+      version,
+    ),
+  )
 })
 
 test('release requires every matrix cell to qualify the exact clean source and artifact', () => {
