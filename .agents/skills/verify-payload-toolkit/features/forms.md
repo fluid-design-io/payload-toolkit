@@ -10,7 +10,7 @@ Initialize a supported official app, add `forms`, integrate its installed guide,
 
 ## Driving it with the contributor harness
 
-Run `pnpm run agent:verify -- --feature forms --framework next --database postgres`. Repeat each Next/TanStack and Postgres/Mongo pair. The harness drives the packed CLI, known guide integration, real REST and browser paths. A saved record must contain the exact submitted values; anonymous reads must fail; rejected invalid input must leave zero records; the visible confirmation requires a real saved row and a console entry containing that row's identity. Admin screenshots show the collection. A controlled failed HTTP response must show an alert without success.
+Run `bun run agent:verify --feature forms --framework next --database postgres`. Repeat each Next/TanStack and Postgres/Mongo pair. The harness drives the packed CLI, known guide integration, real REST and browser paths. A saved record must contain the exact submitted values; anonymous reads must fail; rejected invalid input must leave zero records; the visible confirmation requires a real saved row and a console entry containing that row's identity. Admin screenshots show the collection. A controlled failed HTTP response must show an alert without success.
 
 ## Gotchas
 

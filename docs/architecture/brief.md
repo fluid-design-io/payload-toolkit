@@ -11,7 +11,7 @@ payload-toolkit add forms --cwd ./existing-app --claude
 payload-toolkit add forms --cwd ./existing-app --allow-dirty --json
 ```
 
-Interactive invocations fill missing choices. Noninteractive invocations must supply required choices. `init` and `add` are the first commands. A flag selecting an agent requests automatic integration; no agent flag leaves a copyable integration prompt. The strict agent flag changes invocation status only, not infrastructure readiness. npm, pnpm and Bun install generated projects; pnpm owns repository CI.
+Interactive invocations fill missing choices. Noninteractive invocations must supply required choices. `init` and `add` are the first commands. A flag selecting an agent requests automatic integration; no agent flag leaves a copyable integration prompt. The strict agent flag changes invocation status only, not infrastructure readiness. npm, pnpm and Bun install generated projects; Bun owns repository installation and CI; Node remains the CLI runtime.
 
 A cloud contributor must be able to install locked dependencies, provision or connect isolated test services, check readiness, drive mapped behavior, preserve evidence, and clean up owned resources. Commands and skills must work outside Cursor as well as inside it. Do not launch paid agents in the default test suite.
 

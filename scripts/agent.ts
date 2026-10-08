@@ -56,7 +56,7 @@ const valid = (value: string, allowed: string[], label: string) => {
   if (!allowed.includes(value)) throw new Error(`Unsupported ${label}: ${value}`)
 }
 async function doctor() {
-  const pnpm = await command('pnpm', ['--version'], { cwd: root, allowFailure: true }).catch(
+  const bun = await command('bun', ['--version'], { cwd: root, allowFailure: true }).catch(
     () => null,
   )
   const docker = await command('docker', ['info', '--format', '{{.ServerVersion}}'], {
@@ -71,15 +71,15 @@ async function doctor() {
   return {
     node: process.version,
     nodeSupported: runtime,
-    pnpm: pnpm?.stdout.trim() ?? null,
-    pnpmPinned: pnpm?.stdout.trim() === '10.34.6',
+    bun: bun?.stdout.trim() ?? null,
+    bunPinned: bun?.stdout.trim() === '1.4.2',
     builtCLI: await exists(path.join(root, 'dist/cli.js')),
     browser,
     docker: docker?.code === 0,
     suppliedServices: !!(
       process.env.TOOLKIT_TEST_POSTGRES_URL || process.env.TOOLKIT_TEST_MONGODB_URL
     ),
-    ready: runtime && pnpm?.stdout.trim() === '10.34.6',
+    ready: runtime && bun?.stdout.trim() === '1.4.2',
   }
 }
 async function selectedRun() {
@@ -183,8 +183,8 @@ async function verify() {
     await save()
     const health = await doctor()
     if (!health.ready)
-      throw new Blocked('Use Node >=24.15 within major 24 and pnpm 10.34.6; run agent:doctor')
-    await run('pnpm', ['run', 'build'])
+      throw new Blocked('Use Node >=24.15 within major 24 and Bun 1.4.2; run agent:doctor')
+    await run('bun', ['run', 'build'])
     const pack = await run('npm', [
       'pack',
       '--ignore-scripts',
@@ -216,7 +216,8 @@ async function verify() {
       allowFailure: true,
     })
     if (inherited.code === 0) throw new Error('Fixture workspace inherited a Git repository')
-    const managerVersion = await run(options.packageManager, ['--version'])
+    // Query the output installer outside the repository's Bun package-manager policy.
+    const managerVersion = await run(options.packageManager, ['--version'], workspace)
     evidence.identities.packageManagerVersion = managerVersion.stdout.trim()
     const consumer = path.join(workspace, 'consumer')
     await fs.mkdir(consumer)
@@ -244,7 +245,7 @@ async function verify() {
     }
     if (!values['installation-only'] && !health.browser)
       throw new Blocked(
-        'Chromium is missing. Run pnpm exec playwright install chromium; Linux may need --with-deps.',
+        'Chromium is missing. Run bun x playwright install chromium; Linux may need --with-deps.',
       )
     if (values['installation-only']) {
       // Code generation needs a config URL, but this mode never connects or drives runtime.
@@ -471,10 +472,10 @@ try {
       process.exitCode = 2
   } else if (verb === 'setup') {
     const result = await doctor()
-    if (!result.nodeSupported || !result.pnpmPinned)
-      throw new Blocked('Select Node 24.21.0 and pnpm 10.34.6 first')
-    await command('pnpm', ['install', '--frozen-lockfile'], { cwd: root })
-    await command('pnpm', ['run', 'build'], { cwd: root })
+    if (!result.nodeSupported || !result.bunPinned)
+      throw new Blocked('Select Node 24.21.0 and Bun 1.4.2 first')
+    await command('bun', ['install', '--frozen-lockfile'], { cwd: root })
+    await command('bun', ['run', 'build'], { cwd: root })
     json(await doctor())
   } else if (verb === 'verify') await verify()
   else if (verb === 'evidence')

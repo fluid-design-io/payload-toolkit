@@ -9,11 +9,11 @@ npx payload-toolkit@alpha --help
 npx payload-toolkit@alpha init acme --framework next --database postgres --template minimal --package-manager pnpm
 ```
 
-For source development, build and run the local binary with pnpm 10.34.6:
+For source development, use Node 24.21.0 and Bun 1.4.2 to install and build. Node runs the delivered CLI; generated projects support npm, pnpm and Bun:
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm build
+bun install --frozen-lockfile
+bun run build
 node dist/cli.js --help
 node dist/cli.js init acme --framework next --database postgres --template minimal --package-manager pnpm
 node dist/cli.js init acme --framework tanstack --database mongodb --template custom --features forms --package-manager pnpm
@@ -48,11 +48,13 @@ Contributions add an item, ordinary exports, a contextual guide and an executabl
 
 ## Verification and contributions
 
+Repository tests use `bun:test` through `bun run test`. Verification fixtures default to pnpm 10.34.6; install that separately for the default runtime checks, or select an available output installer with `--package-manager npm` or `--package-manager bun`.
+
 ```sh
-pnpm check
-pnpm agent:doctor
-pnpm agent:verify -- --cli-only
-pnpm agent:verify -- --feature forms --framework next --database postgres --package-manager pnpm
+bun run check
+bun run agent:doctor
+bun run agent:verify --cli-only
+bun run agent:verify --feature forms --framework next --database postgres --package-manager pnpm
 ```
 
 The portable [contributor workflow](docs/contributing.md) and [verification skill](.agents/skills/verify-payload-toolkit/SKILL.md) describe isolated fixtures, proofs and cleanup. Contributors may use their own local or cloud agent accounts. Deterministic CI uses no paid-model credentials. Runtime checks require disposable databases and a browser. Missing capabilities produce blocked results, not passes. Evidence survives cleanup and records failed attempts.

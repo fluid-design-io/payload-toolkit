@@ -1,5 +1,6 @@
+import { nodeExecutable } from './node-runtime.js'
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import { test } from 'bun:test'
 const {
   validateSource,
   validatePack,
@@ -251,7 +252,7 @@ test('publication gates precede writes and matching publication can resume safel
         console.log(JSON.stringify({ events, error }));
       `
       const result = JSON.parse(
-        execFileSync(process.execPath, ['--input-type=module', '--eval', code], {
+        execFileSync(nodeExecutable, ['--input-type=module', '--eval', code], {
           cwd,
           encoding: 'utf8',
           env: {

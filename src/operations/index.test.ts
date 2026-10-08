@@ -1,4 +1,5 @@
-import { test } from 'node:test'
+import { nodeExecutable } from '../../tests/node-runtime.js'
+import { test } from 'bun:test'
 import assert from 'node:assert/strict'
 import { chmod, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
@@ -60,7 +61,7 @@ test('identical installed feature is repeatable and agent failure only changes s
       }),
     )
     await writeFile(path.join(installed, 'index.js'), '')
-    await writeFile(path.join(root, 'codex'), `#!${process.execPath}\nprocess.exit(7)\n`)
+    await writeFile(path.join(root, 'codex'), `#!${nodeExecutable}\nprocess.exit(7)\n`)
     await chmod(path.join(root, 'codex'), 0o700)
     const request = {
       directory: project,
@@ -94,7 +95,7 @@ test('identical installed feature is repeatable and agent failure only changes s
     const capturedClaude = path.join(root, 'claude-input.json')
     await writeFile(
       path.join(root, 'claude'),
-      `#!${process.execPath}\nlet input='';process.stdin.on('data',x=>input+=x);process.stdin.on('end',()=>{require('fs').writeFileSync(${JSON.stringify(capturedClaude)},JSON.stringify({args:process.argv.slice(2),input})); console.log(JSON.stringify({type:'result',subtype:'success',is_error:false,permission_denials:[]}));});\n`,
+      `#!${nodeExecutable}\nlet input='';process.stdin.on('data',x=>input+=x);process.stdin.on('end',()=>{require('fs').writeFileSync(${JSON.stringify(capturedClaude)},JSON.stringify({args:process.argv.slice(2),input})); console.log(JSON.stringify({type:'result',subtype:'success',is_error:false,permission_denials:[]}));});\n`,
     )
     await chmod(path.join(root, 'claude'), 0o700)
     const claude = await add({ ...request, agent: 'claude', requireAgentSuccess: true })
@@ -108,7 +109,7 @@ test('identical installed feature is repeatable and agent failure only changes s
     assert.match(invocation.input, /GUIDE\.md.*SHA-256/)
     await writeFile(
       path.join(root, 'claude'),
-      `#!${process.execPath}\nprocess.stdin.resume();process.stdin.on('end',()=>console.log(JSON.stringify({type:'result',subtype:'success',is_error:true,permission_denials:[{tool_name:'Edit',tool_input:{secret:'do-not-journal-this'}}]})));\n`,
+      `#!${nodeExecutable}\nprocess.stdin.resume();process.stdin.on('end',()=>console.log(JSON.stringify({type:'result',subtype:'success',is_error:true,permission_denials:[{tool_name:'Edit',tool_input:{secret:'do-not-journal-this'}}]})));\n`,
     )
     const denied = await add({ ...request, agent: 'claude', requireAgentSuccess: true })
     assert.equal(denied.installation.status, 'complete')
@@ -122,7 +123,7 @@ test('identical installed feature is repeatable and agent failure only changes s
     )
     await writeFile(
       path.join(root, 'codex'),
-      `#!${process.execPath}\nconsole.log(JSON.stringify({type:'turn.failed',error:{message:'private-failure-message'}}));\n`,
+      `#!${nodeExecutable}\nconsole.log(JSON.stringify({type:'turn.failed',error:{message:'private-failure-message'}}));\n`,
     )
     await chmod(path.join(root, 'codex'), 0o700)
     const terminalFailure = await add({ ...request, agent: 'codex', requireAgentSuccess: true })
@@ -138,7 +139,7 @@ test('identical installed feature is repeatable and agent failure only changes s
       const childPid = path.join(root, selectedAgent + '-child.pid')
       await writeFile(
         path.join(root, selectedAgent),
-        `#!${process.execPath}\nrequire('fs').writeFileSync(${JSON.stringify(childPid)},String(process.pid));process.stdin.resume();setInterval(()=>{},1000);\n`,
+        `#!${nodeExecutable}\nrequire('fs').writeFileSync(${JSON.stringify(childPid)},String(process.pid));process.stdin.resume();setInterval(()=>{},1000);\n`,
       )
       await chmod(path.join(root, selectedAgent), 0o700)
       const controller = new AbortController()
@@ -180,7 +181,7 @@ test('identical installed feature is repeatable and agent failure only changes s
     await writeFile(path.join(project, 'package.json'), beforeUnknown + '\n')
     await writeFile(
       path.join(root, 'codex'),
-      `#!${process.execPath}\nrequire('child_process').execFileSync(${JSON.stringify(gitExecutable)},['add','docs/payload-toolkit/forms/GUIDE.md'],{cwd:process.cwd()});console.log(JSON.stringify({type:'turn.completed'}));\n`,
+      `#!${nodeExecutable}\nrequire('child_process').execFileSync(${JSON.stringify(gitExecutable)},['add','docs/payload-toolkit/forms/GUIDE.md'],{cwd:process.cwd()});console.log(JSON.stringify({type:'turn.completed'}));\n`,
     )
     const stagedByInvocation = await add({
       ...request,

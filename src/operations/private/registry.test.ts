@@ -8,7 +8,7 @@ import { dirname, join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
-import test from 'node:test'
+import { test } from 'bun:test'
 import { type Feature, type Host, ToolkitError } from '../model.js'
 import { describeFeatures, inspectFeatures, installFeatures, prepareFeatures } from './registry.js'
 
@@ -92,9 +92,8 @@ test('public API installs the qualified TSX and guide at literal root paths and 
   }
 })
 
-test(
+test.skipIf(process.platform === 'win32')(
   'real npm installation saves and repeats an exact dependency without changing config',
-  { skip: process.platform === 'win32' },
   async () => {
     const project = await fixture()
     const packageDirectory = await fixture()
@@ -312,9 +311,8 @@ test('invalid compatibility metadata is rejected from a fetched item before muta
   }
 })
 
-test(
+test.skipIf(process.platform === 'win32')(
   'aborting installation stops the worker and its package-process descendants',
-  { skip: process.platform === 'win32' },
   async () => {
     const project = await fixture()
     const previousPath = process.env.PATH

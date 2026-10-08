@@ -1,10 +1,12 @@
 # Contributing to Payload Toolkit
 
-This repository develops the v4 toolkit on `main`. The separate `payload-better-auth-starter` repository retains the v3 starter. Use Node 24.21.0 and pnpm 10.34.6, then run `pnpm run agent:setup` and `pnpm run agent:doctor`.
+This repository develops the v4 toolkit on `main`. The separate `payload-better-auth-starter` repository retains the v3 starter. Use Node 24.21.0 and Bun 1.4.2, then run `bun run agent:setup` and `bun run agent:doctor`.
 
 Repository guidance lives in `AGENTS.md`; `CLAUDE.md` points to it. The shared [verification skill](../.agents/skills/verify-payload-toolkit/SKILL.md) is tracked for contributors and cloud agents. Other agent skills, pstack configuration, `.claude`, `.cursor` and `skills-lock.json` are personal and ignored. The contributor workflow requires no personal skill installation.
 
-Run `pnpm run check` and `pnpm run agent:verify -- --cli-only` for a CLI change. Runtime changes also require the applicable fixture cells described in [verification](./verification.md). CI uses GitHub's standard runners and no paid-agent secrets.
+Run `bun run check` and `bun run agent:verify --cli-only` for a CLI change. Runtime changes also require the applicable fixture cells described in [verification](./verification.md). CI uses GitHub's standard runners and no paid-agent secrets.
+
+Repository tests use `bun:test` through `bun run test`. Node remains the delivered CLI runtime. Generated projects support npm, pnpm and Bun independently of the repository package manager; verification fixtures default to pnpm 10.34.6, which must be installed for those checks.
 
 The registry catalog is the feature list. A new item needs normal source exports, a versioned integration guide, compatibility metadata, an executable `feature-map.ts` acceptance entry and a maintained verification skill document. Use the packed artifact in fixtures. Do not add a second installation path or import the product's private mutation adapters from contributor scripts.
 

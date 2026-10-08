@@ -19,13 +19,13 @@ jobs:
             ref: '${{ github.event.pull_request.head.sha || github.sha }}',
             persist-credentials: false,
           }
-      - uses: pnpm/action-setup@v4
-        with: { version: 10.34.6 }
       - uses: actions/setup-node@v4
-        with: { node-version: 24.21.0, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run check
-      - run: pnpm run agent:verify -- --cli-only
+        with: { node-version: 24.21.0 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run agent:verify --cli-only
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: toolkit-cli-evidence, path: '.scratch/verification/', retention-days: 7 }
@@ -47,11 +47,13 @@ jobs:
       - uses: pnpm/action-setup@v4
         with: { version: 10.34.6 }
       - uses: actions/setup-node@v4
-        with: { node-version: 24.21.0, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm run agent:verify -- --framework ${{ matrix.framework }} --database ${{ matrix.database }}
-      - run: pnpm run agent:cleanup
+        with: { node-version: 24.21.0 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
+      - run: bun install --frozen-lockfile
+      - run: bun x playwright install --with-deps chromium
+      - run: bun run agent:verify --framework ${{ matrix.framework }} --database ${{ matrix.database }}
+      - run: bun run agent:cleanup
         if: always()
       - uses: actions/upload-artifact@v4
         if: always()
@@ -80,10 +82,12 @@ jobs:
       - uses: pnpm/action-setup@v4
         with: { version: 10.34.6 }
       - uses: actions/setup-node@v4
-        with: { node-version: 24.21.0, cache: pnpm }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run agent:verify -- --installation-only
-      - run: pnpm run agent:cleanup
+        with: { node-version: 24.21.0 }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
+      - run: bun install --frozen-lockfile
+      - run: bun run agent:verify --installation-only
+      - run: bun run agent:cleanup
         if: always()
       - uses: actions/upload-artifact@v4
         if: always()
@@ -109,16 +113,13 @@ jobs:
             ref: '${{ github.event.pull_request.head.sha || github.sha }}',
             persist-credentials: false,
           }
-      - uses: pnpm/action-setup@v4
-        with: { version: 10.34.6 }
       - uses: actions/setup-node@v4
-        with: { node-version: 24.21.0, cache: pnpm }
+        with: { node-version: 24.21.0 }
       - uses: oven-sh/setup-bun@v2
-        if: matrix.package-manager == 'bun'
         with: { bun-version: 1.4.2 }
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run agent:verify -- --installation-only --package-manager ${{ matrix.package-manager }}
-      - run: pnpm run agent:cleanup
+      - run: bun install --frozen-lockfile
+      - run: bun run agent:verify --installation-only --package-manager ${{ matrix.package-manager }}
+      - run: bun run agent:cleanup
         if: always()
       - uses: actions/upload-artifact@v4
         if: always()

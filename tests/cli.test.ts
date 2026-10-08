@@ -1,17 +1,18 @@
+import { nodeExecutable } from './node-runtime.js'
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
 import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
-import test from 'node:test'
+import { test } from 'bun:test'
 import { z } from 'zod'
 
 const exec = promisify(execFile)
 const bin = resolve('dist/cli.js')
 async function invoke(args: string[], cwd?: string) {
   try {
-    const result = await exec(process.execPath, [bin, ...args], { cwd, timeout: 20000 })
+    const result = await exec(nodeExecutable, [bin, ...args], { cwd, timeout: 20000 })
     return { ...result, code: 0 }
   } catch (error) {
     if (error instanceof Error && 'stdout' in error && 'stderr' in error && 'code' in error) {

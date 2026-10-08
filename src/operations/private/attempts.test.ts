@@ -1,4 +1,5 @@
-import { test } from 'node:test'
+import { nodeExecutable } from '../../../tests/node-runtime.js'
+import { test } from 'bun:test'
 import assert from 'node:assert/strict'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -23,7 +24,7 @@ test('failed process evidence keeps useful diagnostics while removing credential
     await attempt.start('add', directory)
     await assert.rejects(
       runProcess(
-        process.execPath,
+        nodeExecutable,
         ['-e', `console.error('codegen failed ${secret}'); process.exit(1)`],
         { cwd: directory, attempt },
       ),
@@ -45,7 +46,7 @@ test('failed process evidence keeps useful diagnostics while removing credential
 
 test('abort terminates an owned process and records interruption', async () => {
   const controller = new AbortController()
-  const started = runProcess(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
+  const started = runProcess(nodeExecutable, ['-e', 'setInterval(() => {}, 1000)'], {
     cwd: tmpdir(),
     signal: controller.signal,
   })
@@ -53,9 +54,8 @@ test('abort terminates an owned process and records interruption', async () => {
   await assert.rejects(started, /interrupted/)
 })
 
-test(
+test.skipIf(process.platform === 'win32')(
   'abort kills an ignoring grandchild even when its parent closes its pipes',
-  { skip: process.platform === 'win32' },
   async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'toolkit-tree-test-'))
     const pidFile = path.join(directory, 'grandchild.pid')
@@ -66,7 +66,7 @@ test(
       const parent = `process.on('SIGTERM',()=>process.exit(0));require('child_process').spawn(process.execPath,['-e',${JSON.stringify(grandchild)}],{stdio:'ignore'});setInterval(()=>{},1000);`
       const controller = new AbortController()
       const rejected = assert.rejects(
-        runProcess(process.execPath, ['-e', parent], { cwd: directory, signal: controller.signal }),
+        runProcess(nodeExecutable, ['-e', parent], { cwd: directory, signal: controller.signal }),
         /interrupted/,
       )
       for (let tries = 0; tries < 250; tries++) {
@@ -124,7 +124,7 @@ test('Windows package manager wrappers resolve to JavaScript without shell argum
 })
 
 test('Windows tree termination refuses both failed execution and a missing taskkill launcher', async () => {
-  await assert.rejects(terminateWindowsTree(process.pid, process.execPath), {
+  await assert.rejects(terminateWindowsTree(process.pid, nodeExecutable), {
     code: 'termination-unconfirmed',
     message: /Could not confirm termination/,
   })

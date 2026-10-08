@@ -1,10 +1,11 @@
+import { nodeExecutable } from '../../tests/node-runtime.js'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { promises as fs } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import test from 'node:test'
+import { test } from 'bun:test'
 import { validateRuntimeChanges } from './runtime-source.js'
 import { hasSubmissionNotification } from './notification.js'
 import { command, type Evidence, selectedSourceHash, stop } from './support.js'
@@ -149,7 +150,7 @@ async function drive(
       JSON.stringify({ workflow_run: { id: 7 } }),
     )
     const child = spawn(
-      process.execPath,
+      nodeExecutable,
       [
         '--import',
         path.join(root, 'scripts/fixtures/mock-github.mjs'),
@@ -349,9 +350,8 @@ test('selected source hashes symlink identity without traversing its outside dir
   }
 })
 
-test(
+test.skipIf(process.platform === 'win32')(
   'timed-out command kills its TERM-resistant heartbeat grandchild and retains failure evidence',
-  { skip: process.platform === 'win32' },
   async () => {
     const directory = await fs.mkdtemp(path.join(tmpdir(), 'toolkit-command-test-'))
     const heartbeat = path.join(directory, 'heartbeat.txt')
@@ -361,7 +361,7 @@ test(
     const wrapper = `const {spawn}=require('node:child_process'); process.on('SIGTERM',()=>{}); spawn(process.execPath,['-e',${JSON.stringify(grandchild)}],{stdio:'inherit'}); setInterval(()=>{},1000);`
     try {
       await assert.rejects(
-        command(process.execPath, ['-e', wrapper], {
+        command(nodeExecutable, ['-e', wrapper], {
           cwd: directory,
           directory,
           evidence,
@@ -389,15 +389,14 @@ test(
   },
 )
 
-test(
+test.skipIf(process.platform === 'win32')(
   'server stop kills the live owned group including a TERM-resistant grandchild',
-  { skip: process.platform === 'win32' },
   async () => {
     const directory = await fs.mkdtemp(path.join(tmpdir(), 'toolkit-server-stop-test-'))
     const heartbeat = path.join(directory, 'heartbeat.txt')
     const grandchild = `const fs=require('node:fs'); process.on('SIGTERM',()=>{}); setInterval(()=>fs.appendFileSync(${JSON.stringify(heartbeat)}, 'beat\\n'),20);`
     const wrapper = `require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(grandchild)}],{stdio:'inherit'}); setInterval(()=>{},1000);`
-    const child = spawn(process.execPath, ['-e', wrapper], { detached: true, stdio: 'ignore' })
+    const child = spawn(nodeExecutable, ['-e', wrapper], { detached: true, stdio: 'ignore' })
     try {
       for (let attempt = 0; attempt < 100; attempt++) {
         if (await fs.stat(heartbeat).catch(() => null)) break

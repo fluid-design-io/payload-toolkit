@@ -10,7 +10,7 @@ After verification, inspect its printed run ID with `agent:evidence` and clean r
 
 ## Driving it with the contributor harness
 
-Run `pnpm run agent:evidence`, then `pnpm run agent:cleanup`, then `pnpm run agent:evidence` again. The same run and check records must remain, with cleanup complete. Screenshots/logs remain under the printed evidence directory. Cleanup accepts `--run` for an older recorded run and checks Docker labels before removing anything.
+Run `bun run agent:evidence`, then `bun run agent:cleanup`, then `bun run agent:evidence` again. The same run and check records must remain, with cleanup complete. Screenshots/logs remain under the printed evidence directory. Cleanup accepts `--run` for an older recorded run and checks Docker labels before removing anything.
 
 ## Gotchas
 

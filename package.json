@@ -34,20 +34,20 @@
   },
   "scripts": {
     "registry:build": "tsx scripts/registry-build.ts",
-    "build": "pnpm registry:build && tsc -p tsconfig.build.json && node scripts/finish-build.mjs",
+    "build": "bun run registry:build && tsc -p tsconfig.build.json && node scripts/finish-build.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "oxlint src scripts tests registry/forms && tsx scripts/check-boundaries.ts",
     "format": "oxfmt --check src scripts tests registry catalog package.json tsconfig.json tsconfig.build.json",
     "format:fix": "oxfmt src scripts tests registry catalog package.json tsconfig.json tsconfig.build.json",
-    "test": "node scripts/test.mjs",
-    "check": "pnpm build && pnpm typecheck && pnpm lint && pnpm test",
+    "test": "bun test ./src ./tests ./scripts/fixtures",
+    "check": "bun run build && bun run typecheck && bun run lint && bun run test",
     "dev": "tsx src/cli.ts",
     "agent:setup": "tsx scripts/agent.ts setup",
     "agent:doctor": "tsx scripts/agent.ts doctor",
     "agent:verify": "tsx scripts/agent.ts verify",
     "agent:evidence": "tsx scripts/agent.ts evidence",
     "agent:cleanup": "tsx scripts/agent.ts cleanup",
-    "prepack": "pnpm build"
+    "prepack": "bun run build"
   },
   "dependencies": {
     "@clack/prompts": "1.8.1",
@@ -59,6 +59,7 @@
   },
   "devDependencies": {
     "@playwright/test": "1.64.0",
+    "@types/bun": "1.4.2",
     "@types/node": "24.12.3",
     "@types/semver": "7.8.0",
     "@types/validate-npm-package-name": "4.0.2",
@@ -70,10 +71,8 @@
   "engines": {
     "node": ">=24.15.0"
   },
-  "packageManager": "pnpm@10.34.6",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  }
+  "packageManager": "bun@1.4.2",
+  "trustedDependencies": [
+    "esbuild"
+  ]
 }

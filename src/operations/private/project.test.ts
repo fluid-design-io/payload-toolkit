@@ -1,4 +1,5 @@
-import { test } from 'node:test'
+import { nodeExecutable } from '../../../tests/node-runtime.js'
+import { test } from 'bun:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { chmod, mkdtemp, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises'
@@ -164,9 +165,8 @@ test('an existing normal lease remains blocked after its recorded parent exits',
   }
 })
 
-test(
+test.skipIf(process.platform === 'win32')(
   'Git observation failures and an unavailable Git executable block preflight',
-  { skip: process.platform === 'win32' },
   async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'toolkit-git-failure-test-'))
     const oldPath = process.env.PATH
@@ -179,7 +179,7 @@ test(
       const shim = path.join(shimDirectory, 'git')
       await writeFile(
         shim,
-        `#!${process.execPath}\nconst args=process.argv.slice(2);if(args.includes('status')){console.error('fatal: status observation refused');process.exit(128)}const result=require('child_process').spawnSync(${JSON.stringify(executable)},args,{encoding:'utf8'});process.stdout.write(result.stdout||'');process.stderr.write(result.stderr||'');process.exit(result.status??1);\n`,
+        `#!${nodeExecutable}\nconst args=process.argv.slice(2);if(args.includes('status')){console.error('fatal: status observation refused');process.exit(128)}const result=require('child_process').spawnSync(${JSON.stringify(executable)},args,{encoding:'utf8'});process.stdout.write(result.stdout||'');process.stderr.write(result.stderr||'');process.exit(result.status??1);\n`,
       )
       await chmod(shim, 0o700)
       process.env.PATH = shimDirectory + path.delimiter + oldPath
