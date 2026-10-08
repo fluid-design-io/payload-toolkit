@@ -1,0 +1,88 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+/* heroui-design-system:start eb54f1e3-c413-45cc-9ec2-bbfe398d7baf updatedAt=1791502589293 */
+@import "@heroui-pro/react/themes/mouve";
+
+.mouve-light,
+[data-theme="mouve-light"],
+.mouve-dark,
+[data-theme="mouve-dark"] {
+  /* Border Radius */
+  --radius: 1rem;
+  --field-radius: 2rem;
+
+  /* Spacing */
+  --spacing: 0.234375rem;
+}
+
+.mouve-light,
+[data-theme="mouve-light"] {
+  /* Theme Colors */
+  --background: oklch(95.50% 0.0056 231.68);
+  --muted: oklch(58.00% 0.0140 231.68);
+  --scrollbar: oklch(82.00% 0.0093 231.68);
+  --surface: oklch(97.50% 0.0037 231.68);
+  --surface-secondary: oklch(95.00% 0.0056 231.68);
+  --surface-tertiary: oklch(93.50% 0.0075 231.68);
+  --overlay: oklch(97.50% 0.0037 231.68);
+  --default: oklch(92.00% 0.0056 231.68);
+  --accent: oklch(62.94% 0.0719 231.68);
+  --field-background: oklch(97.00% 0.0028 231.68);
+  --field-border: oklch(88.00% 0.0093 231.68);
+  --border: oklch(88.00% 0.0070 231.68);
+  --separator: oklch(92.00% 0.0047 231.68);
+  --focus: oklch(62.94% 0.0719 231.68);
+  --backdrop: oklch(50.00% 0.0187 231.68 / 0.4);
+  --accent-soft: color-mix(in oklab, oklch(62.94% 0.0719 231.68) 15%, transparent);
+  --accent-hover: color-mix(in oklab, oklch(62.94% 0.0719 231.68) 90%, var(--snow) 10%);
+
+  /* Charts */
+  --chart-1: oklch(42.00% 0.1400 231.68);
+  --chart-2: oklch(50.00% 0.1600 231.68);
+  --chart-3: oklch(55.00% 0.1800 231.68);
+  --chart-4: oklch(65.00% 0.1400 231.68);
+  --chart-5: oklch(75.00% 0.1000 231.68);
+}
+
+.mouve-dark,
+[data-theme="mouve-dark"] {
+  color-scheme: dark;
+  /* Theme Colors */
+  --background: oklch(16.00% 0.0093 231.68);
+  --muted: oklch(65.00% 0.0093 231.68);
+  --scrollbar: oklch(35.00% 0.0093 231.68);
+  --surface: oklch(20.00% 0.0093 231.68);
+  --surface-secondary: oklch(24.00% 0.0093 231.68);
+  --surface-tertiary: oklch(27.00% 0.0093 231.68);
+  --overlay: oklch(20.00% 0.0093 231.68);
+  --default: oklch(26.00% 0.0093 231.68);
+  --accent: oklch(62.94% 0.0719 231.68);
+  --accent-foreground: var(--snow);
+  --success-foreground: oklch(20.00% 0.0093 231.68);
+  --warning-foreground: oklch(20.00% 0.0093 231.68);
+  --field-background: oklch(22.00% 0.0084 231.68);
+  --field-border: oklch(32.00% 0.0117 231.68);
+  --segment: oklch(28.00% 0.0117 231.68);
+  --border: oklch(30.00% 0.0093 231.68);
+  --separator: oklch(28.00% 0.0084 231.68);
+  --focus: oklch(62.94% 0.0719 231.68);
+  --accent-soft: color-mix(in oklab, oklch(62.94% 0.0719 231.68) 15%, transparent);
+  --accent-hover: color-mix(in oklab, oklch(62.94% 0.0719 231.68) 90%, var(--snow) 10%);
+
+  /* Charts */
+  --chart-1: oklch(50.00% 0.1200 231.68);
+  --chart-2: oklch(60.00% 0.1400 231.68);
+  --chart-3: oklch(70.00% 0.1600 231.68);
+  --chart-4: oklch(78.00% 0.1200 231.68);
+  --chart-5: oklch(85.00% 0.0800 231.68);
+}
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+/* heroui-design-system:end */
+
+html, body { margin: 0; min-height: 100%; }
+body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
+[data-theme="mouve-light"] { color-scheme: light; }

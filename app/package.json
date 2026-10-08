@@ -1,0 +1,79 @@
+{
+  "name": "payload-toolkit-web",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "dev": "vite dev --port 3000",
+    "generate-routes": "tsr generate",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node .output/server/index.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test src",
+    "verify:stack": "bun scripts/verify-stack.tsx",
+    "catalog:sync": "bun scripts/sync-catalog.ts",
+    "intent:list": "bun ./node_modules/@tanstack/intent/dist/cli.mjs list",
+    "intent:install": "bun ./node_modules/@tanstack/intent/dist/cli.mjs install",
+    "scaffold": "tanstack create"
+  },
+  "dependencies": {
+    "@heroui-pro/react": "1.0.0-beta.10",
+    "@heroui/react": "3.2.6",
+    "@heroui/styles": "3.2.6",
+    "@internationalized/date": "3.12.4",
+    "@react-aria/ssr": "3.10.1",
+    "@react-aria/utils": "3.34.1",
+    "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/react-devtools": "0.10.13",
+    "@tanstack/react-form": "1.33.5",
+    "@tanstack/react-query": "5.104.1",
+    "@tanstack/react-query-devtools": "5.104.1",
+    "@tanstack/react-router": "1.170.41",
+    "@tanstack/react-router-devtools": "1.167.2",
+    "@tanstack/react-router-ssr-query": "1.167.3",
+    "@tanstack/react-start": "1.168.60",
+    "@tanstack/react-store": "0.11.2",
+    "@tanstack/react-virtual": "3.14.13",
+    "nitro": "3.0.260610-beta",
+    "react": "^19.2.0",
+    "react-aria": "3.52.1",
+    "react-aria-components": "1.21.1",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@tanstack/cli": "0.71.1",
+    "@tanstack/devtools-vite": "0.8.5",
+    "@tanstack/intent": "0.5.5",
+    "@tanstack/router-cli": "^1.132.0",
+    "@types/bun": "1.4.2",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "lightningcss"
+    ]
+  },
+  "intent": {
+    "skills": [
+      "*"
+    ]
+  },
+  "packageManager": "bun@1.4.2",
+  "engines": {
+    "node": "24.21.0",
+    "bun": "1.4.2"
+  },
+  "trustedDependencies": [
+    "@heroui-pro/react"
+  ]
+}
