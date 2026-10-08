@@ -12,8 +12,23 @@ import {
 } from 'shadcn/registry'
 import { registryItemSchema } from 'shadcn/schema'
 import { z } from 'zod'
-import { ToolkitError, type Feature, type FileIdentity, type Host } from '../model.js'
-import { terminateWindowsTree } from './attempts.js'
+import {
+  isExternal,
+  ToolkitError,
+  type Feature,
+  type BundledFeature,
+  type FileIdentity,
+  type Host,
+} from '../model.js'
+import { Attempt, terminateWindowsTree } from './attempts.js'
+import {
+  externalReference,
+  prepareExternal,
+  inspectExternal,
+  publishExternalConfig,
+} from './external-registry.js'
+
+export { externalReference } from './external-registry.js'
 
 const assetDirectory = fileURLToPath(new URL('../../../assets/registry/', import.meta.url))
 const digest = (bytes: Uint8Array | string) => createHash('sha256').update(bytes).digest('hex')
@@ -84,19 +99,47 @@ async function catalog() {
   }
 }
 
+export async function describeRegistries() {
+  const entry = z.object({
+    namespace: z.string(),
+    name: z.string(),
+    description: z.string(),
+    homepage: z.string().url(),
+    repository: z.string().url(),
+    url: z.string(),
+    compatibility: z
+      .object({ upstream: z.string(), documentation: z.string().url().optional() })
+      .optional(),
+  })
+  return z
+    .object({ schemaVersion: z.literal(1), registries: z.array(entry) })
+    .parse(JSON.parse(await Bun.file(join(assetDirectory, 'community-registries.json')).text()))
+    .registries
+}
+
 export async function describeFeatures(): Promise<
   readonly { name: string; description: string }[]
 > {
   return (await catalog()).items.map(({ name, description }) => ({ name, description }))
 }
 
+export function prepareFeatures(
+  names: readonly string[],
+  host: Host,
+): Promise<readonly BundledFeature[]>
+export function prepareFeatures(
+  names: readonly string[],
+  host: Host,
+  context: { project: string; workspace: string; attempt: Attempt; signal?: AbortSignal },
+): Promise<readonly Feature[]>
 export async function prepareFeatures(
   names: readonly string[],
   host: Host,
+  context?: { project: string; workspace: string; attempt: Attempt; signal?: AbortSignal },
 ): Promise<readonly Feature[]> {
   const entries = (await catalog()).items
   const features: Feature[] = []
-  for (const name of new Set(names)) {
+  for (const name of new Set(names.filter((value) => !externalReference(value)))) {
     const entry = entries.find((item) => item.name === name)
     if (!entry) invalid(`Unknown feature: ${name}`)
     const itemPath = join(assetDirectory, `${entry.name}.json`)
@@ -185,6 +228,23 @@ export async function prepareFeatures(
       }),
     )
   }
+  const external = names.filter(externalReference)
+  if (external.length) {
+    if (!context)
+      invalid(
+        'External registry preparation requires an inspected host and owned preparation directory',
+      )
+    features.push(
+      await prepareExternal(
+        context.project,
+        external,
+        host,
+        context.workspace,
+        context.attempt,
+        context.signal,
+      ),
+    )
+  }
   const allPaths = features.flatMap((feature) => feature.files.map((file) => file.path))
   if (new Set(allPaths).size !== allPaths.length)
     invalid('Features declare overlapping file targets')
@@ -255,6 +315,12 @@ export async function inspectFeatures(
   const files: FileIdentity[] = []
   let complete = true
   for (const feature of features) {
+    if (isExternal(feature)) {
+      const inspected = await inspectExternal(project, feature)
+      files.push(...inspected.files)
+      if (!inspected.complete) complete = false
+      continue
+    }
     for (const file of feature.files) {
       const target = await safeFile(project, file.path)
       try {
@@ -272,7 +338,8 @@ export async function inspectFeatures(
     }
   }
   for (const feature of features)
-    if (!(await dependenciesPresent(project, feature.dependencies))) complete = false
+    if (!isExternal(feature) && !(await dependenciesPresent(project, feature.dependencies)))
+      complete = false
   return { complete, files }
 }
 
@@ -415,6 +482,8 @@ if (
       for (const feature of input.features)
         if (digest(await Bun.file(feature.itemPath).bytes()) !== feature.itemSha256)
           invalid(`Bundled item changed: ${feature.name}`)
+      for (const feature of input.features)
+        if (isExternal(feature)) await publishExternalConfig(input.project, feature)
       const config = await getRegistriesConfig(input.project)
       await addRegistryItems(
         input.features.map((feature) => toNamespacedPath(feature.itemPath)),

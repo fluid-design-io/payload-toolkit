@@ -2,7 +2,13 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { z } from 'zod'
-import { addRequestSchema, initRequestSchema, resultSchema, ToolkitError } from './model.js'
+import {
+  addRequestSchema,
+  initRequestSchema,
+  resultSchema,
+  isExternal,
+  ToolkitError,
+} from './model.js'
 import type {
   AddRequest,
   Feature,
@@ -35,6 +41,8 @@ import {
 import { integrationPrompt, invokeAgent } from './private/agents.js'
 import {
   describeFeatures as registryDescriptions,
+  describeRegistries as registryDirectory,
+  externalReference,
   installFeatures,
   inspectFeatures,
   prepareFeatures,
@@ -55,6 +63,10 @@ export async function describeFeatures(): Promise<
   readonly { name: string; description: string }[]
 > {
   return registryDescriptions()
+}
+
+export async function describeRegistries() {
+  return registryDirectory()
 }
 
 const blockedCodes = new Set([
@@ -85,6 +97,7 @@ async function operate(
   let partial = false
   let installed: InstallationOutcome | undefined
   let request: InitRequest | AddRequest | undefined
+  let advisories: { reference: string; message: string }[] = []
   try {
     const input =
       kind === 'init'
@@ -113,12 +126,15 @@ async function operate(
     if (input.kind === 'init') {
       const initRequest = input.request
       const name = projectName(target)
-      features = await prepareFeatures(initRequest.features, {
-        framework: initRequest.framework,
-        database: initRequest.database,
-        packageManager: initRequest.packageManager,
-        payloadVersion: bootstrap.payload,
-      })
+      features = await prepareFeatures(
+        initRequest.features.filter((value) => !externalReference(value)),
+        {
+          framework: initRequest.framework,
+          database: initRequest.database,
+          packageManager: initRequest.packageManager,
+          payloadVersion: bootstrap.payload,
+        },
+      )
       staging = await mkdtemp(path.join(tmpdir(), 'payload-toolkit-'))
       await attempt.fact('staging', { path: staging })
       await attempt.event('bootstrap', 'started', 'Generating official source in clean staging')
@@ -152,16 +168,48 @@ async function operate(
       const afterBootstrap = await snapshot(target)
       requireExpectedChanges(target, baseline, afterBootstrap, 'project')
       baseline = afterBootstrap
+      if (initRequest.features.some(externalReference)) {
+        features = await prepareFeatures(
+          initRequest.features,
+          {
+            framework: initRequest.framework,
+            database: initRequest.database,
+            packageManager: initRequest.packageManager,
+            payloadVersion: bootstrap.payload,
+          },
+          {
+            project: target,
+            workspace: path.join(attempt.directory, 'preparation'),
+            attempt,
+            signal: options.signal,
+          },
+        )
+      }
     } else {
       const host = await inspectHost(target, input.request)
       await attempt.fact('host', host)
-      features = await prepareFeatures(request.features, host)
+      features = await prepareFeatures(request.features, host, {
+        project: target,
+        workspace: path.join(attempt.directory, 'preparation'),
+        attempt,
+        signal: options.signal,
+      })
       const inspection = await inspectFeatures(target, features)
       if (inspection.complete) {
         files = inspection.files
         disposition = 'already-present'
       }
     }
+    advisories = features.flatMap((feature) =>
+      isExternal(feature)
+        ? feature.provenance.advisories.map((message) => ({
+            reference: feature.provenance.references.join(', '),
+            message,
+          }))
+        : [],
+    )
+    await attempt.fact('advisories', advisories)
+    for (const advisory of advisories) await attempt.event('advisory', 'complete', advisory.message)
     if (features.length && disposition !== 'already-present') {
       await requireUnchanged(target, baseline)
       options.signal?.throwIfAborted()
@@ -206,6 +254,9 @@ async function operate(
         version: feature.version,
         itemSha256: feature.itemSha256,
         files: feature.files,
+        ...(isExternal(feature)
+          ? { provenance: feature.provenance, preparation: feature.itemPath }
+          : {}),
       })),
     )
     installed = { status: 'complete', disposition, project: target, files: [...files] }
@@ -229,6 +280,7 @@ async function operate(
         receipt: attempt.receipt,
         installation: installed,
         agent,
+        advisories,
         verification: { status: 'not-run' },
         exitCode,
       }),
@@ -254,7 +306,7 @@ async function operate(
       status: interrupted ? 'interrupted' : blocked && !partial ? 'blocked' : 'failed',
       reason,
       partial,
-      retainedPaths: [target, ...(staging ? [staging] : [])].filter(Boolean),
+      retainedPaths: [target, attempt.directory, ...(staging ? [staging] : [])].filter(Boolean),
     }
     const result = resultSchema.parse({
       schemaVersion: 1,
@@ -262,6 +314,7 @@ async function operate(
       receipt: attempt.receipt,
       installation,
       agent: { status: 'not-started', reason, prompt: null },
+      advisories,
       verification: { status: 'not-run' },
       exitCode: installed
         ? attempt.terminationFailure || request?.requireAgentSuccess

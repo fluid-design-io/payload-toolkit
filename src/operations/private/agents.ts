@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { z } from 'zod'
 import type { Agent, AgentOutcome, Feature } from '../model.js'
-import { ToolkitError } from '../model.js'
+import { isExternal, ToolkitError } from '../model.js'
 import { Attempt, digest, runProcess } from './attempts.js'
 import { exists, snapshot } from './project.js'
 
@@ -89,6 +89,21 @@ export async function integrationPrompt(
   }
   const guides: string[] = []
   for (const feature of features) {
+    if (isExternal(feature)) {
+      for (const qualifiedGuide of feature.files.filter((file) => file.role === 'guide')) {
+        const full = path.join(project, qualifiedGuide.path)
+        if (digest(await Bun.file(full).bytes()) !== qualifiedGuide.sha256)
+          throw new ToolkitError(
+            'collision',
+            `Installed external guide differs from qualified source: ${qualifiedGuide.path}`,
+          )
+        guides.push(`${full} (SHA-256 ${qualifiedGuide.sha256})`)
+      }
+      guides.push(
+        `External sources ${feature.provenance.references.join(', ')}. Frozen graph: ${feature.provenance.items.map((item) => `${item.name} SHA-256 ${item.sha256}`).join('; ')}. Actual host: Payload ${feature.provenance.host.payloadVersion}, ${feature.provenance.host.framework}, ${feature.provenance.host.database}. Installed files: ${feature.files.map((file) => `${file.path} SHA-256 ${file.sha256}`).join('; ')}. Advisories: ${feature.provenance.advisories.join(' ')}. Inspect missing prerequisites and imports, CMSLink/Media/linkGroup/cn or host equivalents, Pages block registration, renderer ownership, and generated Payload types. Preserve the current Payload, framework and React versions; do not downgrade the host. ${feature.provenance.stylesheet ? `Inspect/import frontend stylesheet ${feature.provenance.stylesheet}.` : ''}`,
+      )
+      continue
+    }
     const file = feature.files.find(
       (candidate) => candidate.path === feature.guide && candidate.role === 'guide',
     )

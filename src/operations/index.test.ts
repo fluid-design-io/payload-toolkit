@@ -1,6 +1,6 @@
 import { test } from 'bun:test'
 import assert from 'node:assert/strict'
-import { chmod, mkdir, mkdtemp, rm, symlink } from 'node:fs/promises'
+import { chmod, lstat, mkdir, mkdtemp, rm, symlink } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -247,6 +247,32 @@ test('init refuses an existing target without modifying its source', async () =>
     })
     assert.equal(result.installation.status, 'blocked')
     assert.equal(await Bun.file(path.join(target, 'owned.txt')).text(), 'developer')
+  } finally {
+    if (oldState) process.env.PAYLOAD_TOOLKIT_STATE_DIR = oldState
+    else delete process.env.PAYLOAD_TOOLKIT_STATE_DIR
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('init rejects an incomplete registry namespace before creating the official project', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'toolkit-namespace-test-'))
+  const oldState = process.env.PAYLOAD_TOOLKIT_STATE_DIR
+  process.env.PAYLOAD_TOOLKIT_STATE_DIR = path.join(root, 'state')
+  try {
+    const target = path.join(root, 'app')
+    const result = await init({
+      directory: target,
+      framework: 'next',
+      database: 'postgres',
+      template: 'custom',
+      packageManager: 'npm',
+      features: ['@incomplete'],
+      allowDirty: false,
+      agent: 'none',
+      requireAgentSuccess: false,
+    })
+    assert.equal(result.installation.status, 'blocked')
+    await assert.rejects(lstat(target), { code: 'ENOENT' })
   } finally {
     if (oldState) process.env.PAYLOAD_TOOLKIT_STATE_DIR = oldState
     else delete process.env.PAYLOAD_TOOLKIT_STATE_DIR

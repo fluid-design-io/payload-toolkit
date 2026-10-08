@@ -90,6 +90,7 @@ export const resultSchema = z.object({
   receipt: z.string(),
   installation: installationOutcomeSchema,
   agent: agentOutcomeSchema,
+  advisories: z.array(z.object({ reference: z.string(), message: z.string() })).default([]),
   verification: z.object({ status: z.literal('not-run') }),
   exitCode: z.union([z.literal(0), z.literal(1), z.literal(2)]),
 })
@@ -113,8 +114,11 @@ export type Event = {
   message: string
 }
 export type RunOptions = { signal?: AbortSignal; onEvent?: (event: Event) => void }
-export type ExpectedFile = FileIdentity & { sourceSha256: string; role: 'source' | 'guide' }
-export type Feature = {
+export type ExpectedFile = FileIdentity & {
+  sourceSha256: string
+  role: 'source' | 'guide'
+}
+export type BundledFeature = {
   name: string
   version: string
   itemPath: string
@@ -122,6 +126,33 @@ export type Feature = {
   files: readonly ExpectedFile[]
   dependencies: Readonly<Record<string, string>>
   guide: string
+}
+
+export type ExternalFeature = {
+  kind: 'external'
+  name: string
+  version: string
+  itemPath: string
+  itemSha256: string
+  files: readonly (Omit<ExpectedFile, 'role'> & {
+    role: 'source' | 'guide' | 'host-config'
+    beforeSha256: string | null
+    content: string
+  })[]
+  dependencies: Readonly<Record<string, string>>
+  devDependencies: Readonly<Record<string, string>>
+  guide?: string
+  provenance: {
+    references: readonly string[]
+    items: readonly { reference: string; name: string; sha256: string }[]
+    host: Host
+    advisories: readonly string[]
+    stylesheet?: string
+  }
+}
+export type Feature = BundledFeature | ExternalFeature
+export function isExternal(feature: Feature): feature is ExternalFeature {
+  return 'kind' in feature && feature.kind === 'external'
 }
 
 export class ToolkitError extends Error {

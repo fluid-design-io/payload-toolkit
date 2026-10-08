@@ -9,7 +9,7 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { test } from 'bun:test'
-import { type Feature, type Host, ToolkitError } from '../model.js'
+import { type BundledFeature, type Host, ToolkitError } from '../model.js'
 import { describeFeatures, inspectFeatures, installFeatures, prepareFeatures } from './registry.js'
 
 const host: Host = {
@@ -38,7 +38,7 @@ async function fixture() {
 }
 
 /** Keeps actual feature source but excludes dependency installation, which has runtime fixtures. */
-async function sourceOnly(directory: string): Promise<Feature> {
+async function sourceOnly(directory: string): Promise<BundledFeature> {
   const [feature] = await prepareFeatures(['forms'], host)
   assert.ok(feature)
   const item = JSON.parse(await Bun.file(feature.itemPath).text())
@@ -301,6 +301,11 @@ test('invalid compatibility metadata is rejected from a fetched item before muta
     await Bun.write(
       join(project, 'src/operations/model.ts'),
       Bun.file(new URL('../model.ts', import.meta.url)),
+      { createPath: false },
+    )
+    await Bun.write(
+      join(dirname(copiedModule), 'external-registry.ts'),
+      Bun.file(new URL('./external-registry.ts', import.meta.url)),
       { createPath: false },
     )
     await symlink(join(root, 'node_modules'), join(project, 'node_modules'), 'dir')
