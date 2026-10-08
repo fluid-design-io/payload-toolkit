@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "registries": [
+    {
+      "namespace": "@payload-components",
+      "name": "Payload Components",
+      "description": "Payload CMS blocks and components distributed through a shadcn registry.",
+      "homepage": "https://www.payload-components.xyz",
+      "repository": "https://github.com/Ducksss/payload-components",
+      "url": "https://www.payload-components.xyz/r/{name}.json",
+      "compatibility": {
+        "upstream": "Payload v3 with Next.js 15 or 16.",
+        "documentation": "https://www.payload-components.xyz/docs/installation"
+      }
+    }
+  ]
+}

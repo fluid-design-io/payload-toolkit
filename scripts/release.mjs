@@ -58,6 +58,7 @@ export function validatePack(pack, version) {
   for (const file of [
     'dist/cli.js',
     'assets/registry/forms.json',
+    'assets/registry/community-registries.json',
     'catalog/bootstrap.json',
     'package.json',
     'README.md',

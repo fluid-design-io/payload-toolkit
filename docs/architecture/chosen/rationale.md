@@ -2,7 +2,7 @@
 
 ## Problem
 
-The toolkit must install developer-owned Payload v4 source into new and established applications. Payload owns official templates, shadcn owns registry installation, and the selected developer or agent owns contextual wiring. Installation, agent invocation and runtime verification are separate facts. Main retains the v3 starter; this branch replaces its application structure.
+The toolkit must install developer-owned Payload v4 source into new and established applications. Payload owns official templates, shadcn owns registry installation, and the selected developer or agent owns contextual wiring. Installation, agent invocation and runtime verification are separate facts. Main contains the v4 CLI. The separate `payload-better-auth-starter` repository retains the v3 application.
 
 ## Usage
 
@@ -34,7 +34,7 @@ Every existing target lease blocks a new invocation until its ownership is revie
 
 Bootstrap runs the exact official generator/template/Payload tuple in clean staging with `--no-deps --no-git --no-agent`. It exclusively reserves an absent destination and publishes source only. The requested package manager installs dependencies at the final path, then official scripts generate artifacts there. This addresses the observed absolute staging paths in pnpm command scripts. Partial destinations survive failures for inspection.
 
-The bundled shadcn item uses public registry format, root-anchored `~/` file targets and small `meta.payloadToolkit` compatibility data. Parse metadata from fetched items before aggregate resolution drops it. Shadcn installs files and dependencies. The toolkit verifies expected destinations, guide identity and installed dependencies. V1 admits a small universal first-party catalog without aliases, CSS, environment writes or transitive registry items. Actual qualification establishes expected installed bytes; source and installed hashes remain distinct facts.
+The bundled shadcn item uses public registry format, root-anchored `~/` file targets and small `meta.payloadToolkit` compatibility data. Parse metadata from fetched items before aggregate resolution drops it. Shadcn installs files and dependencies. The toolkit verifies expected destinations, guide identity and installed dependencies. Bundled features use a small universal catalog with qualified installed bytes. External URLs and namespaces support source transformations and transitive registry dependencies under the [external registry contract](external-registries.md). Their compatibility claims are advisory, and their guides are optional. Source and installed hashes remain distinct facts.
 
 The first Forms item wraps the official form-builder plugin and logs the saved submission ID. Its React example waits for a real response and displays errors. Its versioned guide maps ordinary exports into the host's actual config and routes. Generated applications have no toolkit runtime dependency. Native Payload authentication remains; Better Auth has no admitted v4 item.
 

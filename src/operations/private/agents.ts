@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { z } from 'zod'
 import type { Agent, AgentOutcome, Feature } from '../model.js'
-import { ToolkitError } from '../model.js'
+import { isExternal, ToolkitError } from '../model.js'
 import { Attempt, digest, runProcess } from './attempts.js'
 import { exists, snapshot } from './project.js'
 
@@ -89,6 +89,21 @@ export async function integrationPrompt(
   }
   const guides: string[] = []
   for (const feature of features) {
+    if (isExternal(feature)) {
+      for (const qualifiedGuide of feature.files.filter((file) => file.role === 'guide')) {
+        const full = path.join(project, qualifiedGuide.path)
+        if (digest(await Bun.file(full).bytes()) !== qualifiedGuide.sha256)
+          throw new ToolkitError(
+            'collision',
+            `Installed external guide differs from qualified source: ${qualifiedGuide.path}`,
+          )
+        guides.push(`${full} (SHA-256 ${qualifiedGuide.sha256})`)
+      }
+      guides.push(
+        `External sources ${feature.provenance.references.join(', ')}. Frozen graph: ${feature.provenance.items.map((item) => `${item.name} SHA-256 ${item.sha256}`).join('; ')}. Actual host: Payload ${feature.provenance.host.payloadVersion}, ${feature.provenance.host.framework}, ${feature.provenance.host.database}. Installed files: ${feature.files.map((file) => `${file.path} SHA-256 ${file.sha256}`).join('; ')}. Advisories: ${feature.provenance.advisories.join(' ')}. Inspect missing prerequisites and imports, CMSLink/Media/linkGroup/cn or host equivalents, Pages block registration, renderer ownership, and generated Payload types. Preserve the current Payload, framework and React versions; do not downgrade the host. ${feature.provenance.stylesheet ? `Inspect/import frontend stylesheet ${feature.provenance.stylesheet}.` : ''}`,
+      )
+      continue
+    }
     const file = feature.files.find(
       (candidate) => candidate.path === feature.guide && candidate.role === 'guide',
     )
@@ -131,6 +146,8 @@ export async function invokeAgent(
   await attempt.fact('agent-before', before)
   await attempt.event('agent', 'started', `Invoking installed ${agent}`)
   const observation = observeAgentStatus(agent)
+  let stderrTail = ''
+  let untrustedDirectory = false
   try {
     const args =
       agent === 'codex'
@@ -143,6 +160,13 @@ export async function invokeAgent(
       attempt,
       agentOutput: true,
       onStdout: observation.consume,
+      onStderr(chunk) {
+        if (agent !== 'codex') return
+        stderrTail = (stderrTail + chunk).slice(-512)
+        untrustedDirectory ||= stderrTail.includes(
+          'Not inside a trusted directory and --skip-git-repo-check was not specified.',
+        )
+      },
     })
     observation.finish()
     await attempt.fact('agent-status-counts', observation.counts)
@@ -190,7 +214,12 @@ export async function invokeAgent(
     const interrupted =
       (signal?.aborted || (error instanceof ToolkitError && error.code === 'interrupted')) &&
       !(error instanceof ToolkitError && error.code === 'termination-unconfirmed')
-    const reason = error instanceof Error ? error.message : String(error)
+    const reason =
+      untrustedDirectory && error instanceof ToolkitError && error.code === 'process-failed'
+        ? 'Codex refused this directory because it is not a trusted Git project. Initialize or select a Git repository that you trust, then rerun the command with --codex. Installed files are retained; toolkit does not change Git or Codex trust settings.'
+        : error instanceof Error
+          ? error.message
+          : String(error)
     await attempt.event('agent', 'failed', reason)
     if (error instanceof ToolkitError && error.code === 'process-unavailable')
       return { status: 'not-started', reason, prompt }

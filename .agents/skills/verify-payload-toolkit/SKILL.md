@@ -1,6 +1,6 @@
 ---
 name: verify-payload-toolkit
-description: Verify the packed Payload Toolkit CLI and Forms through isolated official Next/TanStack fixtures, real Mongo/Postgres, browser behavior and retained evidence. Use after changing toolkit installation, registry guides, fixtures or reporting.
+description: Verify the packed Payload Toolkit CLI, Forms, and external registries through isolated official fixtures, real databases, browser behavior, and retained evidence. Use after changing toolkit installation, registry guides, fixtures, or reporting.
 ---
 
 # Verify Payload Toolkit
@@ -22,6 +22,8 @@ Run `bun run agent:doctor --runtime` before runtime driving or after unexpected 
 Read `features/README.md` and the selected feature file. Drive Forms with the runtime command above; repeat with `--framework tanstack` and `--database mongodb` for the other cells. `--package-manager npm` or `bun` tests that output installer when available. The default is pnpm.
 
 The known fixture integration reads the installed guide, imports its exported plugin, mounts its real example in the generated host, regenerates types/import map, builds and typechecks. It creates a native admin via real REST, seeds the documented form, submits via Playwright's Name/Email/Message labels and Send button, checks saved fields and admin visibility, denies anonymous reads and ties a console notification to the saved ID. A controlled HTTP 500 tests the example's error handling separately from real persistence. Mock agent contracts use `bun:test` through `bun run test`; no model is invoked by this skill.
+
+Run `bun run agent:verify:external` for packed live Hero Split URL and namespace installation. Add `--runtime` for the known Next.js and Postgres fixture, native authentication, media upload, Page persistence, and browser rendering. Read `features/external-registries.md` for the proof boundaries. These explicit commands use live upstream registries. Default checks do not run them or invoke a paid model.
 
 ## Evidence
 

@@ -1,6 +1,6 @@
 import { test } from 'bun:test'
 import assert from 'node:assert/strict'
-import { chmod, mkdir, mkdtemp, rm, symlink } from 'node:fs/promises'
+import { chmod, lstat, mkdir, mkdtemp, realpath, rm, symlink } from 'node:fs/promises'
 import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -87,6 +87,33 @@ test('identical installed feature is repeatable and agent failure only changes s
     assert.equal(failed.exitCode, 0)
     const strict = await add({ ...request, agent: 'codex', requireAgentSuccess: true })
     assert.equal(strict.exitCode, 1)
+    const capturedCodex = path.join(root, 'codex-arguments.json')
+    await Bun.write(
+      path.join(root, 'codex'),
+      `#!${process.execPath}\nrequire('fs').writeFileSync(${JSON.stringify(capturedCodex)},JSON.stringify(process.argv.slice(2)));process.stderr.write('private-agent-output\\nNot inside a trusted directory and --skip-git-repo-check was not specified.\\n');process.exit(1);\n`,
+      { createPath: false },
+    )
+    const untrusted = await add({ ...request, agent: 'codex', requireAgentSuccess: true })
+    assert.equal(untrusted.installation.status, 'complete')
+    assert.equal(untrusted.agent.status, 'failed')
+    assert.equal(untrusted.exitCode, 1)
+    if (untrusted.agent.status === 'failed') {
+      assert.match(untrusted.agent.reason, /trusted Git project/)
+      assert.match(untrusted.agent.reason, /Installed files are retained/)
+    }
+    assert.deepEqual(JSON.parse(await Bun.file(capturedCodex).text()), [
+      'exec',
+      '-',
+      '--cd',
+      await realpath(project),
+      '--json',
+    ])
+    assert.equal(
+      (await Bun.file(path.join(path.dirname(untrusted.receipt), 'journal.jsonl')).text()).includes(
+        'private-agent-output',
+      ),
+      false,
+    )
     await rm(path.join(root, 'codex'))
     process.env.PATH = root // Explicitly exclude any real installed paid agent.
     const missing = await add({ ...request, agent: 'codex', requireAgentSuccess: true })
@@ -247,6 +274,32 @@ test('init refuses an existing target without modifying its source', async () =>
     })
     assert.equal(result.installation.status, 'blocked')
     assert.equal(await Bun.file(path.join(target, 'owned.txt')).text(), 'developer')
+  } finally {
+    if (oldState) process.env.PAYLOAD_TOOLKIT_STATE_DIR = oldState
+    else delete process.env.PAYLOAD_TOOLKIT_STATE_DIR
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('init rejects an incomplete registry namespace before creating the official project', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'toolkit-namespace-test-'))
+  const oldState = process.env.PAYLOAD_TOOLKIT_STATE_DIR
+  process.env.PAYLOAD_TOOLKIT_STATE_DIR = path.join(root, 'state')
+  try {
+    const target = path.join(root, 'app')
+    const result = await init({
+      directory: target,
+      framework: 'next',
+      database: 'postgres',
+      template: 'custom',
+      packageManager: 'npm',
+      features: ['@incomplete'],
+      allowDirty: false,
+      agent: 'none',
+      requireAgentSuccess: false,
+    })
+    assert.equal(result.installation.status, 'blocked')
+    await assert.rejects(lstat(target), { code: 'ENOENT' })
   } finally {
     if (oldState) process.env.PAYLOAD_TOOLKIT_STATE_DIR = oldState
     else delete process.env.PAYLOAD_TOOLKIT_STATE_DIR

@@ -7,14 +7,16 @@ src/operations/index.ts              init/add and all operation state decisions
 src/operations/model.ts              schema-derived domain requests and outcomes
 src/operations/private/project.ts    target, Git/filesystem baseline, manager and lease
 src/operations/private/official.ts   pinned executable, source-only bootstrap, codegen
-src/operations/private/registry.ts   upstream schemas/APIs, compatibility and artifacts
-src/operations/private/agents.ts     installed guide prompt and installed agent invocation
+src/operations/private/registry.ts   upstream schemas/APIs/CLI, registry graphs, compatibility and artifacts
+src/operations/private/agents.ts     guide or external-source prompt and installed agent invocation
 src/operations/private/attempts.ts   attempt storage and redacted process records
 registry/registry.json               canonical catalog list
 registry/forms/                      plugin, example, GUIDE and item declaration
 catalog/bootstrap.json               exact official tuple and template mapping
+catalog/community-registries.json    community discovery entries, separate from bundled eligibility
 assets/registry/                     generated bundled/public registry item JSON
 scripts/registry-build.ts            public registry build and artifact identities
+scripts/community-registry-build.ts  directory validation, generated Markdown and packaged directory
 scripts/check-boundaries.ts          imports and catalog/acceptance coverage gate
 scripts/agent.ts                     setup, doctor, verify, evidence, cleanup entry
 scripts/fixtures/                    owned fixtures, known integrations and acceptance
@@ -26,7 +28,9 @@ renovate.json                        grouped dependency PRs, manual merges
 
 Only the binary and colocated operation tests import the operations entry. Only the operations owner imports mutation adapters. A schema-only model module carries requests/results; shadcn config/wire types stay inside the registry owner. Fixture scripts invoke the built or packed binary and never use a second product installation path. No published export wildcard exposes implementation modules.
 
-Registry names derive from the single shadcn catalog. Acceptance requirements must cover the catalog exactly, with a build check. Every feature has a versioned guide, normal source exports and an executable acceptance recipe. Add no second list for CLI prompts. Generated assets and checks derive from the authored catalog; no authored copy of an official template exists.
+Bundled registry names derive from the single shadcn catalog. Acceptance requirements must cover that catalog exactly, with a build check. Every bundled feature has a versioned guide, normal source exports and an executable acceptance recipe. Add no second list for bundled CLI prompts. Generated assets and checks derive from the authored catalog; no authored copy of an official template exists.
+
+External URLs and shadcn namespaces use the same operation owner with optional guides and advisory compatibility. The community directory powers discovery, not eligibility or namespace resolution. Its JSON generates a Markdown listing and packaged JSON after the bundled registry build. The main check detects tracked Markdown drift before generation. The [external registry contract](external-registries.md) defines graph resolution and write protections.
 
 Attempts and evidence have separate unique directories outside project Git. The target lease lasts through installation and an explicitly selected agent invocation. Initial snapshots distinguish pre-existing staged, unstaged and untracked changes from later observations. No automatic stash, reset, stage or commit. New-project publication uses exclusive destination creation and source-only copy; final-path install avoids pnpm relocation assumptions.
 

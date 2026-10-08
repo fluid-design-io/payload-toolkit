@@ -26,10 +26,15 @@ pinned official generator owns base source; shadcn's public APIs own registry
 installation. Preserve installed source ownership and native authentication.
 Never import shadcn internals or add a host-wiring manifest language.
 
-Registry contributions need ordinary source exports, versioned GUIDE.md,
-compatibility metadata and an executable acceptance entry. Build derives CLI
-choices and registry artifacts from the canonical catalog. Update the feature
-map when behavior changes. Real agent evaluation uses contributor accounts and
+Bundled registry contributions need ordinary source exports, versioned GUIDE.md,
+compatibility metadata and an executable acceptance entry. Build derives bundled
+CLI choices and registry artifacts from the canonical catalog. Community listings
+live in `catalog/community-registries.json`; generate their Markdown page with
+`bun run registries:build`. The directory is for discovery, not installation
+permission. External URLs and shadcn namespaces can install without toolkit
+metadata or guides. External compatibility claims are advisory; bundled features
+retain exact compatibility checks. Update the feature map when behavior changes.
+Real agent evaluation uses contributor accounts and
 must be requested explicitly; default checks never launch a paid model.
 
 Do not stash, reset, stage or commit users' application changes from the toolkit.

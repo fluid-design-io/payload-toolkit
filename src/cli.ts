@@ -5,7 +5,7 @@ import { Command, CommanderError, Option } from 'commander'
 import { cancel, multiselect, select, text } from '@clack/prompts'
 import { satisfies } from 'semver'
 import { z } from 'zod'
-import { add, describeFeatures, init } from './operations/index.js'
+import { add, describeFeatures, describeRegistries, init } from './operations/index.js'
 import type { Event, Result } from './operations/model.js'
 
 const optionsSchema = z.object({
@@ -75,8 +75,8 @@ function common(command: Command) {
         'mongodb',
       ]),
     )
-    .option('--codex', 'Ask the installed Codex CLI to integrate the installed guide')
-    .option('--claude', 'Ask the installed Claude CLI to integrate the installed guide')
+    .option('--codex', 'Ask the installed Codex CLI to integrate installed source and guidance')
+    .option('--claude', 'Ask the installed Claude CLI to integrate installed source and guidance')
     .option('--require-agent-success', 'Require successful agent invocation for exit zero')
     .option(
       '--allow-dirty',
@@ -119,7 +119,10 @@ async function main() {
         'bun',
       ]),
     )
-    .option('--features <names>', 'Comma-separated catalog items for custom')
+    .option(
+      '--features <names>',
+      'Comma-separated catalog items, registry URLs or namespaces for custom',
+    )
     .option('--database-url <url>', 'Connection for codegen; alternatively set DATABASE_URI')
     .action(async (directory: string | undefined, raw: unknown) => {
       const options = optionsSchema.parse(raw)
@@ -248,7 +251,9 @@ async function main() {
   common(
     program
       .command('add <features...>')
-      .description('Install catalog features into an existing Payload application'),
+      .description(
+        'Install catalog features, registry URLs or shadcn namespaces into a Payload application',
+      ),
   ).action(async (features: string[], raw: unknown) => {
     const options = optionsSchema.parse(raw)
     const result = await add(
@@ -265,6 +270,20 @@ async function main() {
     )
     renderResult(result, options)
   })
+  program
+    .command('registries')
+    .description('List community registries; listing does not certify compatibility')
+    .option('--json', 'Return the registry directory as JSON')
+    .action(async (options: { json?: boolean }) => {
+      const registries = await describeRegistries()
+      if (options.json)
+        process.stdout.write(`${JSON.stringify({ schemaVersion: 1, registries })}\n`)
+      else
+        for (const registry of registries)
+          process.stdout.write(
+            `${registry.namespace} — ${registry.name}\n  ${registry.description}\n  ${registry.homepage}\n`,
+          )
+    })
   await program.parseAsync(process.argv)
 }
 try {
