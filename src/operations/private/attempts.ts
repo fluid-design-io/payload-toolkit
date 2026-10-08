@@ -136,16 +136,23 @@ export async function resolveWindowsCommand(
 ): Promise<{ executable: string; args: readonly string[] }> {
   if (command !== 'npm' && command !== 'pnpm') return { executable: command, args }
   const directories = [
-    path.dirname(nodeExecutable),
     ...(env.PATH || env.Path || '').split(path.delimiter).filter(Boolean),
+    path.dirname(nodeExecutable),
   ]
-  const candidates: string[] = []
   const matches = (filename: string) =>
     command === 'npm'
       ? /(?:^|[/\\])npm-cli\.js$/i.test(filename)
       : /(?:^|[/\\])pnpm\.(?:cjs|js)$/i.test(filename)
-  if (env.npm_execpath && matches(env.npm_execpath)) candidates.push(env.npm_execpath)
-  for (const directory of directories) {
+  if (
+    env.npm_execpath &&
+    matches(env.npm_execpath) &&
+    (await stat(env.npm_execpath)
+      .then((entry) => entry.isFile())
+      .catch(() => false))
+  )
+    return { executable: nodeExecutable, args: [env.npm_execpath, ...args] }
+  for (const directory of new Set(directories)) {
+    const candidates: string[] = []
     candidates.push(
       path.join(
         directory,
@@ -162,16 +169,14 @@ export async function resolveWindowsCommand(
       const relative = match[1]!.replaceAll('\\', path.sep)
       if (!relative.includes('%')) candidates.push(path.resolve(directory, relative))
     }
-  }
-  for (const candidate of new Set(candidates)) {
-    if (
-      await stat(candidate)
-        .then((entry) => entry.isFile())
-        .catch(() => false)
-    )
-      return { executable: nodeExecutable, args: [candidate, ...args] }
-  }
-  for (const directory of directories) {
+    for (const candidate of new Set(candidates)) {
+      if (
+        await stat(candidate)
+          .then((entry) => entry.isFile())
+          .catch(() => false)
+      )
+        return { executable: nodeExecutable, args: [candidate, ...args] }
+    }
     const candidate = path.join(directory, `${command}.exe`)
     if (
       await stat(candidate)

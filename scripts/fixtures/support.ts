@@ -112,15 +112,13 @@ export async function launch(
   if (process.platform === 'win32' && ['npm', 'pnpm'].includes(commandName)) {
     const env = options?.env ?? process.env
     const searchPath = env.PATH || env.Path
-    const launcher = Bun.which(commandName, { PATH: searchPath })
-    if (launcher?.endsWith('.exe')) return spawn(launcher, args, { ...options, shell: false })
     const node = Bun.which('node', { PATH: searchPath })
     if (!node) throw new Blocked('Node is required by the output package manager on Windows')
     const directories = [
-      ...new Set([path.dirname(node), ...(searchPath || '').split(path.delimiter)]),
+      ...new Set([...(searchPath || '').split(path.delimiter).filter(Boolean), path.dirname(node)]),
     ]
-    const candidates: string[] = []
     for (const directory of directories) {
+      const candidates: string[] = []
       candidates.push(
         path.join(
           directory,
@@ -139,10 +137,13 @@ export async function launch(
         if (!match[1]!.includes('%'))
           candidates.push(path.resolve(directory, match[1]!.replaceAll('\\', path.sep)))
       }
+      for (const script of candidates)
+        if (await Bun.file(script).exists())
+          return spawn(node, [script, ...args], { ...options, shell: false })
+      const executable = path.join(directory, `${commandName}.exe`)
+      if (await Bun.file(executable).exists())
+        return spawn(executable, args, { ...options, shell: false })
     }
-    for (const script of candidates)
-      if (await Bun.file(script).exists())
-        return spawn(node, [script, ...args], { ...options, shell: false })
     throw new Blocked(`Cannot locate the ${commandName} JavaScript launcher on Windows`)
   }
   return spawn(commandName, args, { ...options, shell: false })
