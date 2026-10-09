@@ -4,10 +4,11 @@ import { memo, useId } from 'react'
 import { TextContext } from 'react-aria-components'
 import { useWorkspace, useWorkspaceSelector } from '../workspace.context'
 import type { CatalogItem } from '../workspace.types'
+import { RegistryDetails } from './registry.details'
 import { RegistryThumbnail } from './registry.thumbnail'
 
 /**
- * The whole card is the checkbox label, so it is one focusable control. The
+ * The card body is a checkbox label; the details button is a sibling control. The
  * corner button is decoration over the thumbnail and never moves the layout.
  * The card, thumbnail and corner button share one corner center: each inner
  * radius is the outer radius minus its inset. The border is always 2px and
@@ -23,47 +24,50 @@ export const RegistryCard = memo(function RegistryCard({ item }: { item: Catalog
   const kindId = useId()
 
   return (
-    <Checkbox
-      aria-describedby={kindId}
-      isSelected={isSelected}
-      onChange={(selected) => actions.toggleItem(item.ref, selected)}
-      className="group/card w-full"
-    >
-      <Checkbox.Content className="w-full transition-all duration-150 rounded-(--card-radius) border-(length:--card-border) border-transparent p-(--card-pad) [--card-border:2px] [--card-inset:calc(var(--card-pad)+var(--card-border))] [--card-pad:calc(var(--spacing)*1.5)] [--card-radius:var(--radius-xl)] data-[focus-visible=true]:status-focused data-[hovered=true]:bg-surface-secondary/30 data-[hovered=true]:not-group-data-[selected=true]/card:border-surface-secondary group-data-[selected=true]/card:border-accent">
-        <span title={item.description} className="flex w-full flex-col gap-2.5">
-          <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-(--thumb-radius) bg-surface-secondary [--thumb-radius:max(0px,calc(var(--card-radius)-var(--card-inset)))]">
-            <RegistryThumbnail item={item} />
-            <span
-              aria-hidden="true"
-              className="absolute top-(--badge-inset) right-(--badge-inset) grid size-(--badge-size) place-items-center rounded-full [--badge-inset:calc(var(--thumb-radius)-var(--badge-size)/2)] [--badge-size:calc(var(--spacing)*6)] bg-background/85 text-foreground shadow-surface backdrop-blur-sm group-data-[selected=true]/card:bg-accent group-data-[selected=true]/card:text-accent-foreground"
-            >
-              {isSelected ? <RiCheckLine size={14} /> : <RiAddLine size={14} />}
-            </span>
-          </span>
-          <TextContext.Provider value={null}>
-            <span className="flex w-full min-w-0 flex-col gap-0.5 px-1.5 pb-1">
-              <Typography
-                render={(props) => <span {...props} />}
-                type="body-sm"
-                weight="medium"
-                truncate
-              >
-                {item.title}
-              </Typography>
-              <Typography
-                render={(props) => <span {...props} />}
-                type="body-xs"
-                color="muted"
-                id={kindId}
+    <div className="group/item relative min-w-0">
+      <Checkbox
+        aria-describedby={kindId}
+        isSelected={isSelected}
+        onChange={(selected) => actions.toggleItem(item.ref, selected)}
+        className="group/card w-full"
+      >
+        <Checkbox.Content className="w-full transition-all duration-150 rounded-(--card-radius) border-(length:--card-border) border-transparent p-(--card-pad) [--card-border:2px] [--card-inset:calc(var(--card-pad)+var(--card-border))] [--card-pad:calc(var(--spacing)*1.5)] [--card-radius:var(--radius-xl)] data-[focus-visible=true]:status-focused data-[hovered=true]:bg-surface-secondary/30 data-[hovered=true]:not-group-data-[selected=true]/card:border-surface-secondary group-data-[selected=true]/card:border-accent">
+          <span title={item.description} className="flex w-full flex-col gap-2.5">
+            <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-(--thumb-radius) bg-surface-secondary [--thumb-radius:max(0px,calc(var(--card-radius)-var(--card-inset)))]">
+              <RegistryThumbnail item={item} />
+              <span
                 aria-hidden="true"
-                className="capitalize"
+                className="absolute top-(--badge-inset) right-(--badge-inset) grid size-(--badge-size) place-items-center rounded-full [--badge-inset:calc(var(--thumb-radius)-var(--badge-size)/2)] [--badge-size:calc(var(--spacing)*6)] bg-background/85 text-foreground shadow-surface backdrop-blur-sm group-data-[selected=true]/card:bg-accent group-data-[selected=true]/card:text-accent-foreground"
               >
-                {item.kind}
-              </Typography>
+                {isSelected ? <RiCheckLine size={14} /> : <RiAddLine size={14} />}
+              </span>
             </span>
-          </TextContext.Provider>
-        </span>
-      </Checkbox.Content>
-    </Checkbox>
+            <TextContext.Provider value={null}>
+              <span className="flex w-full min-w-0 flex-col gap-0.5 px-1.5 pb-1 pr-12">
+                <Typography
+                  render={(props) => <span {...props} />}
+                  type="body-sm"
+                  weight="medium"
+                  truncate
+                >
+                  {item.title}
+                </Typography>
+                <Typography
+                  render={(props) => <span {...props} />}
+                  type="body-xs"
+                  color="muted"
+                  id={kindId}
+                  aria-hidden="true"
+                  className="capitalize"
+                >
+                  {item.kind}
+                </Typography>
+              </span>
+            </TextContext.Provider>
+          </span>
+        </Checkbox.Content>
+      </Checkbox>
+      <RegistryDetails item={item} />
+    </div>
   )
 })
