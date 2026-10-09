@@ -1,36 +1,39 @@
 import { Workspace } from './workspace'
 
 /**
- * The configurator. Every control writes one Setup, and the command and the
- * prompt are pure derivations of it, so what is copied always matches what
- * the CLI accepts. The template is never chosen: no items means minimal.
+ * The configurator. The rail and search narrow the grid, every card toggles
+ * one item, and the floating bar holds the project settings, the build and
+ * Copy. The command and the prompt are pure derivations of one Setup, which
+ * the URL mirrors, so a shared link restores the same build. The rail footer
+ * carries the home link and the theme toggle; on phones the rail is a sheet
+ * that the toolbar's trigger opens.
  */
 export function WorkspaceScreen() {
   return (
     <Workspace>
-      <Workspace.Main>
-        <Workspace.Header />
-        <Workspace.Registry.Toolbar>
-          <Workspace.Registry.Search />
-          <Workspace.Registry.Filter />
-        </Workspace.Registry.Toolbar>
-        <Workspace.Registry.Count />
-        <Workspace.Results>
-          <Workspace.Registry.Grid />
-        </Workspace.Results>
-        <Workspace.NoMatch />
-      </Workspace.Main>
-      <Workspace.Setup>
-        <Workspace.Setup.Body>
-          <Workspace.Setup.Name />
-          <Workspace.Setup.Framework />
-          <Workspace.Setup.Database />
-          <Workspace.Setup.PackageManager />
-          <Workspace.Setup.Agent />
-          <Workspace.Setup.Items />
-        </Workspace.Setup.Body>
-        <Workspace.Setup.Output />
-      </Workspace.Setup>
+      <Workspace.Rail>
+        <Workspace.Main>
+          <Workspace.Intro />
+          <Workspace.Toolbar>
+            <Workspace.Rail.Trigger />
+            <Workspace.Rail.Current />
+            <Workspace.Registry.Search />
+          </Workspace.Toolbar>
+          <Workspace.Results>
+            <Workspace.Registry.Grid />
+          </Workspace.Results>
+          <Workspace.NoMatch />
+        </Workspace.Main>
+      </Workspace.Rail>
+      <Workspace.Bar>
+        <Workspace.Bar.Content>
+          <Workspace.Bar.Settings />
+          <Workspace.Bar.Build />
+        </Workspace.Bar.Content>
+        <Workspace.Bar.Suffix>
+          <Workspace.Bar.Copy />
+        </Workspace.Bar.Suffix>
+      </Workspace.Bar>
     </Workspace>
   )
 }

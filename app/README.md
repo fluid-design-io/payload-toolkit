@@ -14,13 +14,17 @@ Open http://localhost:3000. Generated development tools remain available in deve
 ## Routes
 
 - `/` shows the interactive robot-arm Hairline figure and a "Start customizing" link.
-- `/workspace` is the configurator. Search and filter the registry grid, toggle
-  items, and set the project name, framework, database, package manager and agent.
-  "Your setup" shows the live `payload-toolkit init` command or a paste-ready agent
-  prompt with a copy button. Below 1024px it is a half-height bottom sheet.
+- `/workspace` is the configurator. A category rail (a sheet opened from the
+  top row's menu button on phones) and a search narrow a grid of registry cards;
+  each card toggles one item. Press "/" to focus the search. The rail's footer
+  holds the home link and the theme toggle. A floating HeroUI Pro ActionBar holds project
+  settings (name, framework, database, package manager, agent), "Your build"
+  with the selected items, and a Copy split button that copies the
+  `payload-toolkit init` command or a paste-ready agent prompt. The setup is
+  mirrored in the URL search params, so a shared link restores the same build.
 
-The command follows the CLI rules. No items means `--template minimal`. Items add
-`--template custom --features <refs>`. The agent flag needs at least one item.
+The command follows the CLI rules. No items means a plain Payload app. Items add
+`--features <refs>`. The agent flag needs at least one item.
 
 ## Catalog snapshot
 
@@ -44,11 +48,12 @@ bun run verify:stack
 bun run build
 ```
 
-`test` runs `bun:test` over `src`. It checks the exact command and prompt strings.
+`test` runs `bun:test` over `src` and `scripts`. It checks the exact command and prompt
+strings, the URL params, the category grouping and catalog image parsing.
 The prompt mirrors the CLI's own agent prompt in the root `src/operations/private/agents.ts`.
 
 `verify:stack` is a standalone React SSR demonstration of Query caching, Form,
-Store updates/selectors and Virtual range calculation. It adds no app pages.
+Store updates and selectors. It adds no app pages.
 Start/Router are exercised by building and serving the root route.
 CLI and Intent are installed locally (`bun run scaffold --help`,
 `bun run intent:list`). Use Node 24.21.0 and Bun 1.4.2.
@@ -58,7 +63,8 @@ CLI and Intent are installed locally (`bun run scaffold --help`,
 HeroUI React and styles are pinned to 3.2.6 with their missing peers, following
 the React Pro MCP quick-start and release guidance. Tailwind is imported first,
 then HeroUI styles, in `src/styles.css`; the root route loads that stylesheet.
-HeroUI v3 needs no provider. A blocking script in the root shell sets `data-theme`
+HeroUI v3 needs no provider. Icons come from `@remixicon/react` (pinned 4.9.0),
+imported per icon by name. A blocking script in the root shell sets `data-theme`
 from `localStorage.theme` or the system preference; HeroUI styles follow it.
 
 No runtime secret is required. The supplied Pro installation token remains in
