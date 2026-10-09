@@ -18,15 +18,14 @@ export const initRequestSchema = z
     ...common,
     framework: frameworkSchema,
     database: databaseSchema,
-    template: z.enum(['minimal', 'custom']),
     packageManager: packageManagerSchema,
     databaseUrl: z.string().min(1).optional(),
   })
   .strict()
   .refine(agentPolicy, 'requireAgentSuccess requires an agent')
   .refine(
-    (request) => request.template !== 'minimal' || request.features.length === 0,
-    'minimal does not accept features',
+    (request) => request.agent === 'none' || request.features.length > 0,
+    'Agent integration requires at least one feature',
   )
 export const addRequestSchema = z
   .object({

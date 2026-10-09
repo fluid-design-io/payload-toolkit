@@ -2,7 +2,7 @@
 
 ## Installation and compatibility
 
-Developers can install a bundled feature, a direct shadcn registry URL, or a shadcn namespace reference. Custom `init --features` accepts the same references. Community directory membership does not grant installation permission. Unlisted URLs remain installable.
+Developers can install a bundled feature, a direct shadcn registry URL, or a shadcn namespace reference. `init --features` accepts the same references. Community directory membership does not grant installation permission. Unlisted URLs remain installable.
 
 External compatibility is advisory. Upstream items can target Payload v3, omit toolkit metadata, or omit an integration guide. The toolkit records the available claims and provides an integration prompt. The developer or selected agent adapts the source to the host. Installation never silently downgrades the host to meet an upstream version claim.
 

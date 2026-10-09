@@ -171,8 +171,6 @@ try {
       'next',
       '--database',
       'postgres',
-      '--template',
-      'minimal',
       '--package-manager',
       'pnpm',
       '--database-url',

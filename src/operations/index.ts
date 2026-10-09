@@ -293,7 +293,16 @@ async function operate(
       !(error instanceof ToolkitError && error.code === 'termination-unconfirmed')
     const invalid = error instanceof z.ZodError
     const blocked = invalid || (error instanceof ToolkitError && blockedCodes.has(error.code))
-    const reason = redact(error instanceof Error ? error.message : String(error), secrets)
+    const message = invalid
+      ? error.issues
+          .map((issue) =>
+            issue.path.length ? `${issue.path.join('.')}: ${issue.message}` : issue.message,
+          )
+          .join('; ')
+      : error instanceof Error
+        ? error.message
+        : String(error)
+    const reason = redact(message, secrets)
     if (error instanceof ToolkitError && error.code === 'termination-unconfirmed')
       attempt.terminationFailure = reason
     await attempt.fact(

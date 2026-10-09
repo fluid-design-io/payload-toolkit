@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
-import { mkdtemp, readdir, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
@@ -9,9 +9,13 @@ import { z } from 'zod'
 
 const exec = promisify(execFile)
 const bin = resolve('dist/cli.js')
-async function invoke(args: string[], cwd?: string) {
+async function invoke(args: string[], cwd?: string, env?: Record<string, string>) {
   try {
-    const result = await exec(process.execPath, [bin, ...args], { cwd, timeout: 20000 })
+    const result = await exec(process.execPath, [bin, ...args], {
+      cwd,
+      env: { ...process.env, ...env },
+      timeout: 20000,
+    })
     return { ...result, code: 0 }
   } catch (error) {
     if (error instanceof Error && 'stdout' in error && 'stderr' in error && 'code' in error) {
@@ -67,30 +71,37 @@ test('conflicting agent flags and strict mode without an agent refuse before ins
   }
 })
 
-test('minimal explains upstream ownership and refuses a feature/agent mismatch', async () => {
-  const help = await invoke(['init', '--help'])
-  assert.equal(help.code, 0)
-  assert.match(help.stdout, /official Payload starter/)
-  const failure = await invoke([
-    'init',
-    'demo',
-    '--framework',
-    'next',
-    '--database',
-    'postgres',
-    '--template',
-    'minimal',
-    '--package-manager',
-    'pnpm',
-    '--features',
-    'forms',
-    '--json',
-  ])
-  assert.equal(failure.code, 2)
-  assert.match(
-    report.parse(JSON.parse(failure.stdout)).installation.reason,
-    /requires --template custom/,
-  )
+test('init infers the plain app from features and refuses an agent without features', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'payload-init-features-'))
+  const directory = join(root, 'work')
+  const env = { PAYLOAD_TOOLKIT_STATE_DIR: join(root, 'state') }
+  try {
+    await mkdir(directory)
+    const help = await invoke(['init', '--help'])
+    assert.equal(help.code, 0)
+    assert.match(help.stdout, /official Payload starter/)
+    assert.match(help.stdout, /omit for a plain Payload app/)
+    assert.doesNotMatch(help.stdout, /--template/)
+    const required = ['--framework', 'next', '--database', 'postgres', '--package-manager', 'pnpm']
+    const agent = await invoke(['init', 'demo', ...required, '--codex', '--json'], directory, env)
+    assert.equal(agent.code, 2)
+    const agentResult = report.parse(JSON.parse(agent.stdout))
+    assert.equal(agentResult.installation.status, 'blocked')
+    assert.equal(agentResult.installation.reason, 'Agent integration requires at least one feature')
+    const template = await invoke(
+      ['init', 'demo', ...required, '--template', 'minimal', '--json'],
+      directory,
+      env,
+    )
+    assert.equal(template.code, 2)
+    assert.equal(
+      report.parse(JSON.parse(template.stdout)).installation.reason,
+      "error: unknown option '--template'",
+    )
+    assert.deepEqual(await readdir(directory), [])
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
 })
 
 test('delivered CLI runs in Bun with no Node binary on PATH', async () => {

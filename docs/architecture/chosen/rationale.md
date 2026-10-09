@@ -7,13 +7,13 @@ The toolkit must install developer-owned Payload v4 source into new and establis
 ## Usage
 
 ```sh
-payload-toolkit init acme --framework next --database postgres --template minimal --package-manager pnpm
-payload-toolkit init acme --framework tanstack --database mongodb --template custom --package-manager pnpm --features forms --codex
+payload-toolkit init acme --framework next --database postgres --package-manager pnpm
+payload-toolkit init acme --framework tanstack --database mongodb --package-manager pnpm --features forms --codex
 payload-toolkit add forms --cwd ./existing-app --claude
 payload-toolkit add forms --cwd ./existing-app --allow-dirty --json
 ```
 
-Missing choices prompt on a terminal. Unattended runs supply framework, database, template and package manager. A database connection is optional; configure-later uses a clearly marked local placeholder without provisioning infrastructure. `--require-agent-success` requires `--codex` or `--claude`. Without an agent flag, installed feature guides produce a copyable prompt.
+Missing choices prompt on a terminal. Unattended runs supply framework, database and package manager. Features are optional; an empty list yields the plain official starter, and an agent requires at least one feature. A database connection is optional; configure-later uses a clearly marked local placeholder without provisioning infrastructure. `--require-agent-success` requires `--codex` or `--claude`. Without an agent flag, installed feature guides produce a copyable prompt.
 
 ```ts
 import { init, add } from './operations/index.js'

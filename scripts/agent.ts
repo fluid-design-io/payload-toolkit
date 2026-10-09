@@ -286,8 +286,6 @@ async function verify() {
         options.framework,
         '--database',
         options.database,
-        '--template',
-        'minimal',
         '--package-manager',
         options.packageManager,
         '--database-url',
