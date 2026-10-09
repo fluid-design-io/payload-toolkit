@@ -13,7 +13,8 @@
         "documentation": "https://www.payload-components.xyz/docs/installation"
       },
       "preview": {
-        "url": "https://www.payload-components.xyz/components/preview/{name}"
+        "url": "https://www.payload-components.xyz/components/preview/{name}",
+        "embed": false
       }
     }
   ]

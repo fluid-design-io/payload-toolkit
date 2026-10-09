@@ -1,4 +1,4 @@
-import { Checkbox, Typography } from '@heroui/react'
+import { Checkbox, cn, Typography } from '@heroui/react'
 import { RiAddLine, RiCheckLine } from '@remixicon/react'
 import { memo, useId } from 'react'
 import { TextContext } from 'react-aria-components'
@@ -31,13 +31,20 @@ export const RegistryCard = memo(function RegistryCard({ item }: { item: Catalog
         onChange={(selected) => actions.toggleItem(item.ref, selected)}
         className="group/card w-full"
       >
-        <Checkbox.Content className="w-full transition-all duration-150 rounded-(--card-radius) border-(length:--card-border) border-transparent p-(--card-pad) [--card-border:2px] [--card-inset:calc(var(--card-pad)+var(--card-border))] [--card-pad:calc(var(--spacing)*1.5)] [--card-radius:var(--radius-xl)] data-[focus-visible=true]:status-focused data-[hovered=true]:bg-surface-secondary/30 data-[hovered=true]:not-group-data-[selected=true]/card:border-surface-secondary group-data-[selected=true]/card:border-accent">
+        <Checkbox.Content
+          className={cn(
+            '[--card-border:2px] [--card-inset:calc(var(--card-pad)+var(--card-border))] [--card-pad:calc(var(--spacing)*1.5)] [--card-radius:var(--radius-xl)]',
+            'w-full transition-all duration-150 rounded-(--card-radius) border-(length:--card-border) border-transparent p-(--card-pad)',
+            'data-[focus-visible=true]:status-focused',
+            'data-[hovered=true]:not-group-data-[selected=true]/card:border-border group-data-[selected=true]/card:border-accent',
+          )}
+        >
           <span title={item.description} className="flex w-full flex-col gap-2.5">
             <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-(--thumb-radius) bg-surface-secondary [--thumb-radius:max(0px,calc(var(--card-radius)-var(--card-inset)))]">
               <RegistryThumbnail item={item} />
               <span
                 aria-hidden="true"
-                className="absolute top-(--badge-inset) right-(--badge-inset) grid size-(--badge-size) place-items-center rounded-full [--badge-inset:calc(var(--thumb-radius)-var(--badge-size)/2)] [--badge-size:calc(var(--spacing)*6)] bg-background/85 text-foreground shadow-surface backdrop-blur-sm group-data-[selected=true]/card:bg-accent group-data-[selected=true]/card:text-accent-foreground"
+                className="absolute top-2.5 right-2.5 grid size-5 place-items-center rounded-full bg-background/85 text-foreground shadow-surface backdrop-blur-sm group-data-[selected=true]/card:bg-accent group-data-[selected=true]/card:text-accent-foreground"
               >
                 {isSelected ? <RiCheckLine size={14} /> : <RiAddLine size={14} />}
               </span>

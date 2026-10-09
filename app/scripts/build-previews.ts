@@ -5,7 +5,7 @@ import { catalog } from '../src/routes/workspace/-workspace/workspace.catalog'
 
 const directory = new URL('../public/registry-previews/', import.meta.url)
 const manifestFile = Bun.file(new URL('manifest.json', directory))
-type Capture = { url: string; image: string }
+type Capture = { url: string; image?: string; imageDark?: string }
 const previous: Record<string, Capture> = (await manifestFile.exists())
   ? await manifestFile.json()
   : {}
@@ -14,59 +14,87 @@ const refresh = process.argv.includes('--refresh')
 if (process.argv.slice(2).some((arg) => arg !== '--refresh'))
   throw new Error('Usage: bun run previews:build [--refresh]')
 await mkdir(directory, { recursive: true })
-const pending = catalog.filter(
-  (item) => item.previewUrl && (!item.image || item.image.startsWith('/registry-previews/')),
-)
+const pending = catalog.flatMap((item) => {
+  if (!item.previewUrl) return []
+  return (['light', 'dark'] as const)
+    .filter((theme) => {
+      const image =
+        theme === 'dark' ? (item.imageDark ?? item.image) : (item.image ?? item.imageDark)
+      return !image || image.startsWith('/registry-previews/')
+    })
+    .map((theme) => ({ item, theme }))
+})
 const browser = await chromium.launch({ channel: process.env.PLAYWRIGHT_CHANNEL, headless: true })
 let failed = 0
 try {
   await Promise.all(
     Array.from({ length: 3 }, async () => {
       while (pending.length) {
-        const item = pending.pop()!
+        const { item, theme } = pending.pop()!
         const url = item.previewUrl!
-        const filename = `${createHash('sha256').update(item.ref).digest('hex')}.png`
+        const field = theme === 'dark' ? 'imageDark' : 'image'
+        const filename = `${createHash('sha256').update(item.ref).digest('hex')}-${theme}.webp`
         const image = `/registry-previews/${filename}`
         const file = new URL(filename, directory)
-        const cached = previous[item.ref]
-        if (
-          !refresh &&
-          cached?.url === url &&
-          cached.image === image &&
-          (await Bun.file(file).exists())
-        ) {
-          captures[item.ref] = cached
-          console.log(`Cached ${item.ref}`)
-          continue
+        const cached = previous[item.ref]?.url === url ? previous[item.ref]?.[field] : undefined
+        const safeCache =
+          cached &&
+          /^\/registry-previews\/[a-f0-9]{64}(?:-(?:light|dark)\.webp|\.png)$/.test(cached)
+        function retain(value: string) {
+          captures[item.ref] ??= { url }
+          captures[item.ref][field] = value
         }
-        const context = await browser.newContext({
-          viewport: { width: 1280, height: 800 },
-          deviceScaleFactor: 1,
-          reducedMotion: 'reduce',
-          colorScheme: 'light',
-          serviceWorkers: 'block',
-        })
         try {
-          const page = await context.newPage()
-          const response = await page.goto(url, { waitUntil: 'load', timeout: 25000 })
-          if (!response?.ok()) throw new Error(`HTTP ${response?.status()}`)
-          await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {})
-          await page.evaluate(() =>
-            Promise.race([
-              document.fonts.ready,
-              new Promise((resolve) => setTimeout(resolve, 3000)),
-            ]),
-          )
-          await page.screenshot({ path: file.pathname, animations: 'disabled', timeout: 10000 })
-          captures[item.ref] = { url, image }
-          console.log(`Captured ${item.ref}`)
+          if (!refresh && safeCache) {
+            const source = Bun.file(new URL(cached.slice('/registry-previews/'.length), directory))
+            if (await source.exists()) {
+              if (cached !== image) await source.image().webp({ quality: 85 }).write(file)
+              retain(image)
+              console.log(`${cached === image ? 'Cached' : 'Converted'} ${item.ref} (${theme})`)
+              continue
+            }
+          }
+          const context = await browser.newContext({
+            viewport: { width: 1280, height: 800 },
+            deviceScaleFactor: 1,
+            reducedMotion: 'reduce',
+            colorScheme: theme,
+            serviceWorkers: 'block',
+          })
+          try {
+            const page = await context.newPage()
+            const response = await page.goto(url, { waitUntil: 'load', timeout: 25000 })
+            if (!response?.ok()) throw new Error(`HTTP ${response?.status()}`)
+            await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {})
+            await page.evaluate(() =>
+              Promise.race([
+                document.fonts.ready,
+                new Promise((resolve) => setTimeout(resolve, 3000)),
+              ]),
+            )
+            await page.screenshot({
+              path: file.pathname,
+              type: 'webp',
+              quality: 85,
+              animations: 'disabled',
+              timeout: 10000,
+            })
+            retain(image)
+            console.log(`Captured ${item.ref} (${theme})`)
+          } finally {
+            await context.close()
+          }
         } catch (error) {
           failed++
-          if (cached?.url === url && cached.image === image && (await Bun.file(file).exists()))
-            captures[item.ref] = cached
-          console.error(`Failed ${item.ref}: ${String(error)}`)
-        } finally {
-          await context.close()
+          if (
+            safeCache &&
+            cached.endsWith('.webp') &&
+            (await Bun.file(
+              new URL(cached.slice('/registry-previews/'.length), directory),
+            ).exists())
+          )
+            retain(cached)
+          console.error(`Failed ${item.ref} (${theme}): ${String(error)}`)
         }
       }
     }),
@@ -79,6 +107,6 @@ try {
   )
 }
 console.log(
-  `${Object.keys(captures).length} thumbnails retained; ${failed} captures failed. Run bun run catalog:sync to use them.`,
+  `${Object.keys(captures).length} preview pairs retained; ${failed} captures failed. Run bun run catalog:sync to use them.`,
 )
 if (failed) process.exitCode = 1

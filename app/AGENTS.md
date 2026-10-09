@@ -250,7 +250,12 @@ when CLI flags change.
 The grid reads `workspace.catalog.ts`, a generated snapshot. `bun run catalog:sync`
 rebuilds it from `../registry/registry.json` and the shadcn index of each
 registry in `../catalog/community-registries.json`. Optional directory `preview.url` and `preview.image` templates support `{name}`.
-`preview.items` supplies per-item overrides or `false` to disable previews.
+`preview.image` accepts a single URL or `{ light, dark }` URLs; upstream
+`meta.preview.image` and `meta.image` accept the same shape. Either variant may be
+omitted. Per-theme fallback resolves overrides independently. `preview.items`
+supplies per-item overrides or `false` to disable previews. Optional `embed: true`
+(in directory or `meta.preview`) enables a live iframe in the details Sheet only
+when the provider permits cross-origin embedding; default is false.
 Each field resolves from directory item overrides, upstream `meta.preview`, then
 directory defaults; `meta.image` remains supported before the default image.
 Upstream `meta.preview: false` disables both unless a directory item override exists.
@@ -258,12 +263,20 @@ URLs must use HTTPS without credentials or fragments; relative upstream values
 resolve against the item's registry URL. `RegistryThumbnail` renders direct images first, cached preview screenshots second,
 and placeholders for missing or failed images. Run `bun run catalog:sync`,
 `bun run previews:build`, then `bun run catalog:sync` to generate URL thumbnails.
+Both grid thumbnails and larger image previews follow the app theme, falling
+back to the other supplied variant, then the placeholder if images fail.
 Install the development browser with `bun x playwright install chromium`, or set
 `PLAYWRIGHT_CHANNEL=chrome` to use installed Chrome. Commit `public/registry-previews/`
-and the catalog. Capture uses a 1280 by 800 light viewport with reduced motion;
+and the catalog. Capture uses a 1280 by 800 viewport, reduced motion and light/dark color preferences;
 unchanged URLs reuse cached captures. `--refresh` recaptures; failed captures exit
 nonzero and retain only matching cached images. This is separate from app builds;
-visitors receive static images. Preview pages are not embedded in iframes.
+visitors receive WebP quality-85 static images for thumbnails. Existing PNG caches
+are converted with Bun; new captures use Playwright WebP directly. A color
+preference does not force upstream pages to implement a dark design.
+The larger preview uses an iframe only with `preview.embed: true` and offers a
+Show image action. `registry.preview.tsx` sets `data-theme` and `color-scheme` on
+the iframe; remote pages must support the inherited preference. We do not mutate
+cross-origin documents. Payload Components currently blocks embedding and uses images.
 Each card has a separate details button beside its title/kind that opens a right
 HeroUI Pro Sheet (`registry/registry.details.tsx`). The Sheet shows a larger
 thumbnail, description, registry name/namespace, registry homepage and an external

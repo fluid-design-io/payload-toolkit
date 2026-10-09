@@ -66,12 +66,31 @@ export function previewFields(meta: Json, configured: unknown, name: string, bas
     'preview.url',
     base,
   )
-  const image = imageUrl(
-    template(item.image) ?? upstream.image ?? meta.image ?? template(defaults.image),
-    'preview.image',
-    base,
+  function themeImage(value: unknown, theme: 'light' | 'dark') {
+    if (value === undefined || typeof value === 'string') return value
+    return record(value, 'preview.image')[theme]
+  }
+  const images = (['light', 'dark'] as const).map((theme) =>
+    imageUrl(
+      template(themeImage(item.image, theme)) ??
+        themeImage(upstream.image, theme) ??
+        themeImage(meta.image, theme) ??
+        template(themeImage(defaults.image, theme)),
+      `preview.image.${theme}`,
+      base,
+    ),
   )
-  return { ...(url && { previewUrl: url }), ...(image && { image }) }
+  const image = images[0] ?? images[1]
+  const imageDark = images[1]
+  const embed = item.embed ?? upstream.embed ?? defaults.embed
+  if (embed !== undefined && typeof embed !== 'boolean')
+    throw new Error('preview.embed must be a boolean')
+  return {
+    ...(url && { previewUrl: url }),
+    ...(image && { image }),
+    ...(imageDark && imageDark !== image && { imageDark }),
+    ...(embed !== undefined && { previewEmbed: embed }),
+  }
 }
 
 function ref(value: string, where: string): string {
@@ -168,18 +187,26 @@ async function community(): Promise<RegistryItem[]> {
   return items
 }
 
-export function capturedImage(item: RegistryItem, captures: Json): string | undefined {
-  if (item.image || !item.previewUrl) return item.image
+export function capturedImage(
+  item: RegistryItem,
+  captures: Json,
+  theme: 'light' | 'dark' = 'light',
+): string | undefined {
+  const explicit =
+    theme === 'dark' ? (item.imageDark ?? item.image) : (item.image ?? item.imageDark)
+  if (explicit || !item.previewUrl) return explicit
   const raw = captures[item.ref]
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined
   const capture = raw as Json
+  const image =
+    theme === 'dark' ? (capture.imageDark ?? capture.image) : (capture.image ?? capture.imageDark)
   if (
     capture.url !== item.previewUrl ||
-    typeof capture.image !== 'string' ||
-    !/^\/registry-previews\/[a-f0-9]{64}\.png$/.test(capture.image)
+    typeof image !== 'string' ||
+    !/^\/registry-previews\/[a-f0-9]{64}-(light|dark)\.webp$/.test(image)
   )
     return undefined
-  return capture.image
+  return image
 }
 
 async function sync() {
@@ -189,15 +216,21 @@ async function sync() {
     ? record(await manifest.json(), 'preview manifest')
     : {}
   for (const item of catalog) {
-    const image = capturedImage(item, captures)
-    if (
-      image &&
-      (item.image ||
-        (await Bun.file(
-          new URL(image.slice('/registry-previews/'.length), previewDirectory),
-        ).exists()))
-    )
-      item.image = image
+    const light = capturedImage(item, captures, 'light')
+    const dark = capturedImage(item, captures, 'dark')
+    for (const [field, image] of [
+      ['image', light],
+      ['imageDark', dark],
+    ] as const) {
+      if (
+        image &&
+        (!image.startsWith('/registry-previews/') ||
+          (await Bun.file(
+            new URL(image.slice('/registry-previews/'.length), previewDirectory),
+          ).exists()))
+      )
+        item[field] = image
+    }
   }
   const refs = new Set<string>()
   for (const item of catalog) {

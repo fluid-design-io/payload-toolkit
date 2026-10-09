@@ -56,4 +56,9 @@ web app. Upstream `meta.preview` and legacy `meta.image` can supply item-specifi
 values. See [community registries](../../community-registries.md) for precedence
 and URL rules. The web app renders direct images or cached screenshots from an explicit contributor
 capture command; images fall back to placeholders on failure. These fields neither authorize installation nor change compatibility,
-source qualification, or agent handoff. Preview pages are not embedded; builds and visitors do not run a capture service.
+source qualification, or agent handoff. The larger Sheet can embed preview pages when `preview.embed: true` is explicitly
+declared and permitted upstream; it offers an image fallback. The iframe carries
+the app theme as `data-theme` and CSS `color-scheme`, without mutating the remote
+document. Light/dark image variants are resolved independently; captures use both
+browser color preferences and WebP quality 85. Builds and visitors do not run a
+capture service. A remote page may ignore the color preference.

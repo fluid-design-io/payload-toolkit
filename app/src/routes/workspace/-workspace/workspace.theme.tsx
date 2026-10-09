@@ -14,9 +14,11 @@ function subscribe(onChange: () => void) {
 }
 
 function currentTheme(): Theme {
-  return document.documentElement.dataset.theme === 'mouve-dark'
-    ? 'dark'
-    : 'light'
+  return document.documentElement.dataset.theme === 'mouve-dark' ? 'dark' : 'light'
+}
+
+export function useWorkspaceTheme(): Theme {
+  return useSyncExternalStore(subscribe, currentTheme, () => 'light' as const)
 }
 
 /**
@@ -27,11 +29,7 @@ function currentTheme(): Theme {
  */
 export function WorkspaceTheme() {
   const { mobileOverlayContainer } = useSidebar()
-  const theme = useSyncExternalStore(
-    subscribe,
-    currentTheme,
-    () => 'light' as const,
-  )
+  const theme = useWorkspaceTheme()
   const next: Theme = theme === 'dark' ? 'light' : 'dark'
   const label = `Switch to ${next} theme`
   const Icon = next === 'light' ? RiSunLine : RiMoonLine
@@ -53,9 +51,7 @@ export function WorkspaceTheme() {
       >
         <Icon size={16} aria-hidden="true" />
       </Button>
-      <Tooltip.Content
-        UNSTABLE_portalContainer={mobileOverlayContainer ?? undefined}
-      >
+      <Tooltip.Content UNSTABLE_portalContainer={mobileOverlayContainer ?? undefined}>
         {label}
       </Tooltip.Content>
     </Tooltip>

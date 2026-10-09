@@ -14,73 +14,76 @@
 .mouve-dark,
 [data-theme='mouve-dark'] {
   /* Border Radius */
-  --radius: 0.875rem;
-  --field-radius: 1rem;
+  --radius: 0.75rem;
+  --field-radius: 0.75rem;
 
-  /* Spacing */
-  --spacing: 0.234375rem;
+  /* Misc */
+  --cursor-interactive: default;
 }
 
 .mouve-light,
 [data-theme='mouve-light'] {
   /* Theme Colors */
-  --background: oklch(95.5% 0.0056 231.68);
-  --muted: oklch(58% 0.014 231.68);
-  --scrollbar: oklch(82% 0.0093 231.68);
-  --surface: oklch(97.5% 0.0037 231.68);
-  --surface-secondary: oklch(95% 0.0056 231.68);
-  --surface-tertiary: oklch(93.5% 0.0075 231.68);
-  --overlay: oklch(97.5% 0.0037 231.68);
-  --default: oklch(92% 0.0056 231.68);
-  --accent: oklch(62.94% 0.0719 231.68);
-  --field-background: oklch(97% 0.0028 231.68);
-  --field-border: oklch(88% 0.0093 231.68);
-  --border: oklch(88% 0.007 231.68);
-  --separator: oklch(92% 0.0047 231.68);
-  --focus: oklch(62.94% 0.0719 231.68);
-  --backdrop: oklch(50% 0.0187 231.68 / 0.4);
-  --accent-soft: color-mix(in oklab, oklch(62.94% 0.0719 231.68) 15%, transparent);
-  --accent-hover: color-mix(in oklab, oklch(62.94% 0.0719 231.68) 90%, var(--snow) 10%);
+  --background: oklch(95.5% 0.0012 231.94);
+  --muted: oklch(58% 0.003 231.94);
+  --scrollbar: oklch(82% 0.002 231.94);
+  --surface: oklch(97.5% 0.0008 231.94);
+  --surface-secondary: oklch(95% 0.0012 231.94);
+  --surface-tertiary: oklch(93.5% 0.0016 231.94);
+  --overlay: oklch(97.5% 0.0008 231.94);
+  --default: oklch(92% 0.0012 231.94);
+  --accent: oklch(73.84% 0.0834 231.94);
+  --accent-foreground: var(--eclipse);
+  --field-background: oklch(97% 0.0006 231.94);
+  --field-border: oklch(88% 0.002 231.94);
+  --border: oklch(88% 0.0015 231.94);
+  --separator: oklch(92% 0.001 231.94);
+  --backdrop: oklch(50% 0.004 231.94 / 0.4);
 
   /* Charts */
-  --chart-1: oklch(42% 0.14 231.68);
-  --chart-2: oklch(50% 0.16 231.68);
-  --chart-3: oklch(55% 0.18 231.68);
-  --chart-4: oklch(65% 0.14 231.68);
-  --chart-5: oklch(75% 0.1 231.68);
+  --chart-1: oklch(42% 0.14 231.94);
+  --chart-2: oklch(50% 0.16 231.94);
+  --chart-3: oklch(55% 0.18 231.94);
+  --chart-4: oklch(65% 0.14 231.94);
+  --chart-5: oklch(75% 0.1 231.94);
+
+  /* Shadows */
+  --surface-shadow: none;
+  --overlay-shadow: none;
 }
 
 .mouve-dark,
 [data-theme='mouve-dark'] {
   color-scheme: dark;
   /* Theme Colors */
-  --background: oklch(16% 0.0093 231.68);
-  --muted: oklch(65% 0.0093 231.68);
-  --scrollbar: oklch(35% 0.0093 231.68);
-  --surface: oklch(20% 0.0093 231.68);
-  --surface-secondary: oklch(24% 0.0093 231.68);
-  --surface-tertiary: oklch(27% 0.0093 231.68);
-  --overlay: oklch(20% 0.0093 231.68);
-  --default: oklch(26% 0.0093 231.68);
-  --accent: oklch(62.94% 0.0719 231.68);
+  --background: oklch(16% 0.002 232.29);
+  --muted: oklch(65% 0.002 232.29);
+  --scrollbar: oklch(35% 0.002 232.29);
+  --surface: oklch(20% 0.002 232.29);
+  --surface-secondary: oklch(24% 0.002 232.29);
+  --surface-tertiary: oklch(27% 0.002 232.29);
+  --overlay: oklch(20% 0.002 232.29);
+  --default: oklch(26% 0.002 232.29);
+  --accent: oklch(51.36% 0.056 232.29);
   --accent-foreground: var(--snow);
-  --success-foreground: oklch(20% 0.0093 231.68);
-  --warning-foreground: oklch(20% 0.0093 231.68);
-  --field-background: oklch(22% 0.0084 231.68);
-  --field-border: oklch(32% 0.0117 231.68);
-  --segment: oklch(28% 0.0117 231.68);
-  --border: oklch(30% 0.0093 231.68);
-  --separator: oklch(28% 0.0084 231.68);
-  --focus: oklch(62.94% 0.0719 231.68);
-  --accent-soft: color-mix(in oklab, oklch(62.94% 0.0719 231.68) 15%, transparent);
-  --accent-hover: color-mix(in oklab, oklch(62.94% 0.0719 231.68) 90%, var(--snow) 10%);
+  --success-foreground: oklch(20% 0.002 232.29);
+  --warning-foreground: oklch(20% 0.002 232.29);
+  --field-background: oklch(22% 0.0018 232.29);
+  --field-border: oklch(32% 0.0025 232.29);
+  --segment: oklch(28% 0.0025 232.29);
+  --border: oklch(30% 0.002 232.29);
+  --separator: oklch(28% 0.0018 232.29);
 
   /* Charts */
-  --chart-1: oklch(50% 0.12 231.68);
-  --chart-2: oklch(60% 0.14 231.68);
-  --chart-3: oklch(70% 0.16 231.68);
-  --chart-4: oklch(78% 0.12 231.68);
-  --chart-5: oklch(85% 0.08 231.68);
+  --chart-1: oklch(50% 0.12 232.29);
+  --chart-2: oklch(60% 0.14 232.29);
+  --chart-3: oklch(70% 0.16 232.29);
+  --chart-4: oklch(78% 0.12 232.29);
+  --chart-5: oklch(85% 0.08 232.29);
+
+  /* Shadows */
+  --surface-shadow: 0 0 0 0 transparent inset;
+  --overlay-shadow: none;
 }
 
 @theme inline {

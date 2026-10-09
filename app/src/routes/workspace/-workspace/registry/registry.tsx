@@ -94,7 +94,7 @@ function RegistryGrid() {
     <div
       role="group"
       aria-label="Registry items"
-      className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-5"
+      className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5"
     >
       {visible.map((item) => (
         <RegistryCard key={item.ref} item={item} />
