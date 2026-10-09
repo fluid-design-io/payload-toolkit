@@ -1,3 +1,5 @@
+import type { Store } from '@tanstack/react-store'
+
 export type Framework = 'next' | 'tanstack'
 export type Database = 'postgres' | 'mongodb'
 export type PackageManager = 'pnpm' | 'npm' | 'bun'
@@ -15,65 +17,66 @@ export type RegistryItem = {
   source: string
   /** Bundled items only: the installed feature guide path. */
   guide?: string
+  /** An https preview from the item's optional `meta.image`. */
+  image?: string
 }
 
-/** Template is derived from `items` (empty is minimal), so it is never stored. */
+/** Everything the command needs. It is mirrored into the URL search params. */
 export type Setup = {
   name: string
   framework: Framework
   database: Database
   packageManager: PackageManager
   agent: Agent
+  /** Selected refs in catalog order, including items hidden by the search or category. */
   items: readonly string[]
 }
 
-export type Filter = 'all' | ItemKind | 'selected'
+/** Block groups are `block:<first name segment>`; groups under three items share `block:other`. */
+export type CategoryId = 'all' | 'feature' | 'component' | `block:${string}`
+
+export type Category = { id: CategoryId; label: string; count: number }
+
+export type CatalogItem = RegistryItem & { category: CategoryId }
+
+export type Catalog = {
+  items: readonly CatalogItem[]
+  kinds: readonly Category[]
+  blocks: readonly Category[]
+}
+
 export type Output = 'command' | 'prompt'
+export type Panel = 'settings' | 'build' | null
 
 export type Option<T extends string> = { value: T; label: string }
 
 export type WorkspaceState = {
   setup: Setup
   query: string
-  filter: Filter
+  category: CategoryId
   output: Output
+  panel: Panel
 }
 
-export type WorkspaceAction =
-  | { type: 'setName'; name: string }
-  | { type: 'setFramework'; framework: Framework }
-  | { type: 'setDatabase'; database: Database }
-  | { type: 'setPackageManager'; packageManager: PackageManager }
-  | { type: 'setAgent'; agent: Agent }
-  | { type: 'setItems'; items: readonly string[] }
-  | { type: 'removeItem'; ref: string }
-  | { type: 'setQuery'; query: string }
-  | { type: 'setFilter'; filter: Filter }
-  | { type: 'setOutput'; output: Output }
+export type WorkspaceActions = {
+  setName: (name: string) => void
+  setFramework: (framework: Framework) => void
+  setDatabase: (database: Database) => void
+  setPackageManager: (packageManager: PackageManager) => void
+  setAgent: (agent: Agent) => void
+  toggleItem: (ref: string, isSelected: boolean) => void
+  clearItems: () => void
+  setQuery: (query: string) => void
+  setCategory: (category: CategoryId) => void
+  setOutput: (output: Output) => void
+  openPanel: (panel: Exclude<Panel, null>) => void
+  /** Closes `panel` only while it is the open one, so a late close cannot shut its successor. */
+  closePanel: (panel: Exclude<Panel, null>) => void
+}
 
+/** Stable for the provider's lifetime; leaves subscribe to slices of `store`. */
 export type WorkspaceContextValue = {
-  state: WorkspaceState & {
-    visible: readonly RegistryItem[]
-    selected: readonly RegistryItem[]
-    command: string
-    prompt: string
-    directoryError: string | null
-    text: string
-  }
-  actions: {
-    setName: (name: string) => void
-    setFramework: (framework: Framework) => void
-    setDatabase: (database: Database) => void
-    setPackageManager: (packageManager: PackageManager) => void
-    setAgent: (agent: Agent) => void
-    setItems: (items: readonly string[]) => void
-    removeItem: (ref: string) => void
-    setQuery: (query: string) => void
-    setFilter: (filter: Filter) => void
-    setOutput: (output: Output) => void
-  }
-  meta: {
-    catalog: readonly RegistryItem[]
-    counts: Record<Filter, number>
-  }
+  store: Store<WorkspaceState, WorkspaceActions>
+  actions: WorkspaceActions
+  meta: { catalog: Catalog }
 }

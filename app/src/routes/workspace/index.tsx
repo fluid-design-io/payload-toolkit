@@ -1,4 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { WorkspaceScreen } from './-workspace'
+import { WorkspaceScreen, parseWorkspaceSearch } from './-workspace'
 
-export const Route = createFileRoute('/workspace/')({ component: WorkspaceScreen })
+export const Route = createFileRoute('/workspace/')({
+  validateSearch: parseWorkspaceSearch,
+  component: WorkspaceScreen,
+})

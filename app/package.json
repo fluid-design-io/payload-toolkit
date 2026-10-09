@@ -2,9 +2,6 @@
   "name": "payload-toolkit-web",
   "private": true,
   "type": "module",
-  "imports": {
-    "#/*": "./src/*"
-  },
   "scripts": {
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
@@ -12,7 +9,7 @@
     "preview": "vite preview",
     "start": "node .output/server/index.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "bun test src",
+    "test": "bun test src scripts",
     "verify:stack": "bun scripts/verify-stack.tsx",
     "catalog:sync": "bun scripts/sync-catalog.ts",
     "intent:list": "bun ./node_modules/@tanstack/intent/dist/cli.mjs list",
@@ -26,6 +23,7 @@
     "@internationalized/date": "3.12.4",
     "@react-aria/ssr": "3.10.1",
     "@react-aria/utils": "3.34.1",
+    "@remixicon/react": "4.9.0",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "0.10.13",
     "@tanstack/react-form": "1.33.5",
@@ -36,7 +34,7 @@
     "@tanstack/react-router-ssr-query": "1.167.3",
     "@tanstack/react-start": "1.168.60",
     "@tanstack/react-store": "0.11.2",
-    "@tanstack/react-virtual": "3.14.13",
+    "motion": "14.0.0",
     "nitro": "3.0.260610-beta",
     "react": "^19.2.0",
     "react-aria": "3.52.1",

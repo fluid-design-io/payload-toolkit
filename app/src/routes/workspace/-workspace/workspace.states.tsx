@@ -1,22 +1,32 @@
+import { Typography } from '@heroui/react'
 import type { PropsWithChildren } from 'react'
-import { useWorkspace } from './workspace.context'
+import { useWorkspace, useWorkspaceSelector } from './workspace.context'
+import { visibleItems } from './workspace.utils'
 
-/** The grid, while the search and filter leave at least one item. */
+function useHasResults(): boolean {
+  const { meta } = useWorkspace()
+  return useWorkspaceSelector(
+    (state) =>
+      visibleItems(meta.catalog.items, state.query, state.category).length > 0,
+  )
+}
+
+/** The grid, while the search and category leave at least one item. */
 export function WorkspaceResults({ children }: PropsWithChildren) {
-  const { state } = useWorkspace()
-  if (!state.visible.length) return null
+  if (!useHasResults()) return null
 
   return <>{children}</>
 }
 
-/** Replaces the grid when nothing matches. Selections behind it are kept. */
+/** Replaces the grid when the search matches nothing. Selections behind it are kept. */
 export function WorkspaceNoMatch() {
-  const { state } = useWorkspace()
-  if (state.visible.length) return null
+  const hasResults = useHasResults()
+  const query = useWorkspaceSelector((state) => state.query.trim())
+  if (hasResults) return null
 
   return (
-    <p className="py-12 text-sm text-muted">
-      {state.query.trim() ? `No items match "${state.query.trim()}".` : 'No items selected.'}
-    </p>
+    <Typography type="body-sm" color="muted" className="py-12">
+      No items match "{query}".
+    </Typography>
   )
 }

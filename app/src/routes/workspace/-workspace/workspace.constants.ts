@@ -1,7 +1,6 @@
 import type {
   Agent,
   Database,
-  Filter,
   Framework,
   Option,
   Output,
@@ -40,15 +39,18 @@ export const agents: readonly Option<Agent>[] = [
   { value: 'claude', label: 'Claude' },
 ]
 
-export const filters: readonly Option<Filter>[] = [
-  { value: 'all', label: 'All' },
-  { value: 'feature', label: 'Features' },
-  { value: 'block', label: 'Blocks' },
-  { value: 'component', label: 'Components' },
-  { value: 'selected', label: 'Selected' },
+/** The descriptions say what Copy writes, since the bar shows no preview. */
+export const outputs: readonly (Option<Output> & { description: string })[] = [
+  { value: 'command', label: 'Command', description: 'Run payload-toolkit init in a terminal' },
+  { value: 'prompt', label: 'Prompt', description: 'Hand the setup to a coding agent' },
 ]
 
-export const outputs: readonly Option<Output>[] = [
-  { value: 'command', label: 'Command' },
-  { value: 'prompt', label: 'Prompt' },
-]
+/** Block group labels where Title Case of the name prefix misleads, including `feature`, which would read like the bundled Features. */
+export const blockLabels: Readonly<Record<string, string>> = {
+  call: 'Call to action',
+  faq: 'FAQ',
+  feature: 'Feature sections',
+}
+
+/** Smaller block groups fold into one "Other" category. */
+export const minBlockGroup = 3

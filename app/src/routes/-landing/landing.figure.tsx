@@ -55,9 +55,9 @@ export function LandingFigure() {
   return (
     <iframe
       ref={frame}
-      src="/figures/hairline-robot-arm.html"
+      src="/figures/hairline-robot-arm.html?play=1"
       title="Robot arm, an interactive Hairline figure"
-      className="block aspect-[5/4] w-[min(560px,calc(100vw-32px))] border-0 bg-transparent transition-opacity duration-300"
+      className="block aspect-[5/4] w-full max-w-[560px] border-0 bg-transparent transition-opacity duration-300 md:max-w-[672px]"
       style={{ opacity: bare ? 1 : 0 }}
     />
   )
