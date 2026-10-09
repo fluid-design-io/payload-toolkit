@@ -1,5 +1,5 @@
 import { Sidebar } from '@heroui-pro/react'
-import { Typography } from '@heroui/react'
+
 import type { PropsWithChildren } from 'react'
 import { Bar } from './bar/bar'
 import { Registry } from './registry/registry'
@@ -20,14 +20,6 @@ function WorkspaceMain({ children }: PropsWithChildren) {
   return <Sidebar.Main className="pb-32 px-6 pt-6 flex flex-col gap-5">{children}</Sidebar.Main>
 }
 
-function WorkspaceIntro() {
-  return (
-    <div className="flex flex-col gap-1">
-      <Typography type="h1">Add blocks to your project</Typography>
-    </div>
-  )
-}
-
 /**
  * At 768px and below, where the rail is a sheet, a slim row stuck to the top
  * that leads the column. Above that it adds no box, so the search sits under
@@ -45,7 +37,6 @@ function WorkspaceToolbar({ children }: PropsWithChildren) {
 export const Workspace = Object.assign(WorkspaceRoot, {
   Rail: WorkspaceRail,
   Main: WorkspaceMain,
-  Intro: WorkspaceIntro,
   Toolbar: WorkspaceToolbar,
   Registry,
   Results: WorkspaceResults,
