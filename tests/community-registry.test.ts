@@ -83,3 +83,28 @@ test('generated listing check rejects drift and a missing document', () => {
   assert.throws(() => assertCommunityListingCurrent(`${expected}edited`, expected), /outdated/)
   assert.throws(() => assertCommunityListingCurrent(null, expected), /outdated/)
 })
+
+test('preview declarations support URL-only, image-only, overrides and opt outs', () => {
+  const preview = {
+    url: 'https://example.com/preview/{name}',
+    image: 'https://example.com/thumb.webp',
+    items: { special: { image: 'https://example.com/special.webp' }, helper: false },
+  }
+  assert.deepEqual(
+    parseCommunityDirectory(directory([{ ...registry, preview }])).registries[0]?.preview,
+    preview,
+  )
+  for (const url of [
+    'http://example.com/demo',
+    'https://user:pass@example.com/demo',
+    'https://example.com/{other}',
+    'https://example.com/{name}/{name}',
+  ]) {
+    assert.throws(() => parseCommunityDirectory(directory([{ ...registry, preview: { url } }])))
+    assert.throws(() =>
+      parseCommunityDirectory(
+        directory([{ ...registry, preview: { items: { special: { image: url } } } }]),
+      ),
+    )
+  }
+})

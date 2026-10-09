@@ -11,6 +11,9 @@
       "compatibility": {
         "upstream": "Payload v3 with Next.js 15 or 16.",
         "documentation": "https://www.payload-components.xyz/docs/installation"
+      },
+      "preview": {
+        "url": "https://www.payload-components.xyz/components/preview/{name}"
       }
     }
   ]

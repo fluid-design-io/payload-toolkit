@@ -47,3 +47,13 @@ One structured directory supports documentation and CLI discovery. A handwritten
 Controlled registries exercise external source installation, dependency graphs, namespace resolution, repeated installs, collisions, and guide-free agent prompts at the operation boundary. The live acceptance fixture checks the delivered packed CLI separately. Mock agents test invocation and result reporting without a paid model.
 
 A live item installed into an isolated official Payload v4 project establishes only the checks recorded for that host. Database, browser, and real-agent results remain separate evidence. An unavailable capability is blocked, not a pass. Real-agent evaluation requires an explicit user request.
+
+## Discovery previews
+
+Optional directory `preview.url` and `preview.image` templates, with per-item
+`preview.items` overrides or opt outs, supply display metadata for the independent
+web app. Upstream `meta.preview` and legacy `meta.image` can supply item-specific
+values. See [community registries](../../community-registries.md) for precedence
+and URL rules. The web app renders direct images or cached screenshots from an explicit contributor
+capture command; images fall back to placeholders on failure. These fields neither authorize installation nor change compatibility,
+source qualification, or agent handoff. Preview pages are not embedded; builds and visitors do not run a capture service.

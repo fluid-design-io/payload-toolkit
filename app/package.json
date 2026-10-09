@@ -14,7 +14,8 @@
     "catalog:sync": "bun scripts/sync-catalog.ts",
     "intent:list": "bun ./node_modules/@tanstack/intent/dist/cli.mjs list",
     "intent:install": "bun ./node_modules/@tanstack/intent/dist/cli.mjs install",
-    "scaffold": "tanstack create"
+    "scaffold": "tanstack create",
+    "previews:build": "bun scripts/build-previews.ts"
   },
   "dependencies": {
     "@heroui-pro/react": "1.0.0-beta.10",
@@ -43,6 +44,7 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.0",
     "@tanstack/cli": "0.71.1",
     "@tanstack/devtools-vite": "0.8.5",
     "@tanstack/intent": "0.5.5",
@@ -55,6 +57,11 @@
     "typescript": "^6.0.2",
     "vite": "^8.0.0"
   },
+  "engines": {
+    "bun": "1.4.2",
+    "node": "24.21.0"
+  },
+  "packageManager": "bun@1.4.2",
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild",
@@ -65,11 +72,6 @@
     "skills": [
       "*"
     ]
-  },
-  "packageManager": "bun@1.4.2",
-  "engines": {
-    "node": "24.21.0",
-    "bun": "1.4.2"
   },
   "trustedDependencies": [
     "@heroui-pro/react"

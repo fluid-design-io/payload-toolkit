@@ -2,6 +2,7 @@ import type { ItemKind, RegistryItem } from '../src/routes/workspace/-workspace/
 
 const root = new URL('../../', import.meta.url)
 const target = new URL('../src/routes/workspace/-workspace/workspace.catalog.ts', import.meta.url)
+const previewDirectory = new URL('../public/registry-previews/', import.meta.url)
 const kinds: Record<string, ItemKind> = {
   'registry:block': 'block',
   'registry:component': 'component',
@@ -39,8 +40,38 @@ export function imageUrl(value: unknown, where: string, base?: string): string |
   } catch {
     throw new Error(`${where} is not a valid URL: ${raw}`)
   }
+  if (url.username || url.password || url.hash)
+    throw new Error(`${where} must not contain credentials or a fragment`)
   if (url.protocol !== 'https:') throw new Error(`${where} must be an https URL: ${raw}`)
   return url.href
+}
+
+export function previewFields(meta: Json, configured: unknown, name: string, base: string) {
+  const defaults = configured === undefined ? {} : record(configured, 'preview')
+  const overrides = defaults.items === undefined ? {} : record(defaults.items, 'preview.items')
+  const override = Object.hasOwn(overrides, name) ? overrides[name] : undefined
+  if (override === false || (override === undefined && meta.preview === false)) return {}
+  const item = override === undefined ? {} : record(override, `preview.items.${name}`)
+  const upstream =
+    meta.preview === undefined || meta.preview === false ? {} : record(meta.preview, 'meta.preview')
+  function template(value: unknown): unknown {
+    if (value === undefined) return undefined
+    const raw = text(value, 'preview template')
+    if (raw.split('{name}').length > 2 || /[{}]/.test(raw.replace('{name}', 'item')))
+      throw new Error('Preview template may contain only one {name} placeholder')
+    return raw.replace('{name}', encodeURIComponent(name))
+  }
+  const url = imageUrl(
+    template(item.url) ?? upstream.url ?? template(defaults.url),
+    'preview.url',
+    base,
+  )
+  const image = imageUrl(
+    template(item.image) ?? upstream.image ?? meta.image ?? template(defaults.image),
+    'preview.image',
+    base,
+  )
+  return { ...(url && { previewUrl: url }), ...(image && { image }) }
 }
 
 function ref(value: string, where: string): string {
@@ -65,7 +96,12 @@ async function bundled(): Promise<RegistryItem[]> {
     const name = text(item.name, `${at}.name`)
     const meta = record(item.meta, `${at}.meta`)
     const toolkit = record(meta.payloadToolkit, `${at}.meta.payloadToolkit`)
-    const picture = imageUrl(meta.image, `${at}.meta.image`)
+    const preview = previewFields(
+      meta,
+      undefined,
+      name,
+      text(registry.homepage, `${where}.homepage`),
+    )
     return {
       ref: ref(name, `${at}.name`),
       name,
@@ -74,7 +110,7 @@ async function bundled(): Promise<RegistryItem[]> {
       kind: 'feature',
       source: 'payload-toolkit',
       guide: text(toolkit.guide, `${at}.meta.payloadToolkit.guide`),
-      ...(picture && { image: picture }),
+      ...preview,
     }
   })
 }
@@ -102,7 +138,12 @@ async function community(): Promise<RegistryItem[]> {
         continue
       }
       const meta = item.meta === undefined ? {} : record(item.meta, `${itemAt}.meta`)
-      const picture = imageUrl(meta.image, `${itemAt}.meta.image`, template.replace('{name}', name))
+      const preview = previewFields(
+        meta,
+        entry.preview,
+        name,
+        template.replace('{name}', encodeURIComponent(name)),
+      )
       items.push({
         ref: ref(`${namespace}/${name}`, `${itemAt}.name`),
         name,
@@ -110,7 +151,7 @@ async function community(): Promise<RegistryItem[]> {
         description: text(item.description, `${itemAt}.description`),
         kind,
         source: namespace,
-        ...(picture && { image: picture }),
+        ...preview,
       })
     }
     console.log(
@@ -121,8 +162,37 @@ async function community(): Promise<RegistryItem[]> {
   return items
 }
 
+export function capturedImage(item: RegistryItem, captures: Json): string | undefined {
+  if (item.image || !item.previewUrl) return item.image
+  const raw = captures[item.ref]
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return undefined
+  const capture = raw as Json
+  if (
+    capture.url !== item.previewUrl ||
+    typeof capture.image !== 'string' ||
+    !/^\/registry-previews\/[a-f0-9]{64}\.png$/.test(capture.image)
+  )
+    return undefined
+  return capture.image
+}
+
 async function sync() {
   const catalog = [...(await bundled()), ...(await community())]
+  const manifest = Bun.file(new URL('manifest.json', previewDirectory))
+  const captures = (await manifest.exists())
+    ? record(await manifest.json(), 'preview manifest')
+    : {}
+  for (const item of catalog) {
+    const image = capturedImage(item, captures)
+    if (
+      image &&
+      (item.image ||
+        (await Bun.file(
+          new URL(image.slice('/registry-previews/'.length), previewDirectory),
+        ).exists()))
+    )
+      item.image = image
+  }
   const refs = new Set<string>()
   for (const item of catalog) {
     if (refs.has(item.ref)) throw new Error(`Duplicate feature reference: ${item.ref}`)
@@ -131,7 +201,7 @@ async function sync() {
 
   await Bun.write(
     target,
-    `// Generated by \`bun run catalog:sync\` from registry/registry.json and catalog/community-registries.json.
+    `// Generated by \`bun run catalog:sync\` from registry/registry.json, catalog/community-registries.json and public/registry-previews/manifest.json.
 import type { RegistryItem } from './workspace.types'
 
 export const catalog: readonly RegistryItem[] = ${JSON.stringify(catalog, null, 2)}

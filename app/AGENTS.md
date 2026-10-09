@@ -249,9 +249,22 @@ when CLI flags change.
 
 The grid reads `workspace.catalog.ts`, a generated snapshot. `bun run catalog:sync`
 rebuilds it from `../registry/registry.json` and the shadcn index of each
-registry in `../catalog/community-registries.json`. An optional `meta.image`
-on either source becomes the card image: https only, with a relative community
-value resolved against that item's registry URL (`imageUrl`). Bundled items become
+registry in `../catalog/community-registries.json`. Optional directory `preview.url` and `preview.image` templates support `{name}`.
+`preview.items` supplies per-item overrides or `false` to disable previews.
+Each field resolves from directory item overrides, upstream `meta.preview`, then
+directory defaults; `meta.image` remains supported before the default image.
+Upstream `meta.preview: false` disables both unless a directory item override exists.
+URLs must use HTTPS without credentials or fragments; relative upstream values
+resolve against the item's registry URL. `RegistryThumbnail` renders direct images first, cached preview screenshots second,
+and placeholders for missing or failed images. Run `bun run catalog:sync`,
+`bun run previews:build`, then `bun run catalog:sync` to generate URL thumbnails.
+Install the development browser with `bun x playwright install chromium`, or set
+`PLAYWRIGHT_CHANNEL=chrome` to use installed Chrome. Commit `public/registry-previews/`
+and the catalog. Capture uses a 1280 by 800 light viewport with reduced motion;
+unchanged URLs reuse cached captures. `--refresh` recaptures; failed captures exit
+nonzero and retain only matching cached images. This is separate from app builds;
+visitors receive static images. There are no external preview links or iframes.
+See `../docs/community-registries.md` for the contribution contract. Bundled items become
 features with their guide path. Community `registry:block` and
 `registry:component` items become blocks and components; other types are
 skipped and printed. The script validates both sources and throws on malformed
