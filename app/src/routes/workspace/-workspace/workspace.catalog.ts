@@ -9,6 +9,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Native Payload forms, persisted submissions, a React example and console notifications.",
     "kind": "feature",
     "source": "payload-toolkit",
+    "sourceName": "Payload Toolkit",
+    "sourceHomepage": "https://github.com/fluid-design-io/payload-toolkit",
+    "itemUrl": "https://github.com/fluid-design-io/payload-toolkit/blob/main/registry/forms/GUIDE.md",
     "guide": "docs/payload-toolkit/forms/GUIDE.md"
   },
   {
@@ -18,6 +21,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload Components proof-of-concept hero block.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/hero-basic.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-basic",
     "image": "/registry-previews/53e7f523f4dd818f890b4a5b3375edb2ec4d6924a66213ee1d5aa4142609f14f.png"
   },
@@ -28,6 +34,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Two-column Payload hero block with an editor-placed visual.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/hero-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-split",
     "image": "/registry-previews/1ec18fdc1d40295addc02e8e2f29ef42be343ff0f5f9b8d8d4fe1983fb330db6.png"
   },
@@ -38,6 +47,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Full-bleed video hero with editor-managed media and a reduced-motion poster fallback.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/hero-video.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-video",
     "image": "/registry-previews/5e24aadf94a74124574f8429123f479c3f98bfd1f74763998ea9f18516cf9875.png"
   },
@@ -48,6 +60,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Centered product hero with a static perspective frame and editor-managed media.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/hero-product-tilt.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-product-tilt",
     "image": "/registry-previews/98a073c3a9df87df5c62463189e40136f9e716b098d79455005c3fbc60dcd183.png"
   },
@@ -58,6 +73,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Motion-first product hero with an animated aurora field, staggered reveal, parallax panel, and metric ticker.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/hero-aurora.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-aurora",
     "image": "/registry-previews/cc2c57e3ed617e69bfa3795e5703e3f6139bfa151ecb8256b91b7f1f4d0c9295.png"
   },
@@ -68,6 +86,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Motion-first editorial hero with a line-masked type reveal, cinematic plate, and velocity marquee.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/hero-kinetic.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-kinetic",
     "image": "/registry-previews/600d9c85883eddc996d1c629b0bffce70d9c210747018382bb834099f7df3f68.png"
   },
@@ -78,6 +99,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Text-first Payload feature grid with optional CTA wiring.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/feature-grid-basic.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-grid-basic",
     "image": "/registry-previews/c54dee2f6ec5a41ff5ff34cf63403deb593d663028c6fd8171894a67c5f094e8.png"
   },
@@ -88,6 +112,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Two-column Payload feature block: heading and CTA beside a feature list.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/feature-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-split",
     "image": "/registry-previews/ba96b7134404490a84e7f05531bdfe56be1f44cffff312da4ad36a3cd0e4d722.png"
   },
@@ -98,6 +125,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Asymmetric Payload bento grid with a featured lead cell and supporting cells.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/feature-bento.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-bento",
     "image": "/registry-previews/1255925b22fdd3c5840c75dc649ba69b1d9f3b1eda71eaee11806403c4da4012.png"
   },
@@ -108,6 +138,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Numbered Payload steps block for sequential, how-it-works feature flows.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/feature-steps.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-steps",
     "image": "/registry-previews/ad9cde2c00559acb3a2e53d7b2b6654ff18f3c089929207aa1ebe83279e46330.png"
   },
@@ -118,6 +151,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Synchronized feature accordion with editor-selected icons and optional media.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/feature-accordion.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-accordion",
     "image": "/registry-previews/659a0701d0ce9ad41f519a897a3ec6c0e39c22597270f24f7eb0a1a68028c555.png"
   },
@@ -128,6 +164,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Two-column feature cards with independent media and optional icons.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/feature-cards-media.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-cards-media",
     "image": "/registry-previews/2b5c8619340bc38d9a8a4516f8e9b88d478a6a3b06aa200fc9f652a206fbbd4a.png"
   },
@@ -138,6 +177,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Dense feature grid with editor-selected icons and a tokenized radial decorator.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/feature-icon-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-icon-grid",
     "image": "/registry-previews/84c2a20bc0b5ba57c833e2222bd6686eb1b9d7883e1fa854b5f83ea944dfc031.png"
   },
@@ -148,6 +190,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Responsive, accessible sandboxed iframe block for approved HTTPS embeds.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/embed-basic.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/embed-basic",
     "image": "/registry-previews/796b431e817abcddb1b2526f701030fb426d8fa94f62b44217e8c58d5e2bddad.png"
   },
@@ -158,6 +203,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Centered, wrapping wall of editable logo uploads under a heading.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/logo-cloud-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/logo-cloud-grid",
     "image": "/registry-previews/11a8c16a9f4ff9c5e624465a681dc455cc3a4d385dcb5edb1ae6fe21e4af1c4c.png"
   },
@@ -168,6 +216,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Logo wall that dims and blurs on hover to reveal a CTA link.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/logo-cloud-hover.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/logo-cloud-hover",
     "image": "/registry-previews/58d172fe8df18718c8c991b2280c366a024f2c031de1081e642e706e95d369ba.png"
   },
@@ -178,6 +229,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Auto-scrolling marquee of editable logos with progressive-blur edge fades.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/logo-cloud-marquee.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/logo-cloud-marquee",
     "image": "/registry-previews/1a1806c6a700b78396b08dfa8497e3168202563c4e8ee6ef05452cdb1a92a110.png"
   },
@@ -188,6 +242,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Compact label-over-logos strip of editable trust logos.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/logo-cloud-inline.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/logo-cloud-inline",
     "image": "/registry-previews/28164ed861cf57e61e5fa1eced145781a8dd33e13e072e032a0da1e979b0cd24.png"
   },
@@ -198,6 +255,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Single wrapping row keeping the label inline with editable logos.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/logo-cloud-inline-wrap.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/logo-cloud-inline-wrap",
     "image": "/registry-previews/0c33b7dbca2365d8b13cba92806ab9398cb42ac186630daa43d944b737c2c577.png"
   },
@@ -208,6 +268,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Two-column Payload content block: a heading beside body copy and a CTA.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-columns.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-columns",
     "image": "/registry-previews/7dc7f37a4c6f23d3b2e0add16def2f44750364a11942a9cee723bd93fabe6fd4.png"
   },
@@ -218,6 +281,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block led by a full-width image above a heading, body, and CTA.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-image-lead.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-image-lead",
     "image": "/registry-previews/6e592c1c977563537044af448fb86649b167a9368b02d94c5cb676f9c0f61307.png"
   },
@@ -228,6 +294,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: body copy and two icon features beside a framed media panel.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-feature-media.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-feature-media",
     "image": "/registry-previews/47e44d381f24471f38a0256f27ba5c7010e98cf29c247e3c91e98e698253e537.png"
   },
@@ -238,6 +307,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: a side media panel beside body copy and two icon features.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-feature-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-feature-split",
     "image": "/registry-previews/ab84a079d551dcb16718f64c3c1f26b052694f92eec6df87d01d43e8355af799.png"
   },
@@ -248,6 +320,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: a centered intro, a full-width image, and a four-up feature grid.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-showcase.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-showcase",
     "image": "/registry-previews/e9e8de526ba56729a86230f8d3abea807422c062fd56ac4cb92a143062d36a67.png"
   },
@@ -258,6 +333,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: a media panel beside body copy and a cited pull quote.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-quote.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-quote",
     "image": "/registry-previews/43792bd9801013484a768233b73d66e4e582bcde0abb7e3cb1e42ea13f5cca1d.png"
   },
@@ -268,6 +346,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: a centered heading and body above a wall of community avatars.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-community.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-community",
     "image": "/registry-previews/07c291fb0304862faecc9cfcdd06981de99212958e5721d42490e124e3e119f4.png"
   },
@@ -278,6 +359,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A responsive grid of integration cards with logo, name, description, and a learn-more link.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/integration-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-grid",
     "image": "/registry-previews/75482c0e9e35d58a6ad34f6e7dddcf257b343d5b2170945f94a11bf73adf028d.png"
   },
@@ -288,6 +372,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A centered cluster of integration logos around a featured brand mark, with a heading and CTA.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/integration-cluster.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-cluster",
     "image": "/registry-previews/553088f2ac5abbfb01a1fb362396174eee57178cb24ab5fe3f173577c78ff120.png"
   },
@@ -298,6 +385,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A two-column section pairing a featured-mark logo cluster with a heading, subtext, and CTA.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/integration-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-split",
     "image": "/registry-previews/2a036437e4085721c9fc1c9f6acab7017aa290ea15cb7109ad5f27a52e3676db.png"
   },
@@ -308,6 +398,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Integration logos wired to a central brand mark by connector lines.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/integration-connect.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-connect",
     "image": "/registry-previews/c52ed247b238a5e497cd8c6235f344f1894232d83747f81200a01ddd172aa8f7.png"
   },
@@ -318,6 +411,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Concentric rings of integration logos that orbit a featured brand mark on hover.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/integration-orbit.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-orbit",
     "image": "/registry-previews/f97568b51951fa2c43e1e8132c23235fb7ccf8863cec942c10b97d7e6235c6a0.png"
   },
@@ -328,6 +424,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A vertical list of integration rows with logo, name, description, and an add action.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/integration-list.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-list",
     "image": "/registry-previews/14d55ea9159747fdfa8397706d54a860932324e92ec40c649f32e9e0bbe524ea.png"
   },
@@ -338,6 +437,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Three auto-scrolling rows of integration logos around a featured brand mark.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/integration-marquee.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-marquee",
     "image": "/registry-previews/dc63a00a98653936aeb26cd898de45c6ce68b06548377a99cc7ec435264c6bed.png"
   },
@@ -348,6 +450,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A two-column section pairing a customer quote with a grid of integration logo cards.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/integration-testimonial.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-testimonial",
     "image": "/registry-previews/0fc70031617e56cd49dc4bbed6c8f5466f278a7dad66bf5742018fe3609d9485.png"
   },
@@ -358,6 +463,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: an intro above alternating media-and-text rows.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-split-rows.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-split-rows",
     "image": "/registry-previews/f3dcb1f3cabeb62f70b3389a43ed1a3f34dc1b8704e214f5c3caea40707d9423.png"
   },
@@ -368,6 +476,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: an intro above a uniform stack of media-and-text rows.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-rows.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-rows",
     "image": "/registry-previews/a1887c9dea48a72adc6f8671c733e288088876301ebb61372a3fb11699cff4f6.png"
   },
@@ -378,6 +489,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: a centered intro above a layered, framed screenshot.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-image-frame.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-image-frame",
     "image": "/registry-previews/cd17bd1f281a6f8667f678a491020a7d1fbb97cf8c447b4ed5e9c88bcf2bc0d0.png"
   },
@@ -388,6 +502,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: an intro, a grid of icon features, and a stats list.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-stats.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-stats",
     "image": "/registry-previews/e156efe209c223823c346006f223e70443bf6fff214ec998d906683099aaee6d.png"
   },
@@ -398,6 +515,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: a serif heading beside a labeled-term list.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-list.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-list",
     "image": "/registry-previews/b8ed217fb0c2c5ff47e3ac469266908e1ae21aaeb536ba1d3dd9cfbf46ee6c92.png"
   },
@@ -408,6 +528,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: a serif heading above a two-column labeled-term list.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-list-columns.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-list-columns",
     "image": "/registry-previews/f317c72499411075f599a139d4f8bf26a08c403222b6d201d3c6297774b6a822.png"
   },
@@ -418,6 +541,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload content block: a serif heading and intro above a multi-column icon list.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/content-list-icons.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-list-icons",
     "image": "/registry-previews/d1e14d713fe281322f134b6a654a47839bd11055b12d777eb72061d6512cbe03.png"
   },
@@ -428,6 +554,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Centered Payload call-to-action block: heading, copy, and one or two CTA links.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/call-to-action-centered.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/call-to-action-centered",
     "image": "/registry-previews/b2bc772dc1267f7da7d06f4723dda2846ec5fc2e1bf26f83ee17b83e16e205b3.png"
   },
@@ -438,6 +567,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Boxed Payload call-to-action block: heading, copy, and CTA links inside a nested panel.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/call-to-action-boxed.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/call-to-action-boxed",
     "image": "/registry-previews/f32a1eefada8a387e74f44e0a5daec5c6a1a873934e73c4454219d7c442e1796.png"
   },
@@ -448,6 +580,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Split Payload call-to-action block: heading and copy on one side, CTA links and assurance on the other.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/call-to-action-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/call-to-action-split",
     "image": "/registry-previews/00399a4259df7add7a472a04134dd203f174c18ef15b85bb1d6959463a993d8e.png"
   },
@@ -458,6 +593,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Email-capture Payload call-to-action block: heading, copy, and a form that posts to a same-origin endpoint.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/call-to-action-signup.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/call-to-action-signup",
     "image": "/registry-previews/52c210c060260417d0ad8949fced38ab5654f204c19e2acf92c6e366f1997f62.png"
   },
@@ -468,6 +606,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Validated contact channels beside an accessible same-origin inquiry form.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/contact-routing-form.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/contact-routing-form",
     "image": "/registry-previews/c6c36f1febcf7efbdb5d6548b65ca3940b4fc975248d7a27e0cbd46236f970f7.png"
   },
@@ -478,6 +619,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Form-free Payload contact block: a grid of validated email, phone, and URL channels.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/contact-channels.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/contact-channels",
     "image": "/registry-previews/ecfcb52eb072c06724b8a5c4fb729e5130a9d216b5f801fe789e03febc6ce9f2.png"
   },
@@ -488,6 +632,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload team block: department-grouped sections, each a grid of member avatars with name and role.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/team-roster.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/team-roster",
     "image": "/registry-previews/da68e3a1f188be478e1fdf897b26ae05464f8f4fa40005c06353dc4f9a234f6e.png"
   },
@@ -498,6 +645,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload team block: a heading and intro above a responsive grid of member photo cards that reveal role on hover.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/team-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/team-grid",
     "image": "/registry-previews/2b551978867e4bb4c06102514247d540d5b3950e747a00a18379dc7968e97495.png"
   },
@@ -508,6 +658,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Bio-forward Payload team block: two-up member cards with avatar, role, and biography.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/team-bios.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/team-bios",
     "image": "/registry-previews/3ed5ff4589851f95f3da66fa81b4e955ced8dd4c6583afbaceb84c1478bdb6ac.png"
   },
@@ -518,6 +671,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload FAQ block: a centered accordion of question/answer items with an optional CTA.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/faq-accordion.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-accordion",
     "image": "/registry-previews/bc9dc86af008b3ded38a884f90e27db9147be6d6204dd4273e03dc8d85d40e1b.png"
   },
@@ -528,6 +684,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload FAQ block: a two-column layout pairing a sticky heading and CTA with an accordion.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/faq-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-split",
     "image": "/registry-previews/8aa4ceea81126798a010e7829b54827450441354fee951c469e9f0cfc2c4bac8.png"
   },
@@ -538,6 +697,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload FAQ block: a centered accordion wrapped in a card with an optional CTA.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/faq-card.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-card",
     "image": "/registry-previews/de1af9e470b0a9040d536399ecf59db37b2a4c83e2d18d6622569e191d47b8d0.png"
   },
@@ -548,6 +710,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload FAQ block: an accordion with a per-question icon from a fixed allowlist.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/faq-icons.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-icons",
     "image": "/registry-previews/7adc3cee0a60d06d2c16afddb682d16136735aebe19390d4b11bb93ff59e76d0.png"
   },
@@ -558,6 +723,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload FAQ block: titled, icon-tagged category groups of accordions.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/faq-grouped.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-grouped",
     "image": "/registry-previews/39ca9e7ae10c7c6c296b1fa311d74b52b56854d7a41822dcb49e634266e4c6e4.png"
   },
@@ -568,6 +736,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload FAQ block: a static two-column grid of question/answer cards.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/faq-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-grid",
     "image": "/registry-previews/92a2e9d9d956534bcf86ecaee55d45b31fc5d110b93853ef4538764c22ec848b.png"
   },
@@ -578,6 +749,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Tiered feature-comparison table Payload block: plan columns with CTAs over grouped feature rows.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/comparator-table.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/comparator-table",
     "image": "/registry-previews/f14f5f77361b38e167e998739379972789bb297e2ba9788266ef28562b986820.png"
   },
@@ -588,6 +762,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Plan-column comparison Payload block: pricing columns in a bordered card over a feature matrix.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/comparator-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/comparator-grid",
     "image": "/registry-previews/430dfe9e5a1cef8cd8384b49251b92da1f2dba15bbe367762337cbf44274ef7d.png"
   },
@@ -598,6 +775,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Stacked plan-card comparison Payload block: one card per plan with its own price, CTA, and feature checklist.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/comparator-stack.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/comparator-stack",
     "image": "/registry-previews/bea0ec49cedacafdd132778ab1a10a134dc5ef0f95aafea15ff89971a6b5ef0a.png"
   },
@@ -608,6 +788,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload testimonials block: a single featured quote with a left accent bar, author, optional role, and avatar.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/testimonials-quote.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-quote",
     "image": "/registry-previews/fe2286515963a59ba18a421d24c60f5ce1d5822df1b31ff7e066124466fddd2c.png"
   },
@@ -618,6 +801,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload testimonials block: a single centered testimonial with a quote-mark, large avatar, author, and role.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/testimonials-spotlight.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-spotlight",
     "image": "/registry-previews/5e2fdcbb76b645cd32f8524541783fcb6be5ec0e5661c57b27a3cb9dadc8db26.png"
   },
@@ -628,6 +814,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload testimonials block: a heading above a responsive grid of quote cards, each with author, optional role, and avatar.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/testimonials-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-grid",
     "image": "/registry-previews/5d480edc22329b2729e7d9fca9f1185c5238fb3324c34966d9aaaa66b455cad8.png"
   },
@@ -638,6 +827,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload testimonials block: a responsive grid of review cards, each with a star rating, quote, author, optional role, and avatar.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/testimonials-rating.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-rating",
     "image": "/registry-previews/d92dc91d1fa2d245a6df98d438154921eba524732fdae045fd8157265dc82da3.png"
   },
@@ -648,6 +840,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload testimonials block: an asymmetric bento with one featured quote in a large cell and supporting quotes around it.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/testimonials-bento.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-bento",
     "image": "/registry-previews/eb5df84d09af837a695974b7d4f551f424b3d9d95c9c8d9323098174fdeac3ea.png"
   },
@@ -658,6 +853,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Payload testimonials block: a heading above a multi-column masonry wall of compact testimonial cards.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/testimonials-wall.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-wall",
     "image": "/registry-previews/a5aba520b8ff8d17f673aabec2a28a4fbf74ef895b40b5bb2f8122bd9b4e2137.png"
   },
@@ -668,6 +866,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Narrative and prominent string metrics paired with semantic customer proof.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/stats-proof.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/stats-proof",
     "image": "/registry-previews/f9ad58f97102b75e401012af99f9a120db2f3d6843d100cfe3a64f8f850817c0.png"
   },
@@ -678,6 +879,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Heading and intro above a responsive grid of large string metrics on rule-topped columns.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/stats-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/stats-grid",
     "image": "/registry-previews/d9fec9744d7b21043abd0862895e694e86c5c2c91891fe41159e502778b42b83.png"
   },
@@ -688,6 +892,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A centred heading above one divided panel that splits metrics into equal columns.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/stats-card.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/stats-card",
     "image": "/registry-previews/e6555cd6b8608e2c0ad1c183ce25dbe33a8209e0d7e18768705877b53a406319.png"
   },
@@ -698,6 +905,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Heading and intro above rule-topped rows where each figure reads as one sentence.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/stats-inline.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/stats-inline",
     "image": "/registry-previews/c54aca443ed9ba357ccd0eaabd366ccb383fe057a858abf32786da1c61212e67.png"
   },
@@ -708,6 +918,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Three-up pricing table of editable plan cards with a highlighted plan.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/pricing-cards.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/pricing-cards",
     "image": "/registry-previews/93bf98d2bcedadd11d33e8b10f5a6a272f51184ec07d819e63cdd303f5463c17.png"
   },
@@ -718,6 +931,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Three-up pricing table on muted card surfaces with a highlighted plan.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/pricing-cards-muted.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/pricing-cards-muted",
     "image": "/registry-previews/60b876a3a0205bf57851f30a9f75b7abe65e4a43805c396cac45e4df5450c513.png"
   },
@@ -728,6 +944,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Three-up pricing table with the CTA inside each plan header.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/pricing-cards-cta.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/pricing-cards-cta",
     "image": "/registry-previews/00af2a602df2987fcbac6e0f02463572d3bf3439aa379453a595323b5676a1d4.png"
   },
@@ -738,6 +957,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Two-plan split pricing: a compact entry plan beside an expanded featured plan.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/pricing-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/pricing-split",
     "image": "/registry-previews/f131d0babaf190f5619751d5ae3a6c8aed8b43d023dabce1e39f52267e0842bb.png"
   },
@@ -748,6 +970,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "Single wide enterprise pricing panel with an editable trust-logo wall.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/pricing-enterprise.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/pricing-enterprise",
     "image": "/registry-previews/c8e1f008b63babc2492cc8796f6a97062a2ba87d92330f96992134fb03e4a7b1.png"
   },
@@ -758,6 +983,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A Pages block that queries the starter Posts collection by category or manual selection and renders grid, list, or featured cards.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/collection-query.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/collection-query",
     "image": "/registry-previews/2d2e8a4248f6cb41da8a86ada6328e7c49862b7b814dee5cee63301b04173c47.png"
   },
@@ -768,6 +996,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A brand block beside labelled columns of navigation links, closed by a copyright rule.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/footer-columns.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/footer-columns",
     "image": "/registry-previews/534715b5ae5489f0b4fd308dedb84e590c360949f21ae4f0e8f94d2bf5925350.png"
   },
@@ -778,6 +1009,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A compact footer keeping the brand and one wrapped row of links on a line, copyright beneath.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/footer-simple.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/footer-simple",
     "image": "/registry-previews/e518a0621b93a6d278f31e01fbd01fda29fac5f9da9ea3abcce43f6a40c05ce7.png"
   },
@@ -788,6 +1022,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A centred brand, tagline, and navigation above a rule carrying copyright and policy links.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/footer-centered.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/footer-centered",
     "image": "/registry-previews/ac104f18b3909655e7e20de93ed9d5f17a7bb2798f3a388c3c534419ff1bebd7.png"
   },
@@ -798,6 +1035,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "An accessible contact form with name, email, organization, and message fields, inline validation, and confirmed submission feedback.",
     "kind": "block",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/contact-form-basic.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/contact-form-basic",
     "image": "/registry-previews/36e78531f6634bfaa9829687125cdd0928a7c4960fe2cf3a6a5f5e58d43d6c89.png"
   },
@@ -808,6 +1048,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "An editorial article header with title, summary, categories, byline, date, and an optional image slot.",
     "kind": "component",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/post-hero.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/post-hero",
     "image": "/registry-previews/2cbf6bd3fe0cdef8b39e53eec6ca5ca14cc1682b25f41c816612966f75f60757.png"
   },
@@ -818,6 +1061,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "An article author profile with optional avatar, role, biography, and profile link.",
     "kind": "component",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/author-card.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/author-card",
     "image": "/registry-previews/275c4e26458eb27c9e7793a3378adc174004a913779262c4ff47bba68ccb38cc.png"
   },
@@ -828,6 +1074,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A newsletter signup callout with a consumer-owned form endpoint.",
     "kind": "component",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/newsletter-callout.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/newsletter-callout",
     "image": "/registry-previews/221ce10a3abf7d161217bf54d54dd3b89004e1bbec2c0da40739f708949624e4.png"
   },
@@ -838,6 +1087,9 @@ export const catalog: readonly RegistryItem[] = [
     "description": "A compact end-of-post list of related articles your template selects; the current post is always excluded.",
     "kind": "component",
     "source": "@payload-components",
+    "sourceName": "Payload Components",
+    "sourceHomepage": "https://www.payload-components.xyz",
+    "itemUrl": "https://www.payload-components.xyz/r/related-posts.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/related-posts",
     "image": "/registry-previews/5f151125d9f34bacb38be4c2c84ce62c49ed3a3d27fb3f9836a2381723d9b716.png"
   }

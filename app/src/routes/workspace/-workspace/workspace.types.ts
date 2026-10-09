@@ -15,6 +15,9 @@ export type RegistryItem = {
   kind: ItemKind
   /** `payload-toolkit` for bundled items, otherwise the registry namespace. */
   source: string
+  sourceName?: string
+  sourceHomepage?: string
+  itemUrl?: string
   /** Bundled items only: the installed feature guide path. */
   guide?: string
   /** Resolved HTTPS image or local captured thumbnail, and source preview page. */

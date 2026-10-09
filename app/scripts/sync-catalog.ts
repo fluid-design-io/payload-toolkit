@@ -109,6 +109,9 @@ async function bundled(): Promise<RegistryItem[]> {
       description: text(item.description, `${at}.description`),
       kind: 'feature',
       source: 'payload-toolkit',
+      sourceName: 'Payload Toolkit',
+      sourceHomepage: text(registry.homepage, `${where}.homepage`),
+      itemUrl: `${text(registry.homepage, `${where}.homepage`)}/blob/main/registry/${encodeURIComponent(name)}/GUIDE.md`,
       guide: text(toolkit.guide, `${at}.meta.payloadToolkit.guide`),
       ...preview,
     }
@@ -151,6 +154,9 @@ async function community(): Promise<RegistryItem[]> {
         description: text(item.description, `${itemAt}.description`),
         kind,
         source: namespace,
+        sourceName: text(entry.name, `${at}.name`),
+        sourceHomepage: text(entry.homepage, `${at}.homepage`),
+        itemUrl: template.replace('{name}', encodeURIComponent(name)),
         ...preview,
       })
     }

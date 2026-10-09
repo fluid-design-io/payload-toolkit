@@ -263,7 +263,19 @@ Install the development browser with `bun x playwright install chromium`, or set
 and the catalog. Capture uses a 1280 by 800 light viewport with reduced motion;
 unchanged URLs reuse cached captures. `--refresh` recaptures; failed captures exit
 nonzero and retain only matching cached images. This is separate from app builds;
-visitors receive static images. There are no external preview links or iframes.
+visitors receive static images. Preview pages are not embedded in iframes.
+Each card has a separate details button beside its title/kind that opens a right
+HeroUI Pro Sheet (`registry/registry.details.tsx`). The Sheet shows a larger
+thumbnail, description, registry name/namespace, registry homepage and an external
+link to the exact preview page (or registry item JSON when no preview is declared).
+Bundled features link to their source guide. `sourceName`, `sourceHomepage` and
+`itemUrl` are generated provenance fields, with no provider-specific UI branches.
+The Sheet's add/remove button uses the same per-item selection as the card and
+keeps the Sheet open. Its local open state does not alter the workspace URL.
+The details trigger is a sibling of the checkbox label, so opening it never toggles
+selection. It is visually hidden until the card is hovered or contains focus;
+keyboard users can still tab to it. Escape, backdrop and the close button dismiss
+it and restore focus.
 See `../docs/community-registries.md` for the contribution contract. Bundled items become
 features with their guide path. Community `registry:block` and
 `registry:component` items become blocks and components; other types are
