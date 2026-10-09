@@ -2,6 +2,7 @@ import { RiBox3Line, RiPuzzle2Line } from '@remixicon/react'
 import type { RemixiconComponentType } from '@remixicon/react'
 import { useState, type ComponentType } from 'react'
 import type { ItemKind, RegistryItem } from '../workspace.types'
+import { useWorkspaceTheme } from '../workspace.theme'
 import { blockGroup } from '../workspace.utils'
 
 const line = 'h-1.5 rounded-full bg-foreground/10'
@@ -144,15 +145,18 @@ const kindIcons: Record<Exclude<ItemKind, 'block'>, RemixiconComponentType> = {
  * of their group and features and components an icon, all decorative.
  */
 export function RegistryThumbnail({ item }: { item: RegistryItem }) {
-  const [failedImage, setFailedImage] = useState<string>()
-  if (item.image && item.image !== failedImage)
+  const theme = useWorkspaceTheme()
+  const [failedImages, setFailedImages] = useState<readonly string[]>([])
+  const candidates = theme === 'dark' ? [item.imageDark, item.image] : [item.image, item.imageDark]
+  const image = candidates.find((url) => url && !failedImages.includes(url))
+  if (image)
     return (
       <img
-        src={item.image}
+        src={image}
         alt=""
         loading="lazy"
         referrerPolicy="no-referrer"
-        onError={() => setFailedImage(item.image)}
+        onError={() => setFailedImages((urls) => [...urls, image])}
         className="size-full object-cover"
       />
     )

@@ -4,7 +4,7 @@ import { RiAddLine, RiCheckLine, RiExpandDiagonalLine, RiExternalLinkLine } from
 import { useState } from 'react'
 import { useWorkspace, useWorkspaceSelector } from '../workspace.context'
 import type { CatalogItem } from '../workspace.types'
-import { RegistryThumbnail } from './registry.thumbnail'
+import { RegistryPreview } from './registry.preview'
 
 export function RegistryDetails({ item }: { item: CatalogItem }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -41,7 +41,7 @@ export function RegistryDetails({ item }: { item: CatalogItem }) {
               </Sheet.Header>
               <Sheet.Body className="flex flex-col gap-6">
                 <div className="aspect-[16/10] w-full shrink-0 overflow-hidden rounded-2xl bg-surface-secondary">
-                  <RegistryThumbnail item={item} />
+                  <RegistryPreview item={item} />
                 </div>
                 <p className="text-sm text-muted">{item.description}</p>
                 <div className="flex flex-col gap-2">

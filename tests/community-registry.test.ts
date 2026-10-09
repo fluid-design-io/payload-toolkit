@@ -108,3 +108,28 @@ test('preview declarations support URL-only, image-only, overrides and opt outs'
     )
   }
 })
+
+test('preview images support light/dark variants and explicit embedding', () => {
+  const preview = {
+    image: {
+      light: 'https://example.com/{name}.webp',
+      dark: 'https://example.com/{name}-dark.webp',
+    },
+    embed: true,
+    items: { helper: { embed: false } },
+  }
+  assert.deepEqual(
+    parseCommunityDirectory(directory([{ ...registry, preview }])).registries[0]?.preview,
+    preview,
+  )
+  for (const image of [
+    {},
+    { dark: 'javascript:alert(1)' },
+    { light: 'http://example.com/light.webp' },
+    { other: 'https://example.com/a.webp' },
+  ])
+    assert.throws(() => parseCommunityDirectory(directory([{ ...registry, preview: { image } }])))
+  assert.throws(() =>
+    parseCommunityDirectory(directory([{ ...registry, preview: { embed: 'true' } }])),
+  )
+})

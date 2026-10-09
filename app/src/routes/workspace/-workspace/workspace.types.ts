@@ -22,7 +22,9 @@ export type RegistryItem = {
   guide?: string
   /** Resolved HTTPS image or local captured thumbnail, and source preview page. */
   image?: string
+  imageDark?: string
   previewUrl?: string
+  previewEmbed?: boolean
 }
 
 /** Everything the command needs. It is mirrored into the URL search params. */

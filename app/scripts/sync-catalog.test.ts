@@ -115,7 +115,7 @@ describe('captured thumbnails', () => {
     source: '@example',
     previewUrl: 'https://example.com/hero',
   }
-  const image = `/registry-previews/${'a'.repeat(64)}.png`
+  const image = `/registry-previews/${'a'.repeat(64)}-light.webp`
   test('a capture is used only for its matching preview URL', () => {
     expect(capturedImage(item, { [item.ref]: { url: item.previewUrl, image } })).toBe(image)
     expect(
@@ -135,5 +135,62 @@ describe('captured thumbnails', () => {
         { [item.ref]: { url: item.previewUrl, image } },
       ),
     ).toBe('https://example.com/image.webp')
+  })
+})
+
+describe('themed preview metadata', () => {
+  test('light/dark image metadata resolves each variant with independent precedence', () => {
+    expect(
+      previewFields(
+        { preview: { image: { light: '/light.webp', dark: '/dark.webp' }, embed: true } },
+        undefined,
+        'hero',
+        base,
+      ),
+    ).toEqual({
+      image: 'https://www.payload-components.xyz/light.webp',
+      imageDark: 'https://www.payload-components.xyz/dark.webp',
+      previewEmbed: true,
+    })
+    expect(
+      previewFields(
+        { image: { light: '/light.webp', dark: '/dark.webp' } },
+        {
+          image: 'https://example.com/{name}.webp',
+          items: {
+            hero: { image: { dark: 'https://example.com/custom-dark.webp' }, embed: false },
+          },
+        },
+        'hero',
+        base,
+      ),
+    ).toEqual({
+      image: 'https://www.payload-components.xyz/light.webp',
+      imageDark: 'https://example.com/custom-dark.webp',
+      previewEmbed: false,
+    })
+    expect(
+      previewFields({}, { image: { dark: 'https://example.com/{name}-dark.webp' } }, 'hero', base),
+    ).toEqual({ image: 'https://example.com/hero-dark.webp' })
+    expect(() => previewFields({ preview: { embed: 'yes' } }, undefined, 'hero', base)).toThrow()
+  })
+  test('dark captures are selected, while a single available capture works in both themes', () => {
+    const item = {
+      ref: 'hero',
+      name: 'hero',
+      title: 'Hero',
+      description: '',
+      kind: 'block' as const,
+      source: 'example',
+      previewUrl: 'https://example.com/hero',
+    }
+    const image = `/registry-previews/${'a'.repeat(64)}-light.webp`
+    const imageDark = `/registry-previews/${'a'.repeat(64)}-dark.webp`
+    const captures = { hero: { url: item.previewUrl, image, imageDark } }
+    expect(capturedImage(item, captures, 'dark')).toBe(imageDark)
+    expect(capturedImage(item, { hero: { url: item.previewUrl, image } }, 'dark')).toBe(image)
+    expect(
+      capturedImage({ ...item, imageDark: 'https://example.com/explicit.webp' }, captures, 'dark'),
+    ).toBe('https://example.com/explicit.webp')
   })
 })
