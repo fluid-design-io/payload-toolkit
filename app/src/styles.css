@@ -6,6 +6,7 @@
 @import '@heroui-pro/react/css/components/action-bar.css' layer(components);
 @import '@heroui-pro/react/css/components/empty-state.css' layer(components);
 @import '@heroui-pro/react/css/components/segment.css' layer(components);
+@import '@heroui-pro/react/css/components/widget.css' layer(components);
 
 /* heroui-design-system:start eb54f1e3-c413-45cc-9ec2-bbfe398d7baf updatedAt=1791502589293 */
 @import '@heroui-pro/react/themes/mouve';

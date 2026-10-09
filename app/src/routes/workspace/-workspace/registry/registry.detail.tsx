@@ -33,16 +33,27 @@ const content: Variants = {
   gone: { opacity: 0, transition: { duration: 0.12 } },
 }
 
+/**
+ * The source is the detail's one link, and it opens this item's own page in
+ * the registry: its preview page, else its registry entry or guide, else the
+ * registry's homepage.
+ */
 function DetailSource({ item }: { item: CatalogItem }) {
-  const itemUrl = item.previewUrl ?? item.itemUrl
+  const href = item.previewUrl ?? item.itemUrl ?? item.sourceHomepage
   const sourceName = item.sourceName ?? item.source
   return (
     <m.div variants={riseIn} className="flex flex-col gap-1.5">
       <Typography type="body-xs" color="muted">
         From
       </Typography>
-      {item.sourceHomepage ? (
-        <Link href={item.sourceHomepage} target="_blank" rel="noopener noreferrer" className="w-fit text-sm">
+      {href ? (
+        <Link
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`View ${item.title} on ${sourceName} (opens in a new tab)`}
+          className="w-fit text-sm"
+        >
           {sourceName}
           <Link.Icon>
             <RiExternalLinkLine size={14} aria-hidden="true" />
@@ -56,20 +67,6 @@ function DetailSource({ item }: { item: CatalogItem }) {
       <Typography type="body-xs" color="muted" className="font-mono break-all">
         {item.ref}
       </Typography>
-      {itemUrl && (
-        <Link
-          href={itemUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`View ${item.title} on ${sourceName} (opens in a new tab)`}
-          className="mt-1 w-fit text-sm"
-        >
-          {item.kind === 'feature' ? 'View guide' : item.previewUrl ? 'View component' : 'View registry item'}
-          <Link.Icon>
-            <RiExternalLinkLine size={14} aria-hidden="true" />
-          </Link.Icon>
-        </Link>
-      )}
     </m.div>
   )
 }

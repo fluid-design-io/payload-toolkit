@@ -18,7 +18,7 @@ const views: Record<Exclude<Panel, null>, { title: string; View: () => JSX.Eleme
 }
 
 /** The risen card is one size for every view and option; it shrinks only to fit the viewport. */
-const card = { width: 448, height: 576 }
+const card = { width: 448, height: 530 }
 const rail = 240
 
 function useCardSize() {
