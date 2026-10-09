@@ -1,4 +1,4 @@
-import { Segment } from '@heroui-pro/react'
+import { Segment, Widget } from '@heroui-pro/react'
 import {
   Button,
   Description,
@@ -10,7 +10,6 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
-  Typography,
 } from '@heroui/react'
 import {
   RiCheckLine,
@@ -19,6 +18,7 @@ import {
   RiSparkling2Line,
   RiTerminalBoxLine,
 } from '@remixicon/react'
+import type { ReactNode } from 'react'
 import { Fragment, useEffect, useId, useState } from 'react'
 import {
   agents,
@@ -175,69 +175,12 @@ function InstallOutput() {
 }
 
 /**
- * A terminal option: the CLI hands off to Claude Code or Codex after
- * installing. The switch remembers the last agent, so turning it back on
- * restores that choice. The CLI only hands off when an item is selected.
- */
-function InstallAgent() {
-  const { actions } = useWorkspace()
-  const isCommand = useWorkspaceSelector((state) => state.output === 'command')
-  const agent = useWorkspaceSelector((state) => state.setup.agent)
-  const isDisabled = useWorkspaceSelector((state) => state.setup.items.length === 0)
-  const [last, setLast] = useState<Exclude<Agent, 'none'>>(agent === 'none' ? 'claude' : agent)
-  if (!isCommand) return null
-  const isOn = agent !== 'none' && !isDisabled
-
-  return (
-    <div className="ms-2 flex flex-col gap-3 border-s-2 border-border ps-4">
-      <Switch
-        isSelected={isOn}
-        isDisabled={isDisabled}
-        onChange={(selected) => actions.setAgent(selected ? last : 'none')}
-        className="w-full flex-row items-start justify-between gap-4"
-      >
-        <Switch.Content className="flex-1 flex-col items-start gap-1">
-          <Label>Have an agent finish the install</Label>
-          <Description>
-            {isDisabled
-              ? 'Add an item to enable.'
-              : "After the files land, the agent follows each item's guide to wire it into your project, fixing imports, registering blocks and regenerating types, then runs your checks and reports what it found. It never touches your Git history."}
-          </Description>
-        </Switch.Content>
-        <Switch.Control className="mt-0.5 shrink-0">
-          <Switch.Thumb />
-        </Switch.Control>
-      </Switch>
-      {isOn && (
-        <Segment
-          aria-label="Agent"
-          size="sm"
-          selectedKey={agent}
-          onSelectionChange={(key) => {
-            const next = key === 'codex' ? 'codex' : 'claude'
-            setLast(next)
-            actions.setAgent(next)
-          }}
-          className="self-start"
-        >
-          {agents
-            .filter((option) => option.value !== 'none')
-            .map((option) => (
-              <Segment.Item key={option.value} id={option.value}>
-                {option.label}
-              </Segment.Item>
-            ))}
-        </Segment>
-      )}
-    </div>
-  )
-}
-
-/**
  * The preview is exactly what the bar's Copy writes, so nothing reaches the
- * clipboard unseen. A command wraps only between arguments, never inside a flag.
+ * clipboard unseen. A command wraps only between arguments, never inside a
+ * flag. The header says where to run it and carries the agent picker while
+ * the CLI hands off.
  */
-function InstallPreview() {
+function InstallPreview({ picker }: { picker: ReactNode }) {
   const { meta } = useWorkspace()
   const output = useWorkspaceSelector((state) => state.output)
   const target = useWorkspaceSelector((state) => state.setup.target)
@@ -248,33 +191,98 @@ function InstallPreview() {
   const isCommand = error === null && output === 'command'
   const hint =
     output === 'prompt'
-      ? 'Paste into Claude Code, Codex, Cursor or any coding agent.'
+      ? 'Paste into any coding agent'
       : target === 'new'
-        ? 'Run from the folder that will hold the project.'
-        : 'Run from your project root.'
+        ? 'Run from the parent folder'
+        : 'Run from your project root'
 
   return (
-    <div className="flex flex-col gap-3">
-      <ScrollShadow className="max-h-48 overflow-y-auto rounded-2xl bg-surface-secondary">
-        <pre
-          data-command={isCommand}
-          data-error={error !== null}
-          className="whitespace-pre-wrap break-words p-3 font-sans text-xs leading-relaxed data-[command=true]:font-mono data-[error=true]:text-muted"
+    <Widget>
+      <Widget.Header className="min-h-11">
+        <Widget.Description>{hint}</Widget.Description>
+        {picker}
+      </Widget.Header>
+      <Widget.Content className="bg-default p-0">
+        <ScrollShadow className="max-h-48 overflow-y-auto">
+          <pre
+            data-command={isCommand}
+            data-error={error !== null}
+            className="whitespace-pre-wrap break-words p-3 font-sans text-xs leading-relaxed data-[command=true]:font-mono data-[error=true]:text-muted"
+          >
+            {isCommand
+              ? text.split(' ').map((token, index) => (
+                  <Fragment key={index}>
+                    {index ? ' ' : ''}
+                    <span className="whitespace-nowrap">{token}</span>
+                  </Fragment>
+                ))
+              : text}
+          </pre>
+        </ScrollShadow>
+      </Widget.Content>
+    </Widget>
+  )
+}
+
+/**
+ * How the setup runs. In the terminal the CLI can hand off to Claude Code or
+ * Codex after installing; the switch remembers the last agent, so turning it
+ * back on restores that choice. The CLI only hands off when an item is
+ * selected.
+ */
+function InstallRun() {
+  const { actions } = useWorkspace()
+  const isCommand = useWorkspaceSelector((state) => state.output === 'command')
+  const agent = useWorkspaceSelector((state) => state.setup.agent)
+  const isDisabled = useWorkspaceSelector((state) => state.setup.items.length === 0)
+  const [last, setLast] = useState<Exclude<Agent, 'none'>>(agent === 'none' ? 'claude' : agent)
+  const isOn = isCommand && agent !== 'none' && !isDisabled
+
+  return (
+    <>
+      {isCommand && (
+        <Switch
+          isSelected={isOn}
+          isDisabled={isDisabled}
+          onChange={(selected) => actions.setAgent(selected ? last : 'none')}
+          className="w-full flex-row items-start justify-between gap-4"
         >
-          {isCommand
-            ? text.split(' ').map((token, index) => (
-                <Fragment key={index}>
-                  {index ? ' ' : ''}
-                  <span className="whitespace-nowrap">{token}</span>
-                </Fragment>
-              ))
-            : text}
-        </pre>
-      </ScrollShadow>
-      <Typography type="body-xs" color="muted">
-        {hint}
-      </Typography>
-    </div>
+          <Switch.Content className="flex-1 flex-col items-start gap-0.5">
+            <Label>Have an agent finish the install</Label>
+            <Description>
+              {isDisabled ? 'Add an item to enable.' : 'Wires each item in and runs your checks.'}
+            </Description>
+          </Switch.Content>
+          <Switch.Control className="mt-0.5 shrink-0">
+            <Switch.Thumb />
+          </Switch.Control>
+        </Switch>
+      )}
+      <InstallPreview
+        picker={
+          isOn && (
+            <Segment
+              aria-label="Agent"
+              size="sm"
+              selectedKey={agent}
+              onSelectionChange={(key) => {
+                const next = key === 'codex' ? 'codex' : 'claude'
+                setLast(next)
+                actions.setAgent(next)
+              }}
+            >
+              {agents
+                .filter((option) => option.value !== 'none')
+                .map((option) => (
+                  <Segment.Item key={option.value} id={option.value}>
+                    {option.label}
+                  </Segment.Item>
+                ))}
+            </Segment>
+          )
+        }
+      />
+    </>
   )
 }
 
@@ -288,8 +296,7 @@ export function InstallView() {
         <ScrollShadow className="-me-3 flex h-full flex-col gap-5 overflow-y-auto pe-3 pb-1">
           <InstallProject />
           <InstallOutput />
-          <InstallAgent />
-          <InstallPreview />
+          <InstallRun />
         </ScrollShadow>
       </CardSection>
     </>
