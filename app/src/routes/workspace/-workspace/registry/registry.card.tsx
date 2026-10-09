@@ -1,7 +1,7 @@
-import { TextContext } from 'react-aria-components'
-import { Typography, Checkbox } from '@heroui/react'
+import { Checkbox, Typography } from '@heroui/react'
 import { RiAddLine, RiCheckLine } from '@remixicon/react'
 import { memo, useId } from 'react'
+import { TextContext } from 'react-aria-components'
 import { useWorkspace, useWorkspaceSelector } from '../workspace.context'
 import type { CatalogItem } from '../workspace.types'
 import { RegistryThumbnail } from './registry.thumbnail'
@@ -17,15 +17,9 @@ import { RegistryThumbnail } from './registry.thumbnail'
  * the label's text and referenced as the description, so the checkbox is
  * named by the title alone.
  */
-export const RegistryCard = memo(function RegistryCard({
-  item,
-}: {
-  item: CatalogItem
-}) {
+export const RegistryCard = memo(function RegistryCard({ item }: { item: CatalogItem }) {
   const { actions } = useWorkspace()
-  const isSelected = useWorkspaceSelector((state) =>
-    state.setup.items.includes(item.ref),
-  )
+  const isSelected = useWorkspaceSelector((state) => state.setup.items.includes(item.ref))
   const kindId = useId()
 
   return (
@@ -35,7 +29,7 @@ export const RegistryCard = memo(function RegistryCard({
       onChange={(selected) => actions.toggleItem(item.ref, selected)}
       className="group/card w-full"
     >
-      <Checkbox.Content className="w-full rounded-(--card-radius) border-(length:--card-border) border-transparent p-(--card-pad) [--card-border:2px] [--card-inset:calc(var(--card-pad)+var(--card-border))] [--card-pad:calc(var(--spacing)*1.5)] [--card-radius:var(--radius-xl)] data-[focus-visible=true]:status-focused data-[hovered=true]:bg-surface-secondary group-data-[selected=true]/card:border-accent">
+      <Checkbox.Content className="w-full transition-all duration-150 rounded-(--card-radius) border-(length:--card-border) border-transparent p-(--card-pad) [--card-border:2px] [--card-inset:calc(var(--card-pad)+var(--card-border))] [--card-pad:calc(var(--spacing)*1.5)] [--card-radius:var(--radius-xl)] data-[focus-visible=true]:status-focused data-[hovered=true]:bg-surface-secondary group-data-[selected=true]/card:border-accent">
         <span title={item.description} className="flex w-full flex-col gap-2.5">
           <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-(--thumb-radius) bg-surface-secondary [--thumb-radius:max(0px,calc(var(--card-radius)-var(--card-inset)))]">
             <RegistryThumbnail item={item} />

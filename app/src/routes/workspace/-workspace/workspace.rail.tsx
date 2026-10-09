@@ -10,9 +10,7 @@ import type { Category } from './workspace.types'
 
 function RailItem({ category }: { category: Category }) {
   const { actions } = useWorkspace()
-  const isCurrent = useWorkspaceSelector(
-    (state) => state.category === category.id,
-  )
+  const isCurrent = useWorkspaceSelector((state) => state.category === category.id)
 
   return (
     <Sidebar.MenuItem
@@ -23,9 +21,7 @@ function RailItem({ category }: { category: Category }) {
     >
       <Sidebar.MenuItemContent className="in-data-[current=true]:bg-surface in-data-[current=true]:shadow-surface px-4">
         <Sidebar.MenuLabel>{category.label}</Sidebar.MenuLabel>
-        <Sidebar.MenuChip className="tabular-nums">
-          {category.count}
-        </Sidebar.MenuChip>
+        <Sidebar.MenuChip className="tabular-nums">{category.count}</Sidebar.MenuChip>
       </Sidebar.MenuItemContent>
     </Sidebar.MenuItem>
   )
@@ -61,7 +57,7 @@ function RailBody() {
       <Sidebar.Footer className="flex-row items-center justify-between ps-5">
         <Link
           to="/"
-          className={buttonVariants({ variant: 'ghost', isIconOnly: true })}
+          className={buttonVariants({ variant: 'ghost', isIconOnly: true, className: 'group' })}
         >
           <LogoMark className="h-5 w-auto" />
         </Link>
@@ -73,7 +69,12 @@ function RailBody() {
 
 function WorkspaceRailRoot({ children }: PropsWithChildren) {
   return (
-    <Sidebar.Provider collapsible="icon" variant="inset" toggleShortcut={false}>
+    <Sidebar.Provider
+      collapsible="icon"
+      variant="inset"
+      toggleShortcut={false}
+      className="container mx-auto"
+    >
       <Sidebar aria-label="Categories">
         <RailBody />
       </Sidebar>

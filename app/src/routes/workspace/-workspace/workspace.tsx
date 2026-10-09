@@ -1,5 +1,5 @@
-import { Typography } from '@heroui/react'
 import { Sidebar } from '@heroui-pro/react'
+import { Typography } from '@heroui/react'
 import type { PropsWithChildren } from 'react'
 import { Bar } from './bar/bar'
 import { Registry } from './registry/registry'
@@ -17,11 +17,7 @@ function WorkspaceRoot({ children }: PropsWithChildren) {
 
 /** Bottom padding keeps the last row of cards clear of the floating bar. */
 function WorkspaceMain({ children }: PropsWithChildren) {
-  return (
-    <Sidebar.Main className="pb-32 px-5 pt-5 flex flex-col gap-5">
-      {children}
-    </Sidebar.Main>
-  )
+  return <Sidebar.Main className="pb-32 px-6 pt-6 flex flex-col gap-5">{children}</Sidebar.Main>
 }
 
 function WorkspaceIntro() {
@@ -40,7 +36,7 @@ function WorkspaceIntro() {
  */
 function WorkspaceToolbar({ children }: PropsWithChildren) {
   return (
-    <div className="sticky top-0 z-10 order-first -mx-4 flex items-center gap-2 bg-background px-4 py-2 md:-mx-8 md:px-8 min-[769px]:contents">
+    <div className="sticky top-0 z-10 order-first -mx-6 flex items-center gap-2 bg-surface px-4 py-2 md:-mx-8 md:px-8 min-[769px]:contents">
       {children}
     </div>
   )
