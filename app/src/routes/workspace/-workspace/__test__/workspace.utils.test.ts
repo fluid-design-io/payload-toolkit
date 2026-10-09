@@ -1,6 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 import type { RegistryItem, Setup } from '../workspace.types'
-import { directoryError, toCatalog, toCommand, toPrompt, visibleItems } from '../workspace.utils'
+import {
+  directoryError,
+  installError,
+  toCatalog,
+  toCommand,
+  toPrompt,
+  visibleItems,
+} from '../workspace.utils'
 
 const catalog: readonly RegistryItem[] = [
   {
@@ -31,6 +38,7 @@ const catalog: readonly RegistryItem[] = [
 ]
 
 const acme: Setup = {
+  target: 'new',
   name: 'acme',
   framework: 'next',
   database: 'postgres',
@@ -88,6 +96,35 @@ describe('toCommand', () => {
   })
 })
 
+describe('toCommand for an existing project', () => {
+  const existing: Setup = { ...acme, target: 'existing', agent: 'claude' }
+
+  test('add takes the refs as arguments and ignores the new-project fields', () => {
+    expect(toCommand({ ...existing, items: ['@payload-components/media', 'forms'] }, catalog)).toBe(
+      'bunx --bun payload-toolkit@alpha add forms @payload-components/media --claude',
+    )
+    expect(toCommand({ ...existing, agent: 'none', items: ['forms'] }, catalog)).toBe(
+      'bunx --bun payload-toolkit@alpha add forms',
+    )
+  })
+
+  test('a registry URL is quoted as one argument', () => {
+    const url: RegistryItem = { ...catalog[2], ref: 'https://example.com/r/a b.json' }
+    expect(toCommand({ ...existing, agent: 'codex', items: [url.ref] }, [url])).toBe(
+      "bunx --bun payload-toolkit@alpha add 'https://example.com/r/a b.json' --codex",
+    )
+  })
+})
+
+describe('installError', () => {
+  test('a new project needs a directory; an existing one needs an item', () => {
+    expect(installError({ ...acme, name: ' ' })).toBe('Enter a directory')
+    expect(installError(acme)).toBe(null)
+    expect(installError({ ...acme, target: 'existing', name: ' ' })).toBe('Select an item to add')
+    expect(installError({ ...acme, target: 'existing', items: ['forms'] })).toBe(null)
+  })
+})
+
 describe('directoryError', () => {
   test('rejects empty and option-like directories', () => {
     expect(directoryError('   ')).toBe('Enter a directory')
@@ -115,6 +152,21 @@ Follow these installed feature guides:
 For @payload-components/hero-basic, inspect the installed source, missing prerequisites and imports, block registration, renderer ownership and generated Payload types. Their compatibility claims are advisory.
 
 Integrate their ordinary exports into this actual host. Preserve existing authorization and unrelated developer changes. Preserve the existing Git HEAD, branch, staged index and unrelated developer work. Do not stash, reset, stage, commit, checkout, switch or otherwise mutate Git state. Do not provision infrastructure. Run applicable code generation, static and runtime checks and report their observed results. Agent completion alone does not verify runtime behavior.`)
+  })
+
+  test('an existing project runs add from its root', () => {
+    expect(
+      toPrompt({ ...acme, target: 'existing', agent: 'claude', items: ['forms'] }, catalog).split(
+        '\n\n',
+      )[0],
+    ).toBe(
+      'Add these items to this Payload v4 project with Payload Toolkit. Run this from the project root:',
+    )
+    expect(
+      toPrompt({ ...acme, target: 'existing', agent: 'claude', items: ['forms'] }, catalog).split(
+        '\n\n',
+      )[1],
+    ).toBe('bunx --bun payload-toolkit@alpha add forms')
   })
 
   test('a setup without items asks the agent to finish the official starter', () => {
@@ -157,6 +209,16 @@ describe('toCatalog', () => {
       { id: 'block:hero', label: 'Hero', count: 3 },
       { id: 'block:other', label: 'Other', count: 2 },
     ])
+  })
+
+  test('labels each item by its own group and tints each category apart from its neighbours', () => {
+    const byName = new Map(fixture.items.map((item) => [item.name, item]))
+    expect(byName.get('forms')?.label).toBe('Feature')
+    expect(byName.get('call-to-action-a')?.label).toBe('Call to action')
+    expect(byName.get('embed-map')?.label).toBe('Embed')
+    expect(byName.get('hero-a')?.hue).toBe(byName.get('hero-c')?.hue)
+    const hues = new Set(fixture.items.map((item) => item.hue))
+    expect(hues.size).toBe(6)
   })
 
   test('tags each item with its category', () => {

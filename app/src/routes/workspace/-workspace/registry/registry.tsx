@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react'
 import { useWorkspace, useWorkspaceSelector } from '../workspace.context'
 import { visibleItems } from '../workspace.utils'
 import { RegistryCard } from './registry.card'
+import { RegistryDetail } from './registry.detail'
 
 /** Inputs that take no typed text, such as each card's checkbox, still let "/" through. */
 const untypedInputs = new Set([
@@ -94,7 +95,7 @@ function RegistryGrid() {
     <div
       role="group"
       aria-label="Registry items"
-      className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5"
+      className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-5 gap-y-7"
     >
       {visible.map((item) => (
         <RegistryCard key={item.ref} item={item} />
@@ -106,4 +107,5 @@ function RegistryGrid() {
 export const Registry = {
   Search: RegistrySearch,
   Grid: RegistryGrid,
+  Detail: RegistryDetail,
 }

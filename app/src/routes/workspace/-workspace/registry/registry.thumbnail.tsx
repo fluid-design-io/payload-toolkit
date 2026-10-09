@@ -140,9 +140,9 @@ const kindIcons: Record<Exclude<ItemKind, 'block'>, RemixiconComponentType> = {
 }
 
 /**
- * A supplied image or cached preview screenshot, with a placeholder on failure.
- * Otherwise blocks draw a wireframe
- * of their group and features and components an icon, all decorative.
+ * A supplied image or cached preview screenshot at full width from its top,
+ * so a page that crops it keeps every column, with a placeholder on failure. Otherwise blocks draw a wireframe of their group
+ * and features and components an icon in their mat's hue, all decorative.
  */
 export function RegistryThumbnail({ item }: { item: RegistryItem }) {
   const theme = useWorkspaceTheme()
@@ -157,15 +157,15 @@ export function RegistryThumbnail({ item }: { item: RegistryItem }) {
         loading="lazy"
         referrerPolicy="no-referrer"
         onError={() => setFailedImages((urls) => [...urls, image])}
-        className="size-full object-cover"
+        className="block h-auto w-full"
       />
     )
 
   if (item.kind !== 'block') {
     const KindIcon = kindIcons[item.kind]
     return (
-      <span aria-hidden="true" className="grid size-full place-items-center bg-accent-soft">
-        <KindIcon size={32} className="text-accent-soft-foreground" />
+      <span aria-hidden="true" className="grid size-full place-items-center">
+        <KindIcon size={32} className="text-[oklch(55%_0.12_var(--hue,250))]" />
       </span>
     )
   }

@@ -26,6 +26,7 @@ const items: readonly RegistryItem[] = [
 describe('workspace search params', () => {
   test('a full setup round-trips through the URL', () => {
     const search = searchFromSetup({
+      target: 'new',
       name: 'acme',
       framework: 'tanstack',
       database: 'mongodb',
@@ -34,6 +35,7 @@ describe('workspace search params', () => {
       items: ['forms', '@payload-components/hero-basic'],
     })
     expect(search).toEqual({
+      target: 'new',
       name: 'acme',
       framework: 'tanstack',
       database: 'mongodb',
@@ -42,6 +44,7 @@ describe('workspace search params', () => {
       items: 'forms,@payload-components/hero-basic',
     })
     expect(setupFromSearch(parseWorkspaceSearch(search, items))).toEqual({
+      target: 'new',
       name: 'acme',
       framework: 'tanstack',
       database: 'mongodb',
@@ -54,11 +57,12 @@ describe('workspace search params', () => {
   test('defaults are omitted, so the default setup has no query string', () => {
     expect(
       searchFromSetup({
+        target: 'existing',
         name: 'my-payload-app',
         framework: 'next',
         database: 'postgres',
         packageManager: 'pnpm',
-        agent: 'none',
+        agent: 'claude',
         items: [],
       }),
     ).toEqual({})
@@ -69,11 +73,12 @@ describe('workspace search params', () => {
 
   test('an empty search restores the default setup', () => {
     expect(setupFromSearch(parseWorkspaceSearch({}, items))).toEqual({
+      target: 'existing',
       name: 'my-payload-app',
       framework: 'next',
       database: 'postgres',
       packageManager: 'pnpm',
-      agent: 'none',
+      agent: 'claude',
       items: [],
     })
   })
@@ -81,7 +86,14 @@ describe('workspace search params', () => {
   test('invalid choices and unknown params are dropped', () => {
     expect(
       parseWorkspaceSearch(
-        { framework: 'remix', database: 42, agent: 'codex', packageManager: ['bun'], theme: 'x' },
+        {
+          target: 'old',
+          framework: 'remix',
+          database: 42,
+          agent: 'codex',
+          packageManager: ['bun'],
+          theme: 'x',
+        },
         items,
       ),
     ).toEqual({ agent: 'codex' })
@@ -111,11 +123,12 @@ describe('workspace search params', () => {
     }
     const merged = { ...raw, ...parseWorkspaceSearch(raw, items) } as WorkspaceSearch
     expect(setupFromSearch(merged)).toEqual({
+      target: 'existing',
       name: 'my-payload-app',
       framework: 'next',
       database: 'mongodb',
       packageManager: 'pnpm',
-      agent: 'none',
+      agent: 'claude',
       items: ['forms'],
     })
   })
