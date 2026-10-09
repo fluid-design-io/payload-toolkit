@@ -1,6 +1,16 @@
-import { Segment, Widget } from '@heroui-pro/react'
+import {
+  BunIcon,
+  MongodbIcon,
+  NextjsIcon,
+  NpmIcon,
+  PnpmIcon,
+  PostgresIcon,
+  TanstackIcon,
+} from '@/components/icons'
+import { RadioButtonGroup, Segment, Widget } from '@heroui-pro/react'
 import {
   Button,
+  cn,
   Description,
   FieldError,
   Input,
@@ -8,8 +18,6 @@ import {
   ScrollShadow,
   Switch,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
 } from '@heroui/react'
 import {
   RiCheckLine,
@@ -18,7 +26,7 @@ import {
   RiSparkling2Line,
   RiTerminalBoxLine,
 } from '@remixicon/react'
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode, SVGProps } from 'react'
 import { Fragment, useEffect, useId, useState } from 'react'
 import {
   agents,
@@ -29,7 +37,14 @@ import {
   targets,
 } from '../workspace.constants'
 import { useWorkspace, useWorkspaceSelector } from '../workspace.context'
-import type { Agent, Option, Output } from '../workspace.types'
+import type {
+  Agent,
+  Database,
+  Framework,
+  Option,
+  Output,
+  PackageManager,
+} from '../workspace.types'
 import { directoryError, installError, outputText } from '../workspace.utils'
 import { CardSection } from './bar.card'
 
@@ -77,7 +92,23 @@ function ProjectName() {
   )
 }
 
-function ProjectChoice<T extends string>({
+type Mark = ComponentType<SVGProps<SVGSVGElement>>
+
+const logos: Record<Framework | Database | PackageManager, Mark> = {
+  next: NextjsIcon,
+  tanstack: TanstackIcon,
+  postgres: PostgresIcon,
+  mongodb: MongodbIcon,
+  pnpm: PnpmIcon,
+  npm: NpmIcon,
+  bun: BunIcon,
+}
+
+/**
+ * A compact logo card per option. The marks follow the text color, muted
+ * until chosen, so the selected card reads brightest beside its ring.
+ */
+function ProjectChoice<T extends keyof typeof logos>({
   label,
   options,
   value,
@@ -94,25 +125,31 @@ function ProjectChoice<T extends string>({
       <Label elementType="span" id={labelId}>
         {label}
       </Label>
-      <ToggleButtonGroup
+      <RadioButtonGroup
         aria-labelledby={labelId}
-        isDetached
-        size="sm"
-        selectionMode="single"
-        disallowEmptySelection
-        selectedKeys={[value]}
-        onSelectionChange={(keys) => {
-          const [next] = keys
-          if (next) onChange(next as T)
-        }}
-        className="flex-wrap justify-start"
+        layout="grid"
+        value={value}
+        onChange={(next) => onChange(next as T)}
+        className={cn('gap-2', options.length > 2 ? 'grid-cols-3' : 'grid-cols-2')}
       >
-        {options.map((option) => (
-          <ToggleButton key={option.value} id={option.value}>
-            {option.label}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
+        {options.map((option) => {
+          const Logo: Mark = logos[option.value]
+          return (
+            <RadioButtonGroup.Item
+              key={option.value}
+              value={option.value}
+              className="flex-row items-center gap-2.5 rounded-xl px-3 py-2.5 text-muted transition-colors data-[hovered=true]:text-foreground data-[selected=true]:bg-default data-[selected=true]:text-foreground"
+            >
+              <RadioButtonGroup.ItemIcon>
+                <Logo className="size-5" />
+              </RadioButtonGroup.ItemIcon>
+              <RadioButtonGroup.ItemContent>
+                <span className="truncate text-sm font-medium">{option.label}</span>
+              </RadioButtonGroup.ItemContent>
+            </RadioButtonGroup.Item>
+          )
+        })}
+      </RadioButtonGroup>
     </div>
   )
 }
@@ -293,7 +330,7 @@ export function InstallView() {
         <InstallTarget />
       </CardSection>
       <CardSection className="min-h-0 flex-1">
-        <ScrollShadow className="-me-3 flex h-full flex-col gap-5 overflow-y-auto pe-3 pb-1">
+        <ScrollShadow className="-ms-1.5 -mt-1.5 -me-3 flex h-full flex-col gap-5 overflow-y-auto ps-1.5 pt-1.5 pe-3 pb-1.5">
           <InstallProject />
           <InstallOutput />
           <InstallRun />
