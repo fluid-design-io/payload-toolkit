@@ -117,7 +117,7 @@ function WorkspaceRailCurrent() {
       type="body-sm"
       weight="medium"
       truncate
-      className="min-w-0 shrink min-[769px]:hidden"
+      className="min-w-48 shrink min-[769px]:hidden"
     >
       {label}
     </Typography>

@@ -29,7 +29,7 @@ export const RegistryCard = memo(function RegistryCard({ item }: { item: Catalog
       onChange={(selected) => actions.toggleItem(item.ref, selected)}
       className="group/card w-full"
     >
-      <Checkbox.Content className="w-full transition-all duration-150 rounded-(--card-radius) border-(length:--card-border) border-transparent p-(--card-pad) [--card-border:2px] [--card-inset:calc(var(--card-pad)+var(--card-border))] [--card-pad:calc(var(--spacing)*1.5)] [--card-radius:var(--radius-xl)] data-[focus-visible=true]:status-focused data-[hovered=true]:bg-surface-secondary group-data-[selected=true]/card:border-accent">
+      <Checkbox.Content className="w-full transition-all duration-150 rounded-(--card-radius) border-(length:--card-border) border-transparent p-(--card-pad) [--card-border:2px] [--card-inset:calc(var(--card-pad)+var(--card-border))] [--card-pad:calc(var(--spacing)*1.5)] [--card-radius:var(--radius-xl)] data-[focus-visible=true]:status-focused data-[hovered=true]:bg-surface-secondary/30 data-[hovered=true]:not-group-data-[selected=true]/card:border-surface-secondary group-data-[selected=true]/card:border-accent">
         <span title={item.description} className="flex w-full flex-col gap-2.5">
           <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-(--thumb-radius) bg-surface-secondary [--thumb-radius:max(0px,calc(var(--card-radius)-var(--card-inset)))]">
             <RegistryThumbnail item={item} />

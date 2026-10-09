@@ -13,7 +13,6 @@ export function WorkspaceScreen() {
     <Workspace>
       <Workspace.Rail>
         <Workspace.Main>
-          <Workspace.Intro />
           <Workspace.Toolbar>
             <Workspace.Rail.Trigger />
             <Workspace.Rail.Current />
