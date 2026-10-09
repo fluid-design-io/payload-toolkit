@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { imageUrl } from './sync-catalog'
+import { capturedImage, imageUrl, previewFields } from './sync-catalog'
 
 const base = 'https://www.payload-components.xyz/r/hero-basic.json'
 
@@ -31,5 +31,109 @@ describe('imageUrl', () => {
       'meta.image is not a valid URL: hero.png',
     )
     expect(() => imageUrl(42, 'meta.image')).toThrow('meta.image must be a non-empty string')
+  })
+})
+
+describe('previewFields', () => {
+  test('directory templates support a registry without upstream metadata', () => {
+    expect(
+      previewFields(
+        {},
+        { url: 'https://example.com/preview/{name}', image: 'https://cdn.example.com/{name}.webp' },
+        'hero-basic',
+        base,
+      ),
+    ).toEqual({
+      previewUrl: 'https://example.com/preview/hero-basic',
+      image: 'https://cdn.example.com/hero-basic.webp',
+    })
+  })
+
+  test('each field uses item override, upstream metadata, legacy image, then default', () => {
+    const configured = {
+      url: 'https://example.com/{name}',
+      image: 'https://example.com/{name}.png',
+      items: { 'hero-basic': { url: 'https://other.example.com/demo' } },
+    }
+    expect(
+      previewFields(
+        { preview: { url: '/demo', image: '../thumb.webp' }, image: '/legacy.png' },
+        configured,
+        'hero-basic',
+        base,
+      ),
+    ).toEqual({
+      previewUrl: 'https://other.example.com/demo',
+      image: 'https://www.payload-components.xyz/thumb.webp',
+    })
+    expect(previewFields({ image: '/legacy.png' }, configured, 'other', base).image).toBe(
+      'https://www.payload-components.xyz/legacy.png',
+    )
+    expect(previewFields({}, undefined, 'hero-basic', base)).toEqual({})
+  })
+
+  test('per-item opt out and upstream opt out preserve placeholder behavior', () => {
+    expect(
+      previewFields(
+        { image: '/image.png' },
+        { url: 'https://example.com/{name}', items: { 'hero-basic': false } },
+        'hero-basic',
+        base,
+      ),
+    ).toEqual({})
+    expect(
+      previewFields({ preview: false }, { url: 'https://example.com/{name}' }, 'hero-basic', base),
+    ).toEqual({})
+    expect(
+      previewFields(
+        { preview: false },
+        { items: { 'hero-basic': { url: 'https://example.com/demo' } } },
+        'hero-basic',
+        base,
+      ),
+    ).toEqual({ previewUrl: 'https://example.com/demo' })
+  })
+
+  test('unsafe URLs and unknown or repeated template placeholders are rejected', () => {
+    for (const url of [
+      'javascript:alert(1)',
+      'https://user:pass@example.com/demo',
+      'https://example.com/{other}',
+      'https://example.com/{name}/{name}',
+    ])
+      expect(() => previewFields({}, { url }, 'hero-basic', base)).toThrow()
+  })
+})
+
+describe('captured thumbnails', () => {
+  const item = {
+    ref: '@example/hero',
+    name: 'hero',
+    title: 'Hero',
+    description: '',
+    kind: 'block' as const,
+    source: '@example',
+    previewUrl: 'https://example.com/hero',
+  }
+  const image = `/registry-previews/${'a'.repeat(64)}.png`
+  test('a capture is used only for its matching preview URL', () => {
+    expect(capturedImage(item, { [item.ref]: { url: item.previewUrl, image } })).toBe(image)
+    expect(
+      capturedImage(item, { [item.ref]: { url: 'https://example.com/old', image } }),
+    ).toBeUndefined()
+    expect(capturedImage(item, {})).toBeUndefined()
+    expect(
+      capturedImage(item, {
+        [item.ref]: { url: item.previewUrl, image: '/registry-previews/../../secret.png' },
+      }),
+    ).toBeUndefined()
+  })
+  test('explicit images take priority over captured URLs', () => {
+    expect(
+      capturedImage(
+        { ...item, image: 'https://example.com/image.webp' },
+        { [item.ref]: { url: item.previewUrl, image } },
+      ),
+    ).toBe('https://example.com/image.webp')
   })
 })

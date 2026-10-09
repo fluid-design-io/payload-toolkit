@@ -1,6 +1,6 @@
 import { RiBox3Line, RiPuzzle2Line } from '@remixicon/react'
 import type { RemixiconComponentType } from '@remixicon/react'
-import type { ComponentType } from 'react'
+import { useState, type ComponentType } from 'react'
 import type { ItemKind, RegistryItem } from '../workspace.types'
 import { blockGroup } from '../workspace.utils'
 
@@ -139,12 +139,23 @@ const kindIcons: Record<Exclude<ItemKind, 'block'>, RemixiconComponentType> = {
 }
 
 /**
- * A registry image when the item has one. Otherwise blocks draw a wireframe
+ * A supplied image or cached preview screenshot, with a placeholder on failure.
+ * Otherwise blocks draw a wireframe
  * of their group and features and components an icon, all decorative.
  */
 export function RegistryThumbnail({ item }: { item: RegistryItem }) {
-  if (item.image)
-    return <img src={item.image} alt="" loading="lazy" className="size-full object-cover" />
+  const [failedImage, setFailedImage] = useState<string>()
+  if (item.image && item.image !== failedImage)
+    return (
+      <img
+        src={item.image}
+        alt=""
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onError={() => setFailedImage(item.image)}
+        className="size-full object-cover"
+      />
+    )
 
   if (item.kind !== 'block') {
     const KindIcon = kindIcons[item.kind]

@@ -17,8 +17,9 @@ export type RegistryItem = {
   source: string
   /** Bundled items only: the installed feature guide path. */
   guide?: string
-  /** An https preview from the item's optional `meta.image`. */
+  /** Resolved HTTPS image or local captured thumbnail, and source preview page. */
   image?: string
+  previewUrl?: string
 }
 
 /** Everything the command needs. It is mirrored into the URL search params. */

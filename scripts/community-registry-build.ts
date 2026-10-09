@@ -18,6 +18,18 @@ const registryUrl = publicUrl.refine(
   'Registry URL must contain exactly one {name} placeholder and no other placeholders',
 )
 
+const previewUrl = publicUrl.refine(
+  (value) => value.split('{name}').length <= 2 && !/[{}]/.test(value.replace('{name}', 'item')),
+  'Preview URL may contain one {name} placeholder and no other placeholders',
+)
+const previewFields = { url: previewUrl.optional(), image: previewUrl.optional() }
+const previewSchema = z.strictObject({
+  ...previewFields,
+  items: z
+    .record(z.string().min(1), z.union([z.literal(false), z.strictObject(previewFields)]))
+    .optional(),
+})
+
 const directorySchema = z.strictObject({
   schemaVersion: z.literal(1),
   registries: z.array(
@@ -28,6 +40,7 @@ const directorySchema = z.strictObject({
       homepage: publicUrl,
       repository: publicUrl,
       url: registryUrl,
+      preview: previewSchema.optional(),
       compatibility: z
         .strictObject({
           upstream: z.string().trim().min(1),
@@ -105,6 +118,21 @@ Each entry contains a unique \`namespace\`, a unique display \`name\`, a \`descr
 The namespace matches shadcn's existing namespace when one exists. Registry URL templates contain exactly one \`{name}\` placeholder.
 Public URLs use HTTPS without credentials or fragments.
 An optional \`compatibility\` object records an upstream claim in \`upstream\` and its source URL in \`documentation\`.
+An optional \`preview\` object supplies \`url\` and/or \`image\` HTTPS templates with at most one \`{name}\` placeholder.
+Use \`preview.items\` keyed by item name for per-item URL/image overrides, or \`false\` to disable both for that item.
+For example: \`"preview": { "url": "https://example.com/preview/{name}", "items": { "helper": false } }\`.
+The web catalog resolves each field from directory item overrides, upstream \`meta.preview.url\` / \`meta.preview.image\`, then registry defaults.
+Existing upstream \`meta.image\` is also supported, before the default image. Upstream relative URLs resolve against the item's registry JSON URL.
+Upstream \`meta.preview: false\` disables both fields unless a directory item override is supplied.
+Upstream metadata must appear in the registry index consumed by \`app/scripts/sync-catalog.ts\`.
+These are Toolkit display conventions, not standard shadcn preview fields or installation requirements.
+The web app renders thumbnails directly: supplied images first, cached screenshots of preview URLs second, then placeholders.
+From \`app/\`, run \`bun run catalog:sync\`, \`bun run previews:build\`, then \`bun run catalog:sync\` to capture and apply URL-only previews.
+Capture uses the app's development-only Playwright dependency. Install Chromium with \`bun x playwright install chromium\`; optionally set \`PLAYWRIGHT_CHANNEL=chrome\` for installed Chrome.
+Commit \`app/public/registry-previews/\` and the generated catalog so builds and visitors do not need a browser capture service.
+Captures use a 1280 by 800 light viewport with reduced motion. Unchanged URLs reuse cached captures; \`--refresh\` recaptures them.
+Capture failures exit nonzero and retain an existing matching capture, or leave the placeholder. Images that fail in the browser also fall back.
+Preview pages are not embedded. Capture is an explicit contributor command, separate from builds and installation.
 Directory entries do not require toolkit metadata, an integration guide, or an acceptance fixture.
 Bundled toolkit features retain their own contribution and verification requirements.
 
