@@ -1,9 +1,12 @@
 import type { Store } from '@tanstack/react-store'
+import type { RefObject } from 'react'
 
 export type Framework = 'next' | 'tanstack'
 export type Database = 'postgres' | 'mongodb'
 export type PackageManager = 'pnpm' | 'npm' | 'bun'
 export type Agent = 'none' | 'codex' | 'claude'
+/** `existing` runs `payload-toolkit add` in a project; `new` runs `init` beside it. */
+export type Target = 'existing' | 'new'
 export type ItemKind = 'feature' | 'block' | 'component'
 
 export type RegistryItem = {
@@ -29,6 +32,8 @@ export type RegistryItem = {
 
 /** Everything the command needs. It is mirrored into the URL search params. */
 export type Setup = {
+  target: Target
+  /** The new project's directory; `add` ignores it. */
   name: string
   framework: Framework
   database: Database
@@ -43,7 +48,8 @@ export type CategoryId = 'all' | 'feature' | 'component' | `block:${string}`
 
 export type Category = { id: CategoryId; label: string; count: number }
 
-export type CatalogItem = RegistryItem & { category: CategoryId }
+/** `label` names the item's own group, even when its category folds into Other; `hue` tints its category. */
+export type CatalogItem = RegistryItem & { category: CategoryId; label: string; hue: number }
 
 export type Catalog = {
   items: readonly CatalogItem[]
@@ -52,7 +58,7 @@ export type Catalog = {
 }
 
 export type Output = 'command' | 'prompt'
-export type Panel = 'settings' | 'build' | null
+export type Panel = 'install' | 'build' | null
 
 export type Option<T extends string> = { value: T; label: string }
 
@@ -62,9 +68,12 @@ export type WorkspaceState = {
   category: CategoryId
   output: Output
   panel: Panel
+  /** The ref whose detail card is open. */
+  detail: string | null
 }
 
 export type WorkspaceActions = {
+  setTarget: (target: Target) => void
   setName: (name: string) => void
   setFramework: (framework: Framework) => void
   setDatabase: (database: Database) => void
@@ -78,11 +87,17 @@ export type WorkspaceActions = {
   openPanel: (panel: Exclude<Panel, null>) => void
   /** Closes `panel` only while it is the open one, so a late close cannot shut its successor. */
   closePanel: (panel: Exclude<Panel, null>) => void
+  openDetail: (ref: string) => void
+  closeDetail: () => void
 }
 
 /** Stable for the provider's lifetime; leaves subscribe to slices of `store`. */
 export type WorkspaceContextValue = {
   store: Store<WorkspaceState, WorkspaceActions>
   actions: WorkspaceActions
-  meta: { catalog: Catalog }
+  meta: {
+    catalog: Catalog
+    /** The bar's count pill, where a selected item's preview lands. */
+    buildCount: RefObject<HTMLSpanElement | null>
+  }
 }

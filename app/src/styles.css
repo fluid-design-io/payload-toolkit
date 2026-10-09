@@ -5,6 +5,7 @@
 @import '@heroui-pro/react/css/components/sheet.css' layer(components);
 @import '@heroui-pro/react/css/components/action-bar.css' layer(components);
 @import '@heroui-pro/react/css/components/empty-state.css' layer(components);
+@import '@heroui-pro/react/css/components/segment.css' layer(components);
 
 /* heroui-design-system:start eb54f1e3-c413-45cc-9ec2-bbfe398d7baf updatedAt=1791502589293 */
 @import '@heroui-pro/react/themes/mouve';
@@ -49,7 +50,6 @@
 
   /* Shadows */
   --surface-shadow: none;
-  --overlay-shadow: none;
 }
 
 .mouve-dark,
@@ -83,7 +83,6 @@
 
   /* Shadows */
   --surface-shadow: 0 0 0 0 transparent inset;
-  --overlay-shadow: none;
 }
 
 @theme inline {
@@ -123,22 +122,47 @@ body {
   background: transparent;
   background: linear-gradient(
     to bottom,
-    hsla(0, 0%, 5%, 0.95) 0%,
-    hsla(216.66, 0.91%, 5.09%, 0.934) 12.6%,
-    hsla(216.43, 2.54%, 5.26%, 0.902) 23.8%,
-    hsla(216.14, 4.52%, 5.48%, 0.858) 33.7%,
-    hsla(215.85, 6.58%, 5.75%, 0.802) 42.5%,
-    hsla(215.56, 8.53%, 6.03%, 0.739) 50.1%,
-    hsla(215.3, 10.28%, 6.33%, 0.67) 56.9%,
-    hsla(215.07, 11.81%, 6.63%, 0.598) 63%,
-    hsla(214.88, 13.12%, 6.91%, 0.524) 68.4%,
-    hsla(214.72, 14.2%, 7.17%, 0.453) 73.3%,
-    hsla(214.58, 15.09%, 7.41%, 0.386) 77.9%,
-    hsla(214.48, 15.81%, 7.62%, 0.326) 82.2%,
-    hsla(214.39, 16.36%, 7.8%, 0.274) 86.4%,
-    hsla(214.33, 16.75%, 7.93%, 0.235) 90.7%,
-    hsla(214.3, 16.99%, 8.01%, 0.209) 95.2%,
-    hsla(214.29, 17.07%, 8.04%, 0.2) 100%
+    hsla(0, 0%, 5%, 0.95) calc(var(--bar-glass-factor) * 0%),
+    hsla(216.66, 0.91%, 5.09%, 0.934) calc(var(--bar-glass-factor) * 12.6%),
+    hsla(216.43, 2.54%, 5.26%, 0.902) calc(var(--bar-glass-factor) * 23.8%),
+    hsla(216.14, 4.52%, 5.48%, 0.858) calc(var(--bar-glass-factor) * 33.7%),
+    hsla(215.85, 6.58%, 5.75%, 0.802) calc(var(--bar-glass-factor) * 42.5%),
+    hsla(215.56, 8.53%, 6.03%, 0.739) calc(var(--bar-glass-factor) * 50.1%),
+    hsla(215.3, 10.28%, 6.33%, 0.67) calc(var(--bar-glass-factor) * 56.9%),
+    hsla(215.07, 11.81%, 6.63%, 0.598) calc(var(--bar-glass-factor) * 63%),
+    hsla(214.88, 13.12%, 6.91%, 0.524) calc(var(--bar-glass-factor) * 68.4%),
+    hsla(214.72, 14.2%, 7.17%, 0.453) calc(var(--bar-glass-factor) * 73.3%),
+    hsla(214.58, 15.09%, 7.41%, 0.386) calc(var(--bar-glass-factor) * 77.9%),
+    hsla(214.48, 15.81%, 7.62%, 0.326) calc(var(--bar-glass-factor) * 82.2%),
+    hsla(214.39, 16.36%, 7.8%, 0.274) calc(var(--bar-glass-factor) * 86.4%),
+    hsla(214.33, 16.75%, 7.93%, 0.235) calc(var(--bar-glass-factor) * 90.7%),
+    hsla(214.3, 16.99%, 8.01%, 0.209) calc(var(--bar-glass-factor) * 95.2%),
+    hsla(214.29, 17.07%, 8.04%, 0.2) calc(var(--bar-glass-factor) * 100%)
   );
   backdrop-filter: blur(4px) saturate(180%) brightness(0.85);
+}
+
+/*
+ * The bar card's sheet, scoped with `dark mouve-dark`: see-through surfaces
+ * over the glass, and white controls like the bar's white call to action.
+ * Selected toggles use the soft accent, so it is solid white too.
+ */
+.bar-panel {
+  --overlay: transparent;
+  --surface: transparent;
+  --surface-secondary: rgb(255 255 255 / 0.08);
+  --default: rgb(255 255 255 / 0.1);
+  --default-foreground: var(--white);
+  --field-background: rgb(255 255 255 / 0.06);
+  --field-border: rgb(255 255 255 / 0.12);
+  --border: rgb(255 255 255 / 0.12);
+  --separator: rgb(255 255 255 / 0.1);
+  --segment: var(--white);
+  --segment-foreground: var(--black);
+  --accent: var(--white);
+  --accent-foreground: var(--black);
+  --accent-soft: var(--white);
+  --accent-soft-hover: rgb(255 255 255 / 0.88);
+  --accent-soft-foreground: var(--black);
+  --focus: var(--white);
 }

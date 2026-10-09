@@ -1,6 +1,6 @@
 import { createStore, useSelector } from '@tanstack/react-store'
 import { getRouteApi, useRouter } from '@tanstack/react-router'
-import { createContext, use, useEffect, useState } from 'react'
+import { createContext, createRef, use, useEffect, useState } from 'react'
 import type { PropsWithChildren } from 'react'
 import { catalog as items } from './workspace.catalog'
 import { parseWorkspaceSearch, searchFromSetup, setupFromSearch } from './workspace.params'
@@ -23,11 +23,13 @@ function createWorkspaceStore(setup: Setup) {
     category: 'all',
     output: 'command',
     panel: null,
+    detail: null,
   }
   return createStore(initial, ({ setState }): WorkspaceActions => {
     const patchSetup = (patch: Partial<Setup>) =>
       setState((state) => ({ ...state, setup: { ...state.setup, ...patch } }))
     return {
+      setTarget: (target) => patchSetup({ target }),
       setName: (name) => patchSetup({ name }),
       setFramework: (framework) => patchSetup({ framework }),
       setDatabase: (database) => patchSetup({ database }),
@@ -48,6 +50,8 @@ function createWorkspaceStore(setup: Setup) {
       openPanel: (panel) => setState((state) => ({ ...state, panel })),
       closePanel: (panel) =>
         setState((state) => (state.panel === panel ? { ...state, panel: null } : state)),
+      openDetail: (detail) => setState((state) => ({ ...state, detail })),
+      closeDetail: () => setState((state) => ({ ...state, detail: null })),
     }
   })
 }
@@ -69,7 +73,11 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
   const [value] = useState<WorkspaceContextValue>(() => {
     const search = parseWorkspaceSearch(router.state.location.search)
     const store = createWorkspaceStore(setupFromSearch(search))
-    return { store, actions: store.actions, meta: { catalog } }
+    return {
+      store,
+      actions: store.actions,
+      meta: { catalog, buildCount: createRef<HTMLSpanElement>() },
+    }
   })
 
   useEffect(() => {

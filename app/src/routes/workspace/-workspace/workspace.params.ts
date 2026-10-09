@@ -1,5 +1,12 @@
 import { catalog } from './workspace.catalog'
-import { agents, databases, defaultSetup, frameworks, packageManagers } from './workspace.constants'
+import {
+  agents,
+  databases,
+  defaultSetup,
+  frameworks,
+  packageManagers,
+  targets,
+} from './workspace.constants'
 import type { Option, RegistryItem, Setup } from './workspace.types'
 
 /** `/workspace` search params. Each one is optional and omitted while it equals the default. */
@@ -33,6 +40,7 @@ export function parseWorkspaceSearch(
   const refs = new Set(scalar(raw.items)?.split(','))
   const selected = items.filter((item) => refs.has(item.ref)).map((item) => item.ref)
   return {
+    target: choice(raw.target, targets),
     name: name?.length ? name : undefined,
     framework: choice(raw.framework, frameworks),
     database: choice(raw.database, databases),
@@ -44,6 +52,7 @@ export function parseWorkspaceSearch(
 
 export function setupFromSearch(search: WorkspaceSearch): Setup {
   return {
+    target: search.target ?? defaultSetup.target,
     name: search.name ?? defaultSetup.name,
     framework: search.framework ?? defaultSetup.framework,
     database: search.database ?? defaultSetup.database,
@@ -54,11 +63,12 @@ export function setupFromSearch(search: WorkspaceSearch): Setup {
 }
 
 /**
- * The inverse of `setupFromSearch`. The agent is kept even with no items; the
- * command drops it then, and it returns once an item is selected.
+ * The inverse of `setupFromSearch`. The new-project fields and the agent are
+ * kept even when the command ignores them, so switching back restores them.
  */
 export function searchFromSetup(setup: Setup): WorkspaceSearch {
   const search: WorkspaceSearch = {}
+  if (setup.target !== defaultSetup.target) search.target = setup.target
   if (setup.name !== defaultSetup.name) search.name = setup.name
   if (setup.framework !== defaultSetup.framework) search.framework = setup.framework
   if (setup.database !== defaultSetup.database) search.database = setup.database

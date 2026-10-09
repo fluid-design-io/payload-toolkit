@@ -4,6 +4,7 @@ import type {
   CatalogItem,
   Category,
   CategoryId,
+  ItemKind,
   Output,
   RegistryItem,
   Setup,
@@ -29,17 +30,26 @@ export function selectedItems<T extends RegistryItem>(
   return catalog.filter((item) => refs.has(item.ref))
 }
 
+/** Why the setup cannot install yet: a new project needs a directory, an existing one needs an item. */
+export function installError(setup: Setup): string | null {
+  if (setup.target === 'new') return directoryError(setup.name)
+  return setup.items.length ? null : 'Select an item to add'
+}
+
 function command(setup: Setup, catalog: readonly RegistryItem[], withAgent: boolean): string {
-  const items = selectedItems(setup, catalog)
+  const refs = selectedItems(setup, catalog).map((item) => item.ref)
+  const agent = withAgent && refs.length && setup.agent !== 'none' ? [`--${setup.agent}`] : []
+  if (setup.target === 'existing')
+    return ['bunx --bun payload-toolkit@alpha add', ...refs.map(quote), ...agent].join(' ')
+
   const parts = [
     'bunx --bun payload-toolkit@alpha init',
     quote(setup.name.trim()),
     `--framework ${setup.framework}`,
     `--database ${setup.database}`,
   ]
-  if (items.length) parts.push(`--features ${items.map((item) => item.ref).join(',')}`)
-  parts.push(`--package-manager ${setup.packageManager}`)
-  if (withAgent && items.length && setup.agent !== 'none') parts.push(`--${setup.agent}`)
+  if (refs.length) parts.push(`--features ${refs.join(',')}`)
+  parts.push(`--package-manager ${setup.packageManager}`, ...agent)
   return parts.join(' ')
 }
 
@@ -53,7 +63,10 @@ const gitInstruction =
 
 export function toPrompt(setup: Setup, catalog: readonly RegistryItem[]): string {
   const items = selectedItems(setup, catalog)
-  const intro = `Create a Payload v4 project with Payload Toolkit. Run this from the parent directory:\n\n${command(setup, catalog, false)}`
+  const intro =
+    setup.target === 'existing'
+      ? `Add these items to this Payload v4 project with Payload Toolkit. Run this from the project root:\n\n${command(setup, catalog, false)}`
+      : `Create a Payload v4 project with Payload Toolkit. Run this from the parent directory:\n\n${command(setup, catalog, false)}`
   if (!items.length)
     return `${intro}\n\nThen inspect the project's rules and the installed official README. Finish configuring the generated Payload application. Preserve native admin authentication. ${gitInstruction} Infrastructure configuration remains the developer's responsibility. Run and report applicable checks; installation is not runtime verification.`
 
@@ -77,10 +90,10 @@ export function toPrompt(setup: Setup, catalog: readonly RegistryItem[]): string
   return paragraphs.join('\n\n')
 }
 
-/** What Copy writes: the name error while the name is invalid, otherwise the chosen output. */
+/** What Install shows and copies: the setup's error while it has one, otherwise the chosen output. */
 export function outputText(setup: Setup, output: Output, catalog: readonly RegistryItem[]): string {
   return (
-    directoryError(setup.name) ??
+    installError(setup) ??
     (output === 'command' ? toCommand(setup, catalog) : toPrompt(setup, catalog))
   )
 }
@@ -105,9 +118,20 @@ export function blockGroup(name: string): string {
   return name.split('-')[0]
 }
 
+function groupLabel(group: string): string {
+  return blockLabels[group] ?? group[0].toUpperCase() + group.slice(1)
+}
+
+const kindLabels: Record<Exclude<ItemKind, 'block'>, string> = {
+  feature: 'Feature',
+  component: 'Component',
+}
+
 /**
- * Tags every item with its category and counts them. Blocks group by name
- * prefix, largest group first, with small groups folded into a final Other.
+ * Tags every item with its category, group label and hue, and counts the
+ * categories. Blocks group by name prefix, largest group first, with small
+ * groups folded into a final Other. Hues step by the golden angle in rail
+ * order, so neighbouring categories never share a tint.
  */
 export function toCatalog(items: readonly RegistryItem[]): Catalog {
   const sizes = new Map<string, number>()
@@ -122,27 +146,32 @@ export function toCatalog(items: readonly RegistryItem[]): Catalog {
     const group = blockGroup(item.name)
     return (sizes.get(group) ?? 0) < minBlockGroup ? 'block:other' : `block:${group}`
   }
-  const tagged = items.map((item) => ({ ...item, category: categoryOf(item) }))
   const count = (id: CategoryId) =>
-    id === 'all' ? tagged.length : tagged.filter((item) => item.category === id).length
+    id === 'all' ? items.length : items.filter((item) => categoryOf(item) === id).length
 
   const groups: Category[] = [...sizes]
     .filter(([, size]) => size >= minBlockGroup)
-    .map(([group, size]) => ({
-      id: `block:${group}` as const,
-      label: blockLabels[group] ?? group[0].toUpperCase() + group.slice(1),
-      count: size,
-    }))
+    .map(([group, size]) => ({ id: `block:${group}` as const, label: groupLabel(group), count: size }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
   const other = count('block:other')
+  const kinds: Category[] = [
+    { id: 'all', label: 'All', count: count('all') },
+    { id: 'feature', label: 'Features', count: count('feature') },
+    { id: 'component', label: 'Components', count: count('component') },
+  ]
+  const blocks = other ? [...groups, { id: 'block:other' as const, label: 'Other', count: other }] : groups
 
-  return {
-    items: tagged,
-    kinds: [
-      { id: 'all', label: 'All', count: count('all') },
-      { id: 'feature', label: 'Features', count: count('feature') },
-      { id: 'component', label: 'Components', count: count('component') },
-    ],
-    blocks: other ? [...groups, { id: 'block:other', label: 'Other', count: other }] : groups,
-  }
+  const hues = new Map(
+    [...kinds.slice(1), ...blocks].map((category, index) => [
+      category.id,
+      Math.round((20 + index * 137.508) % 360),
+    ]),
+  )
+  const tagged = items.map((item) => {
+    const category = categoryOf(item)
+    const label = item.kind === 'block' ? groupLabel(blockGroup(item.name)) : kindLabels[item.kind]
+    return { ...item, category, label, hue: hues.get(category) ?? 0 }
+  })
+
+  return { items: tagged, kinds, blocks }
 }
