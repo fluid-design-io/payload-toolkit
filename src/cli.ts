@@ -12,7 +12,6 @@ const optionsSchema = z.object({
   cwd: z.string().optional(),
   framework: z.enum(['next', 'tanstack']).optional(),
   database: z.enum(['postgres', 'mongodb']).optional(),
-  template: z.enum(['minimal', 'custom']).optional(),
   packageManager: z.enum(['npm', 'pnpm', 'bun']).optional(),
   features: z.string().optional(),
   databaseUrl: z.string().optional(),
@@ -107,12 +106,6 @@ async function main() {
       .description('Pull an official Payload starter, then install optional features'),
   )
     .addOption(
-      new Option(
-        '--template <template>',
-        'minimal pulls the official Payload starter; custom adds selected features',
-      ).choices(['minimal', 'custom']),
-    )
-    .addOption(
       new Option('--package-manager <manager>', 'Installer for the new project').choices([
         'npm',
         'pnpm',
@@ -121,7 +114,7 @@ async function main() {
     )
     .option(
       '--features <names>',
-      'Comma-separated catalog items, registry URLs or namespaces for custom',
+      'Comma-separated catalog items, registry URLs or namespaces; omit for a plain Payload app',
     )
     .option('--database-url <url>', 'Connection for codegen; alternatively set DATABASE_URI')
     .action(async (directory: string | undefined, raw: unknown) => {
@@ -165,27 +158,6 @@ async function main() {
               }),
             )
           : undefined)
-      const template =
-        options.template ||
-        (canPrompt
-          ? answer<'minimal' | 'custom'>(
-              await select({
-                message: 'Template',
-                options: [
-                  {
-                    value: 'minimal',
-                    label: 'Minimal',
-                    hint: 'Pulls the official Payload starter',
-                  },
-                  {
-                    value: 'custom',
-                    label: 'Custom',
-                    hint: 'Official starter plus selected features',
-                  },
-                ],
-              }),
-            )
-          : undefined)
       const packageManager =
         options.packageManager ||
         (canPrompt
@@ -200,43 +172,34 @@ async function main() {
               }),
             )
           : undefined)
-      if (!target || !framework || !database || !template || !packageManager)
+      if (!target || !framework || !database || !packageManager)
         throw new Error(
-          'Unattended init requires directory, --framework, --database, --template and --package-manager',
+          'Unattended init requires directory, --framework, --database and --package-manager',
         )
-      let features =
-        options.features
-          ?.split(',')
-          .map((name) => name.trim())
-          .filter(Boolean) || []
-      if (template === 'minimal' && features.length)
-        throw new Error('--features requires --template custom')
-      if (template === 'custom' && !features.length && canPrompt) {
-        const choices = await describeFeatures()
-        features = answer<string[]>(
-          await multiselect({
-            message: 'Features',
-            required: true,
-            options: choices.map((item) => ({
-              value: item.name,
-              label: item.name,
-              hint: item.description,
-            })),
-          }),
-        )
-      }
-      if (template === 'custom' && !features.length)
-        throw new Error('Custom requires --features or an interactive selection')
-      if (template === 'minimal' && agent !== 'none')
-        throw new Error(
-          'Minimal has no feature guide. Choose custom with features for agent integration',
-        )
+      const features =
+        options.features !== undefined
+          ? options.features
+              .split(',')
+              .map((name) => name.trim())
+              .filter(Boolean)
+          : canPrompt
+            ? answer<string[]>(
+                await multiselect({
+                  message: 'Features (optional)',
+                  required: false,
+                  options: (await describeFeatures()).map((item) => ({
+                    value: item.name,
+                    label: item.name,
+                    hint: item.description,
+                  })),
+                }),
+              )
+            : []
       const result = await init(
         {
           directory: resolve(options.cwd || process.cwd(), target),
           framework,
           database,
-          template,
           packageManager,
           features,
           allowDirty: Boolean(options.allowDirty),

@@ -265,7 +265,6 @@ test('init refuses an existing target without modifying its source', async () =>
       directory: target,
       framework: 'next',
       database: 'postgres',
-      template: 'minimal',
       packageManager: 'npm',
       features: [],
       allowDirty: false,
@@ -291,7 +290,6 @@ test('init rejects an incomplete registry namespace before creating the official
       directory: target,
       framework: 'next',
       database: 'postgres',
-      template: 'custom',
       packageManager: 'npm',
       features: ['@incomplete'],
       allowDirty: false,
@@ -299,6 +297,36 @@ test('init rejects an incomplete registry namespace before creating the official
       requireAgentSuccess: false,
     })
     assert.equal(result.installation.status, 'blocked')
+    await assert.rejects(lstat(target), { code: 'ENOENT' })
+  } finally {
+    if (oldState) process.env.PAYLOAD_TOOLKIT_STATE_DIR = oldState
+    else delete process.env.PAYLOAD_TOOLKIT_STATE_DIR
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('init with an agent and no features refuses before creating the project', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'toolkit-agent-features-test-'))
+  const oldState = process.env.PAYLOAD_TOOLKIT_STATE_DIR
+  process.env.PAYLOAD_TOOLKIT_STATE_DIR = path.join(root, 'state')
+  try {
+    const target = path.join(root, 'app')
+    const result = await init({
+      directory: target,
+      framework: 'next',
+      database: 'postgres',
+      packageManager: 'npm',
+      features: [],
+      allowDirty: false,
+      agent: 'codex',
+      requireAgentSuccess: false,
+    })
+    assert.equal(result.installation.status, 'blocked')
+    assert.equal(
+      'reason' in result.installation && result.installation.reason,
+      'Agent integration requires at least one feature',
+    )
+    assert.equal(result.exitCode, 2)
     await assert.rejects(lstat(target), { code: 'ENOENT' })
   } finally {
     if (oldState) process.env.PAYLOAD_TOOLKIT_STATE_DIR = oldState

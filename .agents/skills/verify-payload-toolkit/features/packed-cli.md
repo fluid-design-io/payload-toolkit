@@ -8,6 +8,8 @@ Published artifact installation, command discovery and invalid-command rejection
 
 Install Payload Toolkit and invoke its binary to find `init` and `add`.
 
+`init` has no template choice. An empty feature list, from omitting `--features` or leaving the optional prompt empty, creates the plain official Payload starter. Selected features install on that same base. `--codex` or `--claude` without a feature exits 2 with the reason `Agent integration requires at least one feature`, and `--template` is rejected as an unknown option. `tests/cli.test.ts` drives both refusals against `dist/cli.js`.
+
 ## Driving it with the contributor harness
 
 Run `bun run agent:verify --cli-only`. It packs the build, installs that tarball into a new npm consumer, invokes its delivered `dist/cli.js --help`, asserts both commands are present, then invokes `unknown-command --json` and asserts a failing exit. Inspect the command transcripts and package digest through `agent:evidence`.

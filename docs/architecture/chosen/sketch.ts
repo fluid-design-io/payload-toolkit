@@ -1,8 +1,9 @@
 /** Design contract. Bodies are stubs; implementation belongs under src/. */
 // Usage comes first. CLI fills terminal choices, then makes one complete call.
 // const result = await init({ directory: './acme', framework: 'next',
-//   database: 'postgres', template: 'minimal', packageManager: 'pnpm',
-//   features: [], allowDirty: false, agent: 'none', requireAgentSuccess: false })
+//   database: 'postgres', packageManager: 'pnpm', features: [],
+//   allowDirty: false, agent: 'none', requireAgentSuccess: false })
+// Empty features yield the plain official starter. An agent requires a feature.
 // const result = await add({ directory: './existing', features: ['forms'],
 //   allowDirty: true, agent: 'codex', requireAgentSuccess: false })
 // process.exitCode = result.exitCode
@@ -21,7 +22,6 @@ export type CommonRequest = {
 export type InitRequest = CommonRequest & {
   framework: Framework
   database: Database
-  template: 'minimal' | 'custom'
   packageManager: PackageManager
   /** Private secret input. Never journal the complete request. */
   databaseUrl?: string

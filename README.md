@@ -6,7 +6,7 @@ The package and command name is `payload-toolkit`. Alpha releases use the `alpha
 
 ```sh
 bunx --bun payload-toolkit@alpha --help
-bunx --bun payload-toolkit@alpha init acme --framework next --database postgres --template minimal --package-manager pnpm
+bunx --bun payload-toolkit@alpha init acme --framework next --database postgres --package-manager pnpm
 ```
 
 For source development, use Node 24.21.0 and Bun 1.4.2 to install and build. Bun runs the delivered CLI, while Node supports official Payload tooling. Generated projects support npm, pnpm and Bun:
@@ -15,19 +15,19 @@ For source development, use Node 24.21.0 and Bun 1.4.2 to install and build. Bun
 bun install --frozen-lockfile
 bun run build
 bun dist/cli.js --help
-bun dist/cli.js init acme --framework next --database postgres --template minimal --package-manager pnpm
-bun dist/cli.js init acme --framework tanstack --database mongodb --template custom --features forms --package-manager pnpm
+bun dist/cli.js init acme --framework next --database postgres --package-manager pnpm
+bun dist/cli.js init acme --framework tanstack --database mongodb --features forms --package-manager pnpm
 bun dist/cli.js add forms --cwd ../existing-payload-project --codex
 bun dist/cli.js add https://www.payload-components.xyz/r/hero-split.json --cwd ../existing-payload-project
 bun dist/cli.js add @payload-components/hero-split --cwd ../existing-payload-project --codex
 bun dist/cli.js registries --json
 ```
 
-Run `init` without all choices in a terminal for prompts. For unattended execution, supply the directory, framework, database, template and package manager. `--json` returns one result and disables prompts. PostgreSQL uses Payload's Drizzle adapter. MongoDB is the other initial database choice.
+Run `init` without all choices in a terminal for prompts. For unattended execution, supply the directory, framework, database and package manager. The terminal flow asks for optional features; leaving the selection empty creates a plain Payload app. `--json` returns one result and disables prompts. PostgreSQL uses Payload's Drizzle adapter. MongoDB is the other initial database choice.
 
-Minimal pulls the official Payload blank template. Custom pulls the same base and installs selected features. The toolkit pins the official generator version, template commit and Payload version in [catalog/bootstrap.json](catalog/bootstrap.json). It does not maintain a cloned blank template. The initial tuple is a v4 canary; compatibility checks and runtime evidence apply to that tuple, not every v4 prerelease.
+Without features, `init` pulls the official Payload blank starter. With `--features`, it pulls the same base and installs the selected features on top. `--codex` and `--claude` integrate feature guides, so they require at least one feature. The toolkit pins the official generator version, template commit and Payload version in [catalog/bootstrap.json](catalog/bootstrap.json). It does not maintain a cloned blank template. The initial tuple is a v4 canary; compatibility checks and runtime evidence apply to that tuple, not every v4 prerelease.
 
-`add` accepts bundled names, direct registry URLs, and shadcn namespace references. Custom initialization accepts the same references in `--features`, separated by commas. Namespace resolution uses shadcn's directory and your project's `components.json` registries. The [community directory](docs/community-registries.md) lists Payload-related registries. `registries` prints that directory, and `registries --json` returns its structured data. Listings are for discovery and do not certify Payload v4 compatibility.
+`add` accepts bundled names, direct registry URLs, and shadcn namespace references. `init` accepts the same references in `--features`, separated by commas. Namespace resolution uses shadcn's directory and your project's `components.json` registries. The [community directory](docs/community-registries.md) lists Payload-related registries. `registries` prints that directory, and `registries --json` returns its structured data. Listings are for discovery and do not certify Payload v4 compatibility.
 
 Database setup belongs to the application developer. Supply `--database-url` or `DATABASE_URI` for an existing connection. Without one, the generated environment contains a local configure-later placeholder. Installation does not provision services or prove that deployment infrastructure is ready.
 
