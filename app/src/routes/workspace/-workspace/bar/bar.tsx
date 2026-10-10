@@ -99,7 +99,7 @@ function BarRoot({ children }: PropsWithChildren) {
         aria-hidden="true"
         data-open={isOpen}
         onClick={close}
-        className="pointer-events-none fixed inset-0 z-40 bg-backdrop opacity-0 transition-opacity duration-[620ms] ease-in-out data-[open=true]:pointer-events-auto data-[open=true]:opacity-100 data-[open=true]:duration-[770ms] motion-reduce:transition-none"
+        className="pointer-events-none fixed inset-0 z-40 bg-backdrop opacity-0 transition-opacity duration-300 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100 motion-reduce:transition-none"
       />
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 min-[769px]:left-[240px]">
         <m.div
