@@ -8,6 +8,7 @@ import type {
   PackageManager,
   Setup,
   Target,
+  View,
 } from './workspace.types'
 
 export const defaultSetup: Setup = {
@@ -19,6 +20,16 @@ export const defaultSetup: Setup = {
   agent: 'claude',
   items: [],
 }
+
+export const defaultView: View = 'grid'
+
+export const views: readonly Option<View>[] = [
+  { value: 'grid', label: 'Grid' },
+  { value: 'factory', label: 'Factory' },
+]
+
+/** The `/lab` mock the factory view renders. Point it at another mock id to swap the scene. */
+export const factoryScene = 'fab-line'
 
 export const frameworks: readonly Option<Framework>[] = [
   { value: 'next', label: 'Next.js' },

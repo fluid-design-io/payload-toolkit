@@ -10,7 +10,8 @@ import { nitro } from 'nitro/vite'
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
   plugins: [
-    devtools(),
+    // React Three Fiber pierces dashed props, so a data-tsd-source stamp on a 3D element becomes a write to `object.data`.
+    devtools({ injectSource: { enabled: true, ignore: { files: [/\/routes\/lab\/-lab\//] } } }),
     nitro({ rollupConfig: { external: [/^@sentry\//] } }),
     tailwindcss(),
     tanstackStart(),

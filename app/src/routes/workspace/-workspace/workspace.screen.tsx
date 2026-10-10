@@ -6,7 +6,9 @@ import { Workspace } from './workspace'
  * Install, and either one morphs the bar into a card, where Install adds to
  * an existing project or starts a new one. The command and the prompt are
  * pure derivations of one Setup, which the URL mirrors, so a shared link
- * restores the same build. The rail footer carries the home link and the
+ * restores the same build. The factory view swaps the grid for a 3D scene
+ * over the same store, so the rail, search, bar and detail card steer both
+ * and switching keeps the build. The rail footer carries the home link and the
  * theme toggle; on phones the rail is a sheet that the toolbar's trigger
  * opens.
  */
@@ -19,11 +21,17 @@ export function WorkspaceScreen() {
             <Workspace.Rail.Trigger />
             <Workspace.Rail.Current />
             <Workspace.Registry.Search />
+            <Workspace.ViewSwitch />
           </Workspace.Toolbar>
-          <Workspace.Results>
-            <Workspace.Registry.Grid />
-          </Workspace.Results>
-          <Workspace.NoMatch />
+          <Workspace.GridView>
+            <Workspace.Results>
+              <Workspace.Registry.Grid />
+            </Workspace.Results>
+            <Workspace.NoMatch />
+          </Workspace.GridView>
+          <Workspace.FactoryView>
+            <Workspace.Factory />
+          </Workspace.FactoryView>
         </Workspace.Main>
       </Workspace.Rail>
       <Workspace.Registry.Detail />

@@ -30,3 +30,17 @@ export function WorkspaceNoMatch() {
     </Typography>
   )
 }
+
+/** The grid and its empty state, while the grid view is chosen. */
+export function WorkspaceGridView({ children }: PropsWithChildren) {
+  if (useWorkspaceSelector((state) => state.view) !== 'grid') return null
+
+  return <>{children}</>
+}
+
+/** The factory scene in the grid's place. The rail, search, bar and detail card stay. */
+export function WorkspaceFactoryView({ children }: PropsWithChildren) {
+  if (useWorkspaceSelector((state) => state.view) !== 'factory') return null
+
+  return <>{children}</>
+}

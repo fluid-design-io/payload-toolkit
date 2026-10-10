@@ -59,6 +59,9 @@ export type Catalog = {
   blocks: readonly Category[]
 }
 
+/** `grid` lists cards; `factory` renders the 3D scene in the grid's place. Both edit one store. */
+export type View = 'grid' | 'factory'
+
 export type Output = 'command' | 'prompt'
 export type Panel = 'install' | 'build' | null
 
@@ -66,6 +69,8 @@ export type Option<T extends string> = { value: T; label: string }
 
 export type WorkspaceState = {
   setup: Setup
+  /** Mirrored into the URL beside `setup`. */
+  view: View
   query: string
   category: CategoryId
   output: Output
@@ -83,6 +88,7 @@ export type WorkspaceActions = {
   setAgent: (agent: Agent) => void
   toggleItem: (ref: string, isSelected: boolean) => void
   clearItems: () => void
+  setView: (view: View) => void
   setQuery: (query: string) => void
   setCategory: (category: CategoryId) => void
   setOutput: (output: Output) => void

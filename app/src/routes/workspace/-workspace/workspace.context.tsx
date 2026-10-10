@@ -3,10 +3,16 @@ import { getRouteApi, useRouter } from '@tanstack/react-router'
 import { createContext, createRef, use, useEffect, useState } from 'react'
 import type { PropsWithChildren } from 'react'
 import { catalog as items } from './workspace.catalog'
-import { parseWorkspaceSearch, searchFromSetup, setupFromSearch } from './workspace.params'
+import {
+  parseWorkspaceSearch,
+  searchFromState,
+  setupFromSearch,
+  viewFromSearch,
+} from './workspace.params'
 import type {
   Catalog,
   Setup,
+  View,
   WorkspaceActions,
   WorkspaceContextValue,
   WorkspaceState,
@@ -16,9 +22,10 @@ import { toCatalog } from './workspace.utils'
 const route = getRouteApi('/workspace/')
 const catalog: Catalog = toCatalog(items)
 
-function createWorkspaceStore(setup: Setup) {
+function createWorkspaceStore(setup: Setup, view: View) {
   const initial: WorkspaceState = {
     setup,
+    view,
     query: '',
     category: 'all',
     output: 'command',
@@ -44,6 +51,7 @@ function createWorkspaceStore(setup: Setup) {
           return { ...state, setup: { ...state.setup, items: ordered } }
         }),
       clearItems: () => patchSetup({ items: [] }),
+      setView: (view) => setState((state) => ({ ...state, view })),
       setQuery: (query) => setState((state) => ({ ...state, query })),
       setCategory: (category) => setState((state) => ({ ...state, category })),
       setOutput: (output) => setState((state) => ({ ...state, output })),
@@ -60,19 +68,19 @@ const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)
 
 /**
  * One store per mounted workspace, never per module, so server requests never
- * share state. The URL seeds `setup` once, read from the router state without
+ * share state. The URL seeds `setup` and `view` once, read from the router state without
  * subscribing (the server and hydration both see the request URL); afterwards
- * the store owns it and mirrors every change back with a replacing navigation
+ * the store owns them and mirrors every change back with a replacing navigation
  * that keeps the scroll position. The URL is never read again, so the
  * write-back cannot loop or re-render the provider, and nothing is written
- * until `setup` actually changes.
+ * until either one actually changes.
  */
 export function WorkspaceProvider({ children }: PropsWithChildren) {
   const router = useRouter()
   const navigate = route.useNavigate()
   const [value] = useState<WorkspaceContextValue>(() => {
     const search = parseWorkspaceSearch(router.state.location.search)
-    const store = createWorkspaceStore(setupFromSearch(search))
+    const store = createWorkspaceStore(setupFromSearch(search), viewFromSearch(search))
     return {
       store,
       actions: store.actions,
@@ -81,11 +89,11 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
   })
 
   useEffect(() => {
-    let setup = value.store.state.setup
+    let mirrored = value.store.state
     const { unsubscribe } = value.store.subscribe((state) => {
-      if (state.setup === setup) return
-      setup = state.setup
-      void navigate({ to: '.', search: searchFromSetup(setup), replace: true, resetScroll: false })
+      if (state.setup === mirrored.setup && state.view === mirrored.view) return
+      mirrored = state
+      void navigate({ to: '.', search: searchFromState(state), replace: true, resetScroll: false })
     })
     return unsubscribe
   }, [value, navigate])

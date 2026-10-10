@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'bun:test'
-import { parseWorkspaceSearch, searchFromSetup, setupFromSearch } from '../workspace.params'
+import {
+  parseWorkspaceSearch,
+  searchFromSetup,
+  searchFromState,
+  setupFromSearch,
+  viewFromSearch,
+} from '../workspace.params'
 import type { WorkspaceSearch } from '../workspace.params'
 import type { RegistryItem } from '../workspace.types'
 
@@ -131,5 +137,28 @@ describe('workspace search params', () => {
       agent: 'claude',
       items: ['forms'],
     })
+  })
+
+  test('the factory view rides beside the setup and round-trips', () => {
+    const search = searchFromState({
+      setup: { ...setupFromSearch({}), items: ['forms'] },
+      view: 'factory',
+    })
+    expect(search).toEqual({ items: 'forms', view: 'factory' })
+    const parsed = parseWorkspaceSearch(search, items)
+    expect(viewFromSearch(parsed)).toBe('factory')
+    expect(setupFromSearch(parsed).items).toEqual(['forms'])
+  })
+
+  test('the grid view is the default, so it never reaches the URL', () => {
+    expect(searchFromState({ setup: setupFromSearch({}), view: 'grid' })).toEqual({})
+    expect(viewFromSearch(parseWorkspaceSearch({}, items))).toBe('grid')
+  })
+
+  test('an unknown view falls back to the grid after the router merges the result', () => {
+    const raw: Record<string, unknown> = { view: '3d' }
+    const merged = { ...raw, ...parseWorkspaceSearch(raw, items) } as WorkspaceSearch
+    expect(viewFromSearch(merged)).toBe('grid')
+    expect(viewFromSearch(parseWorkspaceSearch({ view: 'grid' }, items))).toBe('grid')
   })
 })

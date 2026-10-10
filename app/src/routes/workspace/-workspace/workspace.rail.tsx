@@ -101,7 +101,11 @@ function WorkspaceRailTrigger() {
   )
 }
 
-/** The current category's label beside the trigger, so the closed rail still shows the filter. */
+/**
+ * The current category's label beside the trigger, so the closed rail still
+ * shows the filter. It shrinks and truncates so the search keeps the row's
+ * slack on phones.
+ */
 function WorkspaceRailCurrent() {
   const { meta } = useWorkspace()
   const label = useWorkspaceSelector(
@@ -117,7 +121,7 @@ function WorkspaceRailCurrent() {
       type="body-sm"
       weight="medium"
       truncate
-      className="min-w-32 shrink min-[769px]:hidden"
+      className="min-w-0 max-w-24 shrink min-[769px]:hidden"
     >
       {label}
     </Typography>
