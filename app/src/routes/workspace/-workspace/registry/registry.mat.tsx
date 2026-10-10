@@ -12,7 +12,7 @@ export function hueStyle(item: CatalogItem): CSSProperties {
 
 const pages = {
   card: 'inset-x-[8%] top-[12%] rounded-t-xl transition-transform duration-500 ease-[cubic-bezier(.34,1.5,.5,1)] group-hover/item:-translate-y-1.5 group-hover/item:scale-[1.03]',
-  detail: 'inset-x-[7%] top-[8%] rounded-t-2xl',
+  detail: 'inset-x-[8%] top-[12%] rounded-t-2xl',
 }
 
 type RegistryMatProps = {
