@@ -1,9 +1,12 @@
 import { createHash } from 'node:crypto'
-import { mkdir } from 'node:fs/promises'
+import { mkdir, readdir, rm } from 'node:fs/promises'
 import { chromium } from '@playwright/test'
 import { catalog } from '../src/routes/workspace/-workspace/workspace.catalog'
 
 const directory = new URL('../public/registry-previews/', import.meta.url)
+/** The browser window, and the most of the full page a capture keeps below it. */
+const viewport = { width: 1280, height: 800 }
+const maxHeight = 1600
 const manifestFile = Bun.file(new URL('manifest.json', directory))
 type Capture = { url: string; image?: string; imageDark?: string }
 const previous: Record<string, Capture> = (await manifestFile.exists())
@@ -16,7 +19,7 @@ if (process.argv.slice(2).some((arg) => arg !== '--refresh'))
 await mkdir(directory, { recursive: true })
 const pending = catalog.flatMap((item) => {
   if (!item.previewUrl) return []
-  return (['light', 'dark'] as const)
+  return (item.previewThemes ?? (['light', 'dark'] as const))
     .filter((theme) => {
       const image =
         theme === 'dark' ? (item.imageDark ?? item.image) : (item.image ?? item.imageDark)
@@ -55,7 +58,7 @@ try {
             }
           }
           const context = await browser.newContext({
-            viewport: { width: 1280, height: 800 },
+            viewport,
             deviceScaleFactor: 1,
             reducedMotion: 'reduce',
             colorScheme: theme,
@@ -72,8 +75,11 @@ try {
                 new Promise((resolve) => setTimeout(resolve, 3000)),
               ]),
             )
+            const height = await page.evaluate(() => document.documentElement.scrollHeight)
             await page.screenshot({
               path: file.pathname,
+              fullPage: true,
+              clip: { x: 0, y: 0, width: viewport.width, height: Math.min(Math.max(height, viewport.height), maxHeight) },
               type: 'webp',
               quality: 85,
               animations: 'disabled',
@@ -106,6 +112,12 @@ try {
     `${JSON.stringify(Object.fromEntries(Object.entries(captures).sort(([a], [b]) => a.localeCompare(b))), null, 2)}\n`,
   )
 }
+const retained = new Set(
+  Object.values(captures).flatMap(({ image, imageDark }) => [image, imageDark]),
+)
+for (const filename of await readdir(directory))
+  if (/\.(webp|png)$/.test(filename) && !retained.has(`/registry-previews/${filename}`))
+    await rm(new URL(filename, directory))
 console.log(
   `${Object.keys(captures).length} preview pairs retained; ${failed} captures failed. Run bun run catalog:sync to use them.`,
 )

@@ -14,7 +14,8 @@
       },
       "preview": {
         "url": "https://www.payload-components.xyz/components/preview/{name}",
-        "embed": false
+        "embed": false,
+        "themes": ["light"]
       }
     }
   ]

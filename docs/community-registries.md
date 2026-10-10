@@ -27,6 +27,8 @@ An optional `preview` object supplies `url` and/or `image` HTTPS templates with 
 The same image shape works in upstream `meta.preview.image` and `meta.image`. Either theme may be omitted; the available image is used as fallback.
 Use `preview.items` keyed by item name for per-item overrides, or `false` to disable previews for that item.
 Optional `preview.embed: true` (also supported in `meta.preview.embed`) enables a live iframe in the larger details Sheet. Default is false.
+Optional `preview.themes` lists the color schemes a preview page renders, such as `["light"]` (also supported per item and in `meta.preview.themes`). Default is both.
+Captures skip the themes a page does not render, and its one capture shows in both app themes.
 Only enable embedding when the provider permits cross-origin frames. The Sheet offers a Show image action when embedding is enabled.
 Iframes carry `data-theme="light|dark"` and CSS `color-scheme`; the embedded page must support the inherited color preference. An attribute on the iframe cannot change the remote document's classes.
 For example: `"preview": { "url": "https://example.com/preview/{name}", "items": { "helper": false } }`.
@@ -39,8 +41,8 @@ The web app renders thumbnails directly: supplied images first, cached screensho
 From `app/`, run `bun run catalog:sync`, `bun run previews:build`, then `bun run catalog:sync` to capture and apply URL-only previews.
 Capture uses the app's development-only Playwright dependency. Install Chromium with `bun x playwright install chromium`; optionally set `PLAYWRIGHT_CHANNEL=chrome` for installed Chrome.
 Commit `app/public/registry-previews/` and the generated catalog so builds and visitors do not need a browser capture service.
-Captures use a 1280 by 800 viewport with reduced motion and light/dark color preferences. Pages must support `prefers-color-scheme` for distinct themes.
-Screenshots are WebP at quality 85. Cached PNGs are converted with Bun; new captures use Playwright WebP directly. Unchanged URLs reuse cached captures; `--refresh` recaptures them.
+Captures use a 1280 by 800 viewport with reduced motion and light/dark color preferences, then keep up to 1600 pixels of the full page so taller blocks show more content in the details. Viewport-height sections keep their 800-pixel height. Pages must support `prefers-color-scheme` for distinct themes.
+Screenshots are WebP at quality 85. Cached PNGs are converted with Bun; new captures use Playwright WebP directly. Unchanged URLs reuse cached captures; `--refresh` recaptures them. Each run deletes captures the manifest no longer references.
 Capture failures exit nonzero and retain an existing matching capture, or leave the placeholder. Images that fail in the browser also fall back.
 Payload Components currently blocks cross-origin frames, so its details use images. Capture is an explicit contributor command, separate from builds and installation.
 Directory entries do not require toolkit metadata, an integration guide, or an acceptance fixture.

@@ -28,6 +28,8 @@ export type RegistryItem = {
   imageDark?: string
   previewUrl?: string
   previewEmbed?: boolean
+  /** Color schemes the preview page renders; absent means both. */
+  previewThemes?: readonly ('light' | 'dark')[]
 }
 
 /** Everything the command needs. It is mirrored into the URL search params. */
