@@ -126,6 +126,7 @@ body {
  * opens, so the risen card frosts and dims what it covers; these are its closed values.
  */
 .glass {
+  --bar-glass-factor: 1;
   --bar-glass-blur: 4px;
   --bar-glass-saturate: 180%;
   --bar-glass-brightness: 0.85;

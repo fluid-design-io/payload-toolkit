@@ -21,11 +21,29 @@ const views: Record<Exclude<Panel, null>, { title: string; View: () => JSX.Eleme
 const card = { width: 448, height: 530 }
 const rail = 240
 
-/** The glass frosts and dims across the whole morph, not just its first leg. */
-const glassKeys = ['--bar-glass-factor', '--bar-glass-blur', '--bar-glass-saturate', '--bar-glass-brightness']
+/**
+ * The glass's gradient deepens with the morph's default settle, while its
+ * frost and dimming span the whole morph, not just its first leg. It mounts
+ * closed, so only the bar's entrance plays on load.
+ */
+const glass = {
+  closed: {
+    '--bar-glass-factor': 1,
+    '--bar-glass-blur': '4px',
+    '--bar-glass-saturate': '180%',
+    '--bar-glass-brightness': 0.85,
+  },
+  open: {
+    '--bar-glass-factor': 1.5,
+    '--bar-glass-blur': '24px',
+    '--bar-glass-saturate': '150%',
+    '--bar-glass-brightness': 0.8,
+  },
+}
+const frostKeys = ['--bar-glass-blur', '--bar-glass-saturate', '--bar-glass-brightness']
 const glassMorph = {
-  open: { ...morph.open, ...Object.fromEntries(glassKeys.map((key) => [key, morphSpan.open])) },
-  close: { ...morph.close, ...Object.fromEntries(glassKeys.map((key) => [key, morphSpan.close])) },
+  open: { ...morph.open, ...Object.fromEntries(frostKeys.map((key) => [key, morphSpan.open])) },
+  close: { ...morph.close, ...Object.fromEntries(frostKeys.map((key) => [key, morphSpan.close])) },
 }
 
 function useCardSize() {
@@ -86,16 +104,13 @@ function BarRoot({ children }: PropsWithChildren) {
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 min-[769px]:left-[240px]">
         <m.div
           ref={shell}
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 8, ...glass.closed }}
           animate={{
             opacity: 1,
             y: 0,
             width: isOpen ? size.width : 'auto',
             height: isOpen ? size.height : 'auto',
-            '--bar-glass-factor': isOpen ? 1.5 : 1,
-            '--bar-glass-blur': isOpen ? '24px' : '4px',
-            '--bar-glass-saturate': isOpen ? '150%' : '180%',
-            '--bar-glass-brightness': isOpen ? 0.7 : 0.85,
+            ...glass[isOpen ? 'open' : 'closed'],
           }}
           transition={isReduced ? { duration: 0 } : glassMorph[isOpen ? 'open' : 'close']}
           className="pointer-events-auto relative flex flex-col justify-end overflow-hidden rounded-[1.875rem] glass text-white ring-1 ring-white/10"
