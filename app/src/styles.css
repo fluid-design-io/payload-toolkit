@@ -121,7 +121,14 @@ body {
   color-scheme: light;
 }
 
+/*
+ * The bar's glass. The bar animates the factor and the filter variables as it
+ * opens, so the risen card frosts and dims what it covers; these are its closed values.
+ */
 .glass {
+  --bar-glass-blur: 4px;
+  --bar-glass-saturate: 180%;
+  --bar-glass-brightness: 0.85;
   background: transparent;
   background: linear-gradient(
     to bottom,
@@ -142,7 +149,8 @@ body {
     hsla(214.3, 16.99%, 8.01%, 0.209) calc(var(--bar-glass-factor) * 95.2%),
     hsla(214.29, 17.07%, 8.04%, 0.2) calc(var(--bar-glass-factor) * 100%)
   );
-  backdrop-filter: blur(4px) saturate(180%) brightness(0.85);
+  backdrop-filter: blur(var(--bar-glass-blur)) saturate(var(--bar-glass-saturate))
+    brightness(var(--bar-glass-brightness));
 }
 
 /*

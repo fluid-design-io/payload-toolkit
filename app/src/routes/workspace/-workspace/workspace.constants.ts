@@ -98,6 +98,12 @@ export const morph: Record<'open' | 'close', Transition> = {
 }
 export const morphContentDelay = 0.4
 
+/** Each morph end to end, the rise's delay and length or the narrow's, for values that change across all of it. */
+export const morphSpan: Record<'open' | 'close', Transition> = {
+  open: { type: 'tween', ease: 'easeInOut', duration: 0.77 },
+  close: { type: 'tween', ease: 'easeInOut', duration: 0.62 },
+}
+
 /** One row of morphed content, rising in after the shape settles. */
 export const riseIn: Variants = {
   hidden: { opacity: 0, y: 8 },

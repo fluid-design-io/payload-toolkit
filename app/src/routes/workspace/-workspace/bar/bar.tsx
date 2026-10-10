@@ -3,7 +3,7 @@ import { AnimatePresence, LazyMotion, domAnimation, useReducedMotion } from 'mot
 import * as m from 'motion/react-m'
 import type { JSX, PropsWithChildren } from 'react'
 import { useEffect, useRef } from 'react'
-import { morph, morphContentDelay } from '../workspace.constants'
+import { morph, morphContentDelay, morphSpan } from '../workspace.constants'
 import { useWorkspace, useWorkspaceSelector } from '../workspace.context'
 import type { Panel } from '../workspace.types'
 import { useViewport } from '../workspace.viewport'
@@ -20,6 +20,13 @@ const views: Record<Exclude<Panel, null>, { title: string; View: () => JSX.Eleme
 /** The risen card is one size for every view and option; it shrinks only to fit the viewport. */
 const card = { width: 448, height: 530 }
 const rail = 240
+
+/** The glass frosts and dims across the whole morph, not just its first leg. */
+const glassKeys = ['--bar-glass-factor', '--bar-glass-blur', '--bar-glass-saturate', '--bar-glass-brightness']
+const glassMorph = {
+  open: { ...morph.open, ...Object.fromEntries(glassKeys.map((key) => [key, morphSpan.open])) },
+  close: { ...morph.close, ...Object.fromEntries(glassKeys.map((key) => [key, morphSpan.close])) },
+}
 
 function useCardSize() {
   const viewport = useViewport(card)
@@ -74,7 +81,7 @@ function BarRoot({ children }: PropsWithChildren) {
         aria-hidden="true"
         data-open={isOpen}
         onClick={close}
-        className="pointer-events-none fixed inset-0 z-40 bg-black/20 opacity-0 transition-opacity duration-300 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100"
+        className="pointer-events-none fixed inset-0 z-40 bg-backdrop opacity-0 transition-opacity duration-[620ms] ease-in-out data-[open=true]:pointer-events-auto data-[open=true]:opacity-100 data-[open=true]:duration-[770ms] motion-reduce:transition-none"
       />
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 min-[769px]:left-[240px]">
         <m.div
@@ -86,8 +93,11 @@ function BarRoot({ children }: PropsWithChildren) {
             width: isOpen ? size.width : 'auto',
             height: isOpen ? size.height : 'auto',
             '--bar-glass-factor': isOpen ? 1.5 : 1,
+            '--bar-glass-blur': isOpen ? '24px' : '4px',
+            '--bar-glass-saturate': isOpen ? '150%' : '180%',
+            '--bar-glass-brightness': isOpen ? 0.7 : 0.85,
           }}
-          transition={isReduced ? { duration: 0 } : morph[isOpen ? 'open' : 'close']}
+          transition={isReduced ? { duration: 0 } : glassMorph[isOpen ? 'open' : 'close']}
           className="pointer-events-auto relative flex flex-col justify-end overflow-hidden rounded-[1.875rem] glass text-white ring-1 ring-white/10"
         >
           <AnimatePresence mode="wait" custom={entry}>
