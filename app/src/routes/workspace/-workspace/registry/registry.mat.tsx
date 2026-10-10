@@ -11,7 +11,7 @@ export function hueStyle(item: CatalogItem): CSSProperties {
 }
 
 const pages = {
-  card: 'inset-x-[8%] top-[12%] rounded-t-xl transition-transform duration-500 ease-[cubic-bezier(.34,1.5,.5,1)] group-hover/item:-translate-y-1.5 group-hover/item:scale-[1.03]',
+  card: 'inset-x-[8%] top-[12%] rounded-t-xl transition-transform duration-500 ease-[cubic-bezier(.34,1.5,.5,1)] group-data-[hovered=true]/mat:-translate-y-1.5 group-data-[hovered=true]/mat:scale-[1.03]',
   /** The detail card animates `--page-radius` from the card page's corner. */
   detail: 'inset-x-[8%] top-[12%] rounded-t-[var(--page-radius)]',
 }
