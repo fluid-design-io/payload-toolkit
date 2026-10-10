@@ -10,20 +10,31 @@ import { useWorkspace, useWorkspaceSelector } from '../workspace.context'
 import type { CatalogItem } from '../workspace.types'
 import { useViewport } from '../workspace.viewport'
 import { flyToBar } from './registry.flight'
-import { RegistryMat, hueStyle, matRect, matTint } from './registry.mat'
+import { RegistryMat, hueStyle, matShape, matTint } from './registry.mat'
+import type { MatShape } from './registry.mat'
 import { RegistryPreview } from './registry.preview'
 import { useSwipeDismiss } from './registry.swipe'
 
-type Rect = { left: number; top: number; width: number; height: number }
+/** The card's box and corners, its own and its page's, as the morph animates them. */
+type Shape = {
+  left: number
+  top: number
+  width: number
+  height: number
+  borderRadius: number
+  '--page-radius': string
+}
 
 const detail = { width: 880, height: 600 }
 /** The preview pane's share of the open card, matching the `md` layout of the details beside it. */
 const paneShare = { wide: { width: '58.333%', height: '100%' }, narrow: { width: '100%', height: '45%' } }
 const wholeCard = { width: '100%', height: '100%' }
+const openCorners = { borderRadius: 28, pageRadius: 24 }
 
-function toRect(rect: DOMRect | null, fallback: Rect): Rect {
-  if (!rect) return fallback
-  return { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+function toShape(mat: MatShape | null, fallback: Shape): Shape {
+  if (!mat) return fallback
+  const { left, top, width, height } = mat.rect
+  return { left, top, width, height, borderRadius: mat.radius, '--page-radius': `${mat.pageRadius}px` }
 }
 
 const content: Variants = {
@@ -94,21 +105,23 @@ function RegistryDetailCard({ item }: { item: CatalogItem }) {
   const pane = useRef<HTMLDivElement>(null)
   const width = Math.min(detail.width, viewport.width - 32)
   const height = Math.min(detail.height, viewport.height - 48)
-  const center: Rect = {
+  const center: Shape = {
     left: (viewport.width - width) / 2,
     top: (viewport.height - height) / 2,
     width,
     height,
+    borderRadius: openCorners.borderRadius,
+    '--page-radius': `${openCorners.pageRadius}px`,
   }
-  const [origin] = useState(() => toRect(matRect(item.ref), center))
-  const [closingTo, setClosingTo] = useState<Rect | null>(null)
+  const [origin] = useState(() => toShape(matShape(item.ref), center))
+  const [closingTo, setClosingTo] = useState<Shape | null>(null)
   const isClosing = closingTo !== null
   const [isSettled, setIsSettled] = useState(false)
   const isLive = isSettled && !isClosing
   const morphTransition = isReduced ? { duration: 0 } : morph[isClosing ? 'close' : 'open']
 
   const close = () => {
-    if (!isClosing) setClosingTo(toRect(matRect(item.ref), origin))
+    if (!isClosing) setClosingTo(toShape(matShape(item.ref), origin))
   }
 
   const { y, swipeProps } = useSwipeDismiss({ height, isDisabled: isClosing, onDismiss: close })
@@ -128,8 +141,8 @@ function RegistryDetailCard({ item }: { item: CatalogItem }) {
       <Modal className="contents">
         <m.div
           style={{ ...hueStyle(item), y }}
-          initial={{ ...origin, borderRadius: 16 }}
-          animate={{ ...(closingTo ?? center), borderRadius: isClosing ? 16 : 28, ...(isClosing && { y: 0 }) }}
+          initial={origin}
+          animate={{ ...(closingTo ?? center), ...(isClosing && { y: 0 }) }}
           transition={morphTransition}
           onAnimationComplete={() => (isClosing ? actions.closeDetail() : setIsSettled(true))}
           className={`fixed overflow-hidden ${matTint}`}

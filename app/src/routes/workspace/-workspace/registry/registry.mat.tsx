@@ -12,7 +12,8 @@ export function hueStyle(item: CatalogItem): CSSProperties {
 
 const pages = {
   card: 'inset-x-[8%] top-[12%] rounded-t-xl transition-transform duration-500 ease-[cubic-bezier(.34,1.5,.5,1)] group-hover/item:-translate-y-1.5 group-hover/item:scale-[1.03]',
-  detail: 'inset-x-[8%] top-[12%] rounded-t-2xl',
+  /** The detail card animates `--page-radius` from the card page's corner. */
+  detail: 'inset-x-[8%] top-[12%] rounded-t-[var(--page-radius)]',
 }
 
 type RegistryMatProps = {
@@ -70,10 +71,22 @@ export function RegistryMat({
   )
 }
 
-/** The card mat the detail card morphs from, if it is on the page. */
-export function matRect(ref: string): DOMRect | null {
-  return (
-    document.querySelector(`[data-registry-mat="${CSS.escape(ref)}"]`)?.getBoundingClientRect() ??
-    null
-  )
+export type MatShape = { rect: DOMRect; radius: number; pageRadius: number }
+
+function cornerRadius(element: Element | null) {
+  return element ? parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0 : 0
+}
+
+/**
+ * The card mat the detail card morphs from, if it is on the page: its box and
+ * its own and its page's computed corners, which the theme scales.
+ */
+export function matShape(ref: string): MatShape | null {
+  const mat = document.querySelector(`[data-registry-mat="${CSS.escape(ref)}"]`)
+  if (!mat) return null
+  return {
+    rect: mat.getBoundingClientRect(),
+    radius: cornerRadius(mat),
+    pageRadius: cornerRadius(mat.querySelector('[data-registry-page]')),
+  }
 }

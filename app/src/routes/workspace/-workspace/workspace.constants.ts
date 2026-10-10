@@ -72,11 +72,29 @@ const settle: Transition = { type: 'spring', bounce: 0, duration: 0.3 }
 /**
  * The bar and the registry detail share one morph. Opening stretches sideways,
  * then springs upward; closing lowers first, then narrows. Content waits for
- * the rise with `morphContentDelay`. A swipe's offset lowers home with the top.
+ * the rise with `morphContentDelay`. Corners follow the height, and a swipe's
+ * offset lowers home with the top.
  */
 export const morph: Record<'open' | 'close', Transition> = {
-  open: { width: stretch, left: stretch, height: rise, top: rise, default: settle },
-  close: { height: lower, top: lower, y: lower, width: narrow, left: narrow, default: settle },
+  open: {
+    width: stretch,
+    left: stretch,
+    height: rise,
+    top: rise,
+    borderRadius: rise,
+    '--page-radius': rise,
+    default: settle,
+  },
+  close: {
+    height: lower,
+    top: lower,
+    y: lower,
+    borderRadius: lower,
+    '--page-radius': lower,
+    width: narrow,
+    left: narrow,
+    default: settle,
+  },
 }
 export const morphContentDelay = 0.4
 
