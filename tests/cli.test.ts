@@ -50,6 +50,18 @@ test('delivered CLI exposes init/add and rejects missing unattended choices with
   }
 })
 
+test('delivered CLI prints the usage docs that ship with it', async () => {
+  const index = await invoke(['docs'])
+  assert.equal(index.code, 0)
+  assert.match(index.stdout, /^# Payload Toolkit/)
+  const page = await invoke(['docs', 'agents'])
+  assert.equal(page.code, 0)
+  assert.match(page.stdout, /^# Agent integration/)
+  const unknown = await invoke(['docs', '../package'])
+  assert.equal(unknown.code, 2)
+  assert.match(unknown.stderr, /Unknown docs page/)
+})
+
 test('conflicting agent flags and strict mode without an agent refuse before installation', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'payload-flags-'))
   try {

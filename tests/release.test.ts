@@ -27,6 +27,7 @@ const pack = {
     'assets/registry/forms.json',
     'assets/registry/community-registries.json',
     'catalog/bootstrap.json',
+    'docs/usage/index.md',
     'package.json',
     'README.md',
     'LICENSE.md',

@@ -40,6 +40,8 @@ live in `catalog/community-registries.json`; generate their Markdown page with
 permission. External URLs and shadcn namespaces can install without toolkit
 metadata or guides. External compatibility claims are advisory; bundled features
 retain exact compatibility checks. Update the feature map when behavior changes.
+Usage docs in `docs/usage` ship in the package and `payload-toolkit docs` prints
+them; update them in the same change as CLI behavior.
 Real agent evaluation uses contributor accounts and
 must be requested explicitly; default checks never launch a paid model.
 

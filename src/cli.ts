@@ -95,6 +95,7 @@ async function main() {
     .version(metadata.version)
     .exitOverride()
     .showHelpAfterError()
+    .addHelpText('after', '\nDocs for this version: payload-toolkit docs\n')
   program.configureOutput({
     writeErr: (message) => {
       if (!jsonMode) process.stderr.write(message)
@@ -246,6 +247,15 @@ async function main() {
           process.stdout.write(
             `${registry.namespace} — ${registry.name}\n  ${registry.description}\n  ${registry.homepage}\n`,
           )
+    })
+  program
+    .command('docs [page]')
+    .description('Print the usage docs that ship with this version')
+    .action(async (page = 'index') => {
+      const file = Bun.file(new URL(`../docs/usage/${page}.md`, import.meta.url))
+      if (!/^[a-z-]+$/.test(page) || !(await file.exists()))
+        throw new Error(`Unknown docs page: ${page}. Run payload-toolkit docs to list pages`)
+      process.stdout.write(await file.text())
     })
   await program.parseAsync(process.argv)
 }

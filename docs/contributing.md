@@ -21,3 +21,33 @@ Renovate targets `main`, groups Payload and shadcn contract changes and leaves m
 Renovate reads root package dependencies and uses three scoped regex managers for the Payload pins in `catalog/bootstrap.json`, `registry/registry.json` and the Forms guide target sentence. Generator, Payload, feature dependency, exact compatibility and declared guide target versions are proposed together in the manual Payload v4 tuple PR. Canary discovery includes versions beyond npm's latest tag. The template commit stays a deliberate qualification choice: confirm that source commit against the proposed generator release, then run the four runtime cells before merging. A grouped update alone does not establish compatibility. The extraction test covers the current single-version compatibility contract; expanding that contract requires updating the extraction and checks together.
 
 Bun runs repository scripts directly; `tsx` is unnecessary. Plain file I/O uses `Bun.file()` and `Bun.write()`. Keep `node:fs/promises` for directory operations, exclusive file creation, permissions and fsync; Bun implements these APIs. These choices follow [Bun's file I/O guidance](https://bun.sh/docs/runtime/file-io) and preserve toolkit ownership and recovery contracts.
+
+## Run from source
+
+Install and build with Node 24.21.0 and Bun 1.4.3, then run the built CLI. Every command in the [usage docs](usage/index.md) works the same way against `dist/cli.js`. Those pages ship in the package and `payload-toolkit docs` prints them, so update them in the same change as CLI behavior.
+
+```sh
+bun install --frozen-lockfile
+bun run build
+bun dist/cli.js --help
+bun dist/cli.js init acme --framework next --database postgres --package-manager pnpm
+```
+
+## Checks
+
+Verification fixtures default to pnpm 10.34.6; install that separately for the default runtime checks, or select an available output installer with `--package-manager npm` or `--package-manager bun`.
+
+```sh
+bun run check
+bun run agent:doctor
+bun run agent:verify --cli-only
+bun run agent:verify --feature forms --framework next --database postgres --package-manager pnpm
+bun run agent:verify:external
+bun run agent:verify:external --runtime
+```
+
+The external verifier downloads the live Hero Split item into an isolated official Next.js fixture and checks URL installation and namespace repeats. Its default mode requires network access and pnpm 10.34.6, but no database, browser, or paid model. `--runtime` also uses an owned PostgreSQL database and Chromium to exercise a known integration. These checks report this item and host combination separately from registry-wide compatibility.
+
+Bundled contributions add an item, ordinary exports, a contextual guide, and an executable acceptance recipe. Build checks enforce catalog coverage and private module imports. See the [external registry contract](architecture/chosen/external-registries.md) for installation ownership and the [chosen architecture](architecture/chosen/rationale.md) for the base design.
+
+CI starts on standard public GitHub runners. A separate trusted workflow reports actual run and tested-revision conclusions. The runner benchmark can follow once fixture costs are measurable. The [release instructions](releasing.md) describe preparing and publishing an alpha from the reviewed package tarball.

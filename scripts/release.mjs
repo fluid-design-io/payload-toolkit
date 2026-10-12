@@ -51,7 +51,7 @@ export function validatePack(pack, version) {
     assert(!file.split('/').includes('..'), `Unsafe packed path: ${file}`)
     assert.match(
       file,
-      /^(dist\/[\w./-]+\.(?:js(?:\.map)?|json)|assets\/registry\/[\w-]+\.json|catalog\/bootstrap\.json|package\.json|README\.md|LICENSE\.md)$/,
+      /^(dist\/[\w./-]+\.(?:js(?:\.map)?|json)|assets\/registry\/[\w-]+\.json|catalog\/bootstrap\.json|docs\/usage\/[\w-]+\.md|package\.json|README\.md|LICENSE\.md)$/,
       `Unexpected packed file: ${file}`,
     )
   }
@@ -60,6 +60,7 @@ export function validatePack(pack, version) {
     'assets/registry/forms.json',
     'assets/registry/community-registries.json',
     'catalog/bootstrap.json',
+    'docs/usage/index.md',
     'package.json',
     'README.md',
     'LICENSE.md',
