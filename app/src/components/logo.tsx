@@ -10,35 +10,29 @@ import type { ComponentProps } from 'react'
  * half is hidden by the plate rather than clipped, and stops being hidden as
  * soon as it rises above the rim. `--logo-ground` must match the surface
  * behind the mark.
+ *
+ * The viewBox centres the resting drawing (y 14 to 47) so the mark lines up
+ * with icons beside it; the lifted block overflows the top of the box.
  */
 export function LogoMark({ className, ...props }: ComponentProps<'svg'>) {
   return (
     <svg
-      viewBox="2 2 60 48"
+      viewBox="2 4 60 48"
       fill="none"
       strokeLinejoin="round"
       strokeLinecap="round"
       aria-hidden="true"
-      className={cn(
-        'overflow-visible [--logo-ground:var(--background)]',
-        className,
-      )}
+      className={cn('overflow-visible [--logo-ground:var(--background)]', className)}
       {...props}
     >
-      <g
-        className="[&_*]:[vector-effect:non-scaling-stroke]"
-        strokeWidth={1.25}
-      >
+      <g className="[&_*]:[vector-effect:non-scaling-stroke]" strokeWidth={1.25}>
         <polygon
           points="32,16 60,30 32,44 4,30"
           fill="var(--logo-ground)"
           className="stroke-muted/50"
         />
         <polyline points="14.5,30 32,21.25 49.5,30" className="stroke-muted" />
-        <polyline
-          points="19,31.25 32,24.75 45,31.25"
-          className="stroke-muted/50"
-        />
+        <polyline points="19,31.25 32,24.75 45,31.25" className="stroke-muted/50" />
         <g className="transition-transform duration-700 ease-[cubic-bezier(.32,.72,0,1)] group-hover:-translate-y-[10px] group-focus-visible:-translate-y-[10px] motion-reduce:transition-none">
           <polygon
             points="32,14 46,21 46,35 32,42 18,35 18,21"
@@ -53,10 +47,7 @@ export function LogoMark({ className, ...props }: ComponentProps<'svg'>) {
           stroke="none"
         />
         <polyline points="4,30 32,44 60,30" className="stroke-muted/50" />
-        <polyline
-          points="4,30 4,33 32,47 60,33 60,30"
-          className="stroke-muted/50"
-        />
+        <polyline points="4,30 4,33 32,47 60,33 60,30" className="stroke-muted/50" />
         <polyline points="14.5,30 32,38.75 49.5,30" className="stroke-muted" />
       </g>
     </svg>
@@ -66,16 +57,9 @@ export function LogoMark({ className, ...props }: ComponentProps<'svg'>) {
 /** The mark beside the `payload-toolkit` wordmark; the wrapper is the hover group. */
 export function Logo({ className, ...props }: ComponentProps<'span'>) {
   return (
-    <span
-      className={cn('group inline-flex items-center gap-2', className)}
-      {...props}
-    >
+    <span className={cn('group inline-flex items-center gap-2', className)} {...props}>
       <LogoMark className="h-8 w-auto" />
-      <Typography
-        render={(props) => <span {...props} />}
-        type="body-sm"
-        className="font-mono"
-      >
+      <Typography render={(props) => <span {...props} />} type="body-sm" className="font-mono">
         payload-toolkit
       </Typography>
     </span>

@@ -1,5 +1,5 @@
 import { buttonVariants, cn } from '@heroui/react'
-import { RiGithubFill } from '@remixicon/react'
+import { RiGithubLine } from '@remixicon/react'
 import { createServerFn } from '@tanstack/react-start'
 import { queryOptions, useQuery } from '@tanstack/react-query'
 
@@ -61,11 +61,15 @@ export function GithubStars({ className }: { className?: string }) {
       className={buttonVariants({
         variant: 'ghost',
         size: 'sm',
-        className: cn('gap-1.5 tabular-nums', className),
+        className: cn('gap-1.5', className),
       })}
     >
-      <RiGithubFill size={16} aria-hidden="true" />
-      {stars && <span aria-hidden="true">{stars.short}</span>}
+      <RiGithubLine size={16} aria-hidden="true" />
+      {stars && (
+        <span aria-hidden="true" className="font-light tabular-nums">
+          {stars.short}
+        </span>
+      )}
     </a>
   )
 }

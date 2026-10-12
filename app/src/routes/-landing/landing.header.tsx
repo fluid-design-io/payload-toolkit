@@ -35,11 +35,15 @@ export function LandingHeader() {
             className={buttonVariants({
               variant: 'ghost',
               isIconOnly: !stars,
-              className: 'inline-flex gap-1.5 tabular-nums',
+              className: 'inline-flex gap-1.5',
             })}
           >
             <RiGithubFill className="size-5" aria-hidden="true" />
-            {stars && <span aria-hidden="true">{stars.short}</span>}
+            {stars && (
+              <span aria-hidden="true" className="font-light tabular-nums">
+                {stars.short}
+              </span>
+            )}
           </Tooltip.Trigger>
           <Tooltip.Content placement="bottom">View on GitHub</Tooltip.Content>
         </Tooltip>
