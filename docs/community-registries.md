@@ -5,7 +5,7 @@ The compatibility column records upstream claims. Payload v4 runtime compatibili
 
 | Registry | Namespace | Description | Upstream compatibility | Repository |
 | --- | --- | --- | --- | --- |
-| [Payload Components](<https://www.payload-components.xyz>) | @payload-components | Payload CMS blocks and components distributed through a shadcn registry. | Payload v3 with Next.js 15 or 16. [Upstream documentation](<https://www.payload-components.xyz/docs/installation>) | [Source](<https://github.com/Ducksss/payload-components>) |
+| [Payload Components](<https://www.payload-components.xyz>) | @payload-components | Payload CMS blocks and components distributed through a shadcn registry. | Payload v3 with Next.js 15 or 16; experimental Payload v4 with Next.js 16 (16.2.6 or newer) and Node.js 24.15.0 or newer. [Upstream documentation](<https://www.payload-components.xyz/docs/installation>) | [Source](<https://github.com/Ducksss/payload-components>) |
 
 ## Installation policy
 

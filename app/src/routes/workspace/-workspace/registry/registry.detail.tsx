@@ -48,13 +48,11 @@ const content: Variants = {
   gone: { opacity: 0, transition: { duration: 0.12 } },
 }
 
-/**
- * The source is the detail's one link, and it opens this item's own page in
- * the registry: its preview page, else its registry entry or guide, else the
- * registry's homepage.
- */
+/** The source link opens the item's documentation, registry entry or guide. */
 function DetailSource({ item }: { item: CatalogItem }) {
-  const href = item.previewUrl ?? item.itemUrl ?? item.sourceHomepage
+  const href = item.source === '@payload-components'
+    ? `https://www.payload-components.xyz/docs/components/${encodeURIComponent(item.name)}`
+    : item.itemUrl ?? item.sourceHomepage
   const sourceName = item.sourceName ?? item.source
   return (
     <m.div variants={riseIn} className="flex flex-col gap-1.5">

@@ -9,7 +9,7 @@
       "repository": "https://github.com/Ducksss/payload-components",
       "url": "https://www.payload-components.xyz/r/{name}.json",
       "compatibility": {
-        "upstream": "Payload v3 with Next.js 15 or 16.",
+        "upstream": "Payload v3 with Next.js 15 or 16; experimental Payload v4 with Next.js 16 (16.2.6 or newer) and Node.js 24.15.0 or newer.",
         "documentation": "https://www.payload-components.xyz/docs/installation"
       },
       "preview": {
