@@ -3,7 +3,27 @@ import assert from 'node:assert/strict'
 import { chmod, lstat, mkdtemp, mkdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { publishOfficialSource, requireNode } from './official.js'
+import { appendToolkitAgentRules, publishOfficialSource, requireNode } from './official.js'
+
+test('agent rules keep the official pointer and add the exact toolkit docs version', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'toolkit-agent-rules-'))
+  try {
+    const { version } = await Bun.file(new URL('../../../package.json', import.meta.url)).json()
+    const official = '# AI Agent\n\nFor any Payload-related work, reference the skill.\n'
+    await Bun.write(path.join(directory, 'AGENTS.md'), official)
+    await appendToolkitAgentRules(directory)
+    const rules = await Bun.file(path.join(directory, 'AGENTS.md')).text()
+    assert(rules.startsWith(`${official}\n## Payload Toolkit\n`))
+    assert(rules.includes(`bunx --bun payload-toolkit@${version} docs`))
+    await rm(path.join(directory, 'AGENTS.md'))
+    await appendToolkitAgentRules(directory)
+    assert(
+      (await Bun.file(path.join(directory, 'AGENTS.md')).text()).startsWith('## Payload Toolkit'),
+    )
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+})
 
 test('source publication reserves destination once and excludes dependency/Git trees', async () => {
   const directory = await mkdtemp(path.join(tmpdir(), 'toolkit-publish-test-'))

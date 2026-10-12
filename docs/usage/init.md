@@ -5,10 +5,10 @@ payload-toolkit init acme --framework next --database postgres --package-manager
 payload-toolkit init acme --framework tanstack --database mongodb --features forms --package-manager pnpm
 ```
 
-Run `init` without all choices in a terminal for prompts. For unattended execution, supply the directory, framework, database and package manager. The terminal flow asks for optional features; leaving the selection empty creates a plain Payload app. `--json` returns one result and disables prompts. PostgreSQL uses Payload's Drizzle adapter. MongoDB is the other initial database choice. Generated projects support npm, pnpm and Bun.
+In a terminal, missing choices are prompted. Unattended runs must pass the directory, `--framework` (`next`, `tanstack`), `--database` (`postgres`, `mongodb`) and `--package-manager` (`npm`, `pnpm`, `bun`). `--json` prints one result and disables prompts.
 
-Without features, `init` pulls the official Payload blank starter. With `--features`, it pulls the same base and installs the selected features on top. `--features` accepts the same references as `add`, separated by commas. `--codex` and `--claude` integrate feature guides, so they require at least one feature.
+`init` runs the pinned official generator and template, then installs any `--features`, a comma-separated list of the references `add` accepts. Without features it is the plain official starter. `--codex` and `--claude` need at least one feature.
 
-The toolkit pins the official generator version, template commit and Payload version in `catalog/bootstrap.json`. It does not maintain a cloned blank template. The initial tuple is a v4 canary; compatibility checks and runtime evidence apply to that tuple, not every v4 prerelease.
+The generator writes `AGENTS.md` pointing at the skill in the installed `payload` package; `init` appends a section naming `payload-toolkit@<version> docs` for the version that created the project.
 
-Database setup belongs to the application developer. Supply `--database-url` or `DATABASE_URI` for an existing connection. Without one, the generated environment contains a local configure-later placeholder. Installation does not provision services or prove that deployment infrastructure is ready.
+Pass `--database-url` or set `DATABASE_URI` to use an existing database. Otherwise the environment gets a local placeholder to configure later. The toolkit never provisions services.

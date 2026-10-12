@@ -19,6 +19,21 @@ export const bootstrap = z
   .parse(
     JSON.parse(await Bun.file(new URL('../../../catalog/bootstrap.json', import.meta.url)).text()),
   )
+const toolkit = z
+  .object({ version: z.string() })
+  .parse(JSON.parse(await Bun.file(new URL('../../../package.json', import.meta.url)).text()))
+
+// The generator's AGENTS.md points at the skill inside the installed payload package. The
+// toolkit runs through bunx instead of node_modules, so its section pins the version.
+export async function appendToolkitAgentRules(project: string): Promise<void> {
+  const file = Bun.file(path.join(project, 'AGENTS.md'))
+  const official = (await file.exists()) ? `${(await file.text()).trimEnd()}\n\n` : ''
+  await Bun.write(
+    file,
+    `${official}## Payload Toolkit\n\nThis project was created with Payload Toolkit ${toolkit.version}. Before adding or integrating toolkit features, read the docs for that version: \`bunx --bun payload-toolkit@${toolkit.version} docs\`.\n`,
+  )
+}
+
 // Payload's official generator and generated scripts still require an actual Node binary.
 // Bun's process.versions.node describes compatibility, not the installed Node runtime.
 export function requireNode(): void {
@@ -81,7 +96,6 @@ export async function createOfficialSource(
       `--use-${request.packageManager}`,
       '--no-deps',
       '--no-git',
-      '--no-agent',
     ],
     { cwd: stagingParent, attempt, signal, secrets: [uri] },
   )

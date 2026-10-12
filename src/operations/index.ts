@@ -31,6 +31,7 @@ import {
   snapshot,
 } from './private/project.js'
 import {
+  appendToolkitAgentRules,
   bootstrap,
   completeOfficialProject,
   createOfficialSource,
@@ -160,6 +161,7 @@ async function operate(
         'Installing dependencies and generating official artifacts',
       )
       await completeOfficialProject(target, initRequest, attempt, options.signal)
+      await appendToolkitAgentRules(target)
       await attempt.event(
         'dependencies',
         'complete',
