@@ -8,6 +8,11 @@ import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
 
+const title = 'Payload Toolkit'
+const description =
+  'Payload Toolkit is a collection of tools and resources for building with Payload CMS.'
+const ogImage = `${import.meta.env.VITE_SITE_URL}/payload-toolkit-og.png`
+
 interface MyRouterContext {
   queryClient: QueryClient
 }
@@ -22,9 +27,20 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         name: 'viewport',
         content: 'width=device-width, initial-scale=1',
       },
-      {
-        title: 'Payload Toolkit',
-      },
+      { title },
+      { name: 'description', content: description },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:site_name', content: title },
+      { property: 'og:title', content: title },
+      { property: 'og:description', content: description },
+      { property: 'og:image', content: ogImage },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '675' },
+      { property: 'og:image:alt', content: title },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: title },
+      { name: 'twitter:description', content: description },
+      { name: 'twitter:image', content: ogImage },
     ],
     links: [
       {
