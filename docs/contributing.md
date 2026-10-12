@@ -1,6 +1,6 @@
 # Contributing to Payload Toolkit
 
-This repository develops the v4 toolkit on `main`. The separate `payload-better-auth-starter` repository retains the v3 starter. Use Node 24.21.0 and Bun 1.4.2, then run `bun run agent:setup` and `bun run agent:doctor`.
+This repository develops the v4 toolkit on `main`. The separate `payload-better-auth-starter` repository retains the v3 starter. Use Node 24.21.0 and Bun 1.4.3, then run `bun run agent:setup` and `bun run agent:doctor`.
 
 Repository guidance lives in `AGENTS.md`; `CLAUDE.md` points to it. The shared [verification skill](../.agents/skills/verify-payload-toolkit/SKILL.md) is tracked for contributors and cloud agents. Other agent skills, pstack configuration, `.claude`, `.cursor` and `skills-lock.json` are personal and ignored. The contributor workflow requires no personal skill installation.
 

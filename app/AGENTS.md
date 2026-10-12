@@ -72,7 +72,7 @@ consulted. Intent warns about devtools-event-client 0.5.0 and Form's private
 
 ### Stack and checks
 
-Use Node 24.21.0 and Bun 1.4.2. React 19, TanStack Start and file Router run on
+Use Node 24.21.0 and Bun 1.4.3. React 19, TanStack Start and file Router run on
 Vite 8/TypeScript 6 with Tailwind v4. QueryClient remains scoped to each router
 factory invocation; preserve the generated SSR dehydration integration.
 Form 1.33.5 and Store 0.11.2 are exact dependencies. Virtual was removed when
@@ -410,7 +410,7 @@ bun run catalog:sync
 bun run test
 ```
 
-`bun run test` runs `bun:test` over `src` and `scripts`. It asserts the exact
+`bun run test` type checks, then runs `bun:test` over `src` and `scripts`. It asserts the exact
 command and prompt strings, including the README invocations, the URL params,
 the category grouping and catalog image parsing.
 

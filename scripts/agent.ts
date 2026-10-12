@@ -78,14 +78,14 @@ async function doctor() {
     node: nodeVersion,
     nodeSupported: runtime,
     bun: bun?.stdout.trim() ?? null,
-    bunPinned: bun?.stdout.trim() === '1.4.2',
+    bunPinned: bun?.stdout.trim() === '1.4.3',
     builtCLI: await exists(path.join(root, 'dist/cli.js')),
     browser,
     docker: docker?.code === 0,
     suppliedServices: !!(
       process.env.TOOLKIT_TEST_POSTGRES_URL || process.env.TOOLKIT_TEST_MONGODB_URL
     ),
-    ready: runtime && bun?.stdout.trim() === '1.4.2',
+    ready: runtime && bun?.stdout.trim() === '1.4.3',
   }
 }
 async function selectedRun() {
@@ -195,7 +195,7 @@ async function verify() {
     await save()
     const health = await doctor()
     if (!health.ready)
-      throw new Blocked('Use Node >=24.15 within major 24 and Bun 1.4.2; run agent:doctor')
+      throw new Blocked('Use Node >=24.15 within major 24 and Bun 1.4.3; run agent:doctor')
     await run('bun', ['run', 'build'])
     const pack = await run('npm', [
       'pack',
@@ -500,7 +500,7 @@ try {
   } else if (verb === 'setup') {
     const result = await doctor()
     if (!result.nodeSupported || !result.bunPinned)
-      throw new Blocked('Select Node 24.21.0 and Bun 1.4.2 first')
+      throw new Blocked('Select Node 24.21.0 and Bun 1.4.3 first')
     await command('bun', ['install', '--frozen-lockfile'], { cwd: root })
     await command('bun', ['run', 'build'], { cwd: root })
     json(await doctor())

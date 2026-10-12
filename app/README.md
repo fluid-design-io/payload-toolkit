@@ -56,7 +56,7 @@ The prompt mirrors the CLI's own agent prompt in the root `src/operations/privat
 Store updates and selectors. It adds no app pages.
 Start/Router are exercised by building and serving the root route.
 CLI and Intent are installed locally (`bun run scaffold --help`,
-`bun run intent:list`). Use Node 24.21.0 and Bun 1.4.2.
+`bun run intent:list`). Use Node 24.21.0 and Bun 1.4.3.
 
 ## HeroUI
 

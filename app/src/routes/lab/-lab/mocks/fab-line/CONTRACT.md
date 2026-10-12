@@ -606,7 +606,7 @@ that runs later than the frame it was created in.
 
 ## Verify
 
-From `app/`: `bunx tsc --noEmit 2>&1 | grep 'mocks/fab-line'` prints nothing,
+From `app/`: `bun check 2>&1 | grep 'mocks/fab-line'` prints nothing,
 and `bun run test` passes. Harness:
 `bun shot.ts fab-line <out> --query '<slot>=<id>' ...` from
 `/private/tmp/claude-502/-Users-oliverpan-Desktop-Tutorials-payload-toolkit/9fb32aa3-bd64-457d-89ef-9af8d30ff2b1/scratchpad/r5/tools`

@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24.21.0 }
       - uses: oven-sh/setup-bun@v2
-        with: { bun-version: 1.4.2 }
+        with: { bun-version: 1.4.3 }
       - run: bun install --frozen-lockfile
       - run: bun run check
       - run: bun run agent:verify --cli-only
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24.21.0 }
       - uses: oven-sh/setup-bun@v2
-        with: { bun-version: 1.4.2 }
+        with: { bun-version: 1.4.3 }
       - run: bun install --frozen-lockfile
       - run: bun x playwright install --with-deps chromium
       - run: bun run agent:verify --framework ${{ matrix.framework }} --database ${{ matrix.database }}
@@ -86,7 +86,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24.21.0 }
       - uses: oven-sh/setup-bun@v2
-        with: { bun-version: 1.4.2 }
+        with: { bun-version: 1.4.3 }
       - run: bun install --frozen-lockfile
       - name: Verify registry worker before full project installation
         run: |
@@ -123,7 +123,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 24.21.0 }
       - uses: oven-sh/setup-bun@v2
-        with: { bun-version: 1.4.2 }
+        with: { bun-version: 1.4.3 }
       - run: bun install --frozen-lockfile
       - run: bun run agent:verify --installation-only --package-manager ${{ matrix.package-manager }}
       - run: bun run agent:cleanup

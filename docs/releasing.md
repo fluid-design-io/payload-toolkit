@@ -1,6 +1,6 @@
 # Alpha releases
 
-Use Node 24.21.0 and Bun 1.4.2. The package name is `payload-toolkit`; the initial version is `0.1.0-alpha.0`. Publish prereleases with the `alpha` tag. Package configuration also defaults publishing to public access and the alpha channel on the npm registry.
+Use Node 24.21.0 and Bun 1.4.3. The package name is `payload-toolkit`; the initial version is `0.1.0-alpha.0`. Publish prereleases with the `alpha` tag. Package configuration also defaults publishing to public access and the alpha channel on the npm registry.
 
 Generated-project fixtures retain npm/pnpm/Bun coverage and default to pnpm 10.34.6. Bun runs the CLI; Node is retained for official Payload tooling; Bun installs and checks this repository.
 

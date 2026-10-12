@@ -9,7 +9,7 @@ bunx --bun payload-toolkit@alpha --help
 bunx --bun payload-toolkit@alpha init acme --framework next --database postgres --package-manager pnpm
 ```
 
-For source development, use Node 24.21.0 and Bun 1.4.2 to install and build. Bun runs the delivered CLI, while Node supports official Payload tooling. Generated projects support npm, pnpm and Bun:
+For source development, use Node 24.21.0 and Bun 1.4.3 to install and build. Bun runs the delivered CLI, while Node supports official Payload tooling. Generated projects support npm, pnpm and Bun:
 
 ```sh
 bun install --frozen-lockfile

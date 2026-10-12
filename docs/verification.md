@@ -1,6 +1,6 @@
 # Verification
 
-Use Node 24.21.0 and Bun 1.4.2 for repository installation and scripts. Unit and contract tests use `bun:test`. Generated-project installation remains a separate choice: npm, pnpm or Bun. Fixtures default to pnpm 10.34.6, which must be installed for the default installation/runtime checks.
+Use Node 24.21.0 and Bun 1.4.3 for repository installation and scripts. Unit and contract tests use `bun:test`. Generated-project installation remains a separate choice: npm, pnpm or Bun. Fixtures default to pnpm 10.34.6, which must be installed for the default installation/runtime checks.
 
 `bun run agent:verify --cli-only` verifies the actual packed binary through an isolated consumer. `bun run agent:verify --installation-only --package-manager npm` drives real packed init/add and records the output lockfile and installed dependencies, without database/browser checks. Use `bun` or `pnpm` for the other installers. `bun run agent:verify --framework next --database postgres` additionally creates an official project, adds Forms, applies known guide integration, runs codegen/build/typecheck and drives real REST/browser behavior. Repeat with TanStack and MongoDB. Output package-manager coverage uses `--package-manager npm` and `--package-manager bun`; install that manager first.
 
