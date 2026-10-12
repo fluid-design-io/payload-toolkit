@@ -15,7 +15,9 @@ Run `bun run agent:setup`. This installs the frozen lockfile and builds the pack
 
 ## Doctor
 
-Run `bun run agent:doctor --runtime` before runtime driving or after unexpected failures. It reports actual Node/Bun versions, the built binary, Chromium executable, Docker daemon and supplied-service availability. Missing required capabilities are blocked evidence and exit 2. They do not count as a pass.
+Run `bun run agent:doctor --runtime` before runtime driving or after unexpected failures. It reports actual Node/Bun versions, the built binary, Chromium executable, Docker daemon and supplied-service availability. Missing required capabilities are blocked evidence and exit 2. They do not count as a pass. Test failures exit 1.
+
+Docker provides disposable databases by default, each with a unique name, random localhost port and ownership label; the Mongo fixture starts a single-node replica set. Without Docker, supply `TOOLKIT_TEST_POSTGRES_URL` or `TOOLKIT_TEST_MONGODB_URL` with `TOOLKIT_TEST_DISPOSABLE=yes`. Fixtures write test data to those borrowed databases and never drop them; never use production URLs.
 
 ## Drive
 

@@ -6,20 +6,14 @@ payload-toolkit add https://www.payload-components.xyz/r/hero-split.json
 payload-toolkit add @payload-components/hero-split
 ```
 
-`add` installs into the current directory unless `--cwd` names another. It accepts bundled names, direct registry URLs, and shadcn namespace references. Namespace resolution uses shadcn's directory and the project's `components.json` registries. `registries` prints the community directory of Payload-related registries, and `registries --json` returns its structured data. Listings are for discovery and do not certify Payload v4 compatibility.
+`add` installs into the current directory, or `--cwd`. It accepts bundled feature names, registry item URLs and shadcn namespace references. Namespaces resolve through shadcn's directory and the project's `components.json`. `registries` lists community registries for discovery; a listing is not a compatibility claim.
 
 ## Bundled features
 
-Forms is the first feature. It installs the official form-builder plugin wrapper, a React submission example and a versioned `GUIDE.md`. The guide asks the developer or selected agent to inspect the real config, routes and native admin authentication before wiring it. Submissions persist in Payload and create a console notification. Better Auth is unavailable until its v4 support is proven.
+`forms` installs the official form-builder plugin wrapper, a React submission example and a versioned `GUIDE.md` for wiring it into the real config and routes. Bundled features are checked against the exact pinned Payload version.
 
-Bundled features retain exact compatibility and qualified installed-byte checks.
+## External items
 
-## External registries
+External items install through shadcn's public CLI and need no toolkit metadata or guide. Their compatibility claims are advisory, so a v3 claim does not block installation. Invalid registry data, unsafe destinations and changed existing files still stop the write.
 
-The toolkit uses shadcn's public registry format, APIs, and CLI. Applications own the installed code and have no toolkit runtime dependency.
-
-External blocks and their registry dependencies install without directory approval or Payload v4 certification. Compatibility claims are advisory. A v3 claim or missing toolkit metadata does not block source installation. Invalid registry data, unsafe destinations, and divergent existing files still stop the affected write.
-
-External installation supports source, blocks, UI, CSS and CSS variables. Alias-based installation currently requires local TypeScript or JavaScript paths without inheritance and shadcn aliases that start with `@/` or `./`. Base projects, fonts, environment writes and Tailwind configuration changes need manual setup.
-
-When an external item needs shadcn transformations, the toolkit uses shadcn's public CLI in isolation. If the host has no `components.json`, installation can add a minimal config and a stylesheet. The integration prompt identifies any stylesheet that the host needs to import. Source installation does not establish that the block is registered in Payload or renders correctly.
+Supported: source files, blocks, UI, CSS and CSS variables. Alias paths must be local TypeScript or JavaScript paths without `extends`, with shadcn aliases starting `@/` or `./`. Base projects, fonts, environment writes and Tailwind config changes need manual setup. A project without `components.json` may get a minimal one plus a stylesheet; the integration prompt names any stylesheet to import. Installed source is not yet registered in Payload or proven to render.

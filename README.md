@@ -30,4 +30,8 @@ The usage docs ship inside the package, so they always match the version you run
 bunx --bun payload-toolkit@alpha docs
 ```
 
-The same pages are in [docs/usage](docs/usage) on GitHub. Contributors can start with [contributing](docs/contributing.md), and the [community registries](docs/community-registries.md) list Payload-related component registries.
+The same pages are in [docs/usage](docs/usage) on GitHub, and the [community registries](docs/community-registries.md) list Payload-related component registries.
+
+## Contributing
+
+Work with your coding agent: [AGENTS.md](AGENTS.md) holds the setup, checks and rules it needs.

@@ -1,8 +1,8 @@
 # Payload Toolkit
 
-Payload Toolkit pulls an official Payload v4 starter and installs features whose source the application owns. These pages ship with the package, so they describe the installed version. Print one with `payload-toolkit docs <page>`.
+Payload Toolkit creates Payload v4 projects from the official starter and installs features whose source the project owns. These pages ship with the package, so they match the installed version. Print one with `payload-toolkit docs <page>`.
 
-Alpha releases target the exact Payload v4 canary tuple pinned in the package's `catalog/bootstrap.json`. Run the CLI with Bun 1.4.2 or newer. Creating a project also requires Node 24.15 or newer for the official Payload generator.
+Requires Bun 1.4.2+; `init` also needs Node 24.15+ for the official generator. Alpha releases target the exact Payload v4 canary pinned in the package's `catalog/bootstrap.json`.
 
 ```sh
 payload-toolkit init acme --framework next --database postgres --package-manager pnpm
@@ -12,7 +12,7 @@ payload-toolkit registries --json
 
 ## Pages
 
-- `init`: create a project from the official starter
+- `init`: create a project
 - `add`: install bundled features, registry URLs and shadcn namespaces
 - `agents`: hand an installation to Codex or Claude Code
 - `recovery`: Git changes, interrupted attempts and target leases

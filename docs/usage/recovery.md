@@ -1,7 +1,7 @@
 # Git changes and recovery
 
-Existing Git changes stop installation by default. `--allow-dirty` permits those changes and records the actual starting index, working files and relevant untracked files. It does not permit overwriting edited feature files. The toolkit never stashes, resets, stages or commits.
+Uncommitted Git changes stop installation. `--allow-dirty` proceeds and records the starting index and files, but never overwrites edited feature files. The toolkit never stashes, resets, stages or commits.
 
-Attempts live outside the app in the user state directory. Interrupted and partial installs remain available for inspection; no automatic rollback deletes work.
+Attempts and receipts live in the user state directory, outside the project. Interrupted or partial installs are kept for inspection; nothing is rolled back.
 
-An existing target lease always blocks another toolkit run, even when its recorded parent process has exited. Normal completion releases its own lease. After a crash or unconfirmed process termination, inspect the recorded attempt and verify that its owned child processes have stopped before manually removing the exact lease path reported by the error. Preserve application files and attempt evidence during recovery.
+A target lease blocks any other run on that project, even if its process has exited. After a crash, inspect the recorded attempt, confirm its child processes have stopped, then remove the exact lease path the error reports. Keep project files and attempt evidence.
