@@ -1,3 +1,4 @@
+import { githubUrl, useGithubStars } from '@/components/github-stars'
 import { LogoMark } from '@/components/logo'
 import { Tooltip, buttonVariants } from '@heroui/react'
 import { RiGithubFill } from '@remixicon/react'
@@ -6,6 +7,7 @@ import { useState } from 'react'
 
 export function LandingHeader() {
   const [githubTooltipOpen, setGithubTooltipOpen] = useState(false)
+  const stars = useGithubStars()
 
   return (
     <header className="fixed inset-x-0 top-4 z-50 mx-auto w-fit">
@@ -24,19 +26,20 @@ export function LandingHeader() {
           <Tooltip.Trigger<'a'>
             render={(props) => <a {...props} />}
             role="link"
-            href="https://github.com/fluid-design-io/payload-toolkit"
+            href={githubUrl}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="View on GitHub"
+            aria-label={stars ? `View on GitHub, ${stars.count} stars` : 'View on GitHub'}
             onPointerEnter={() => setGithubTooltipOpen(true)}
             onPointerLeave={() => setGithubTooltipOpen(false)}
             className={buttonVariants({
               variant: 'ghost',
-              isIconOnly: true,
-              className: 'inline-flex',
+              isIconOnly: !stars,
+              className: 'inline-flex gap-1.5 tabular-nums',
             })}
           >
             <RiGithubFill className="size-5" aria-hidden="true" />
+            {stars && <span aria-hidden="true">{stars.short}</span>}
           </Tooltip.Trigger>
           <Tooltip.Content placement="bottom">View on GitHub</Tooltip.Content>
         </Tooltip>

@@ -1,3 +1,4 @@
+import { GithubStars } from '@/components/github-stars.tsx'
 import { LogoMark } from '@/components/logo.tsx'
 import { Sheet, Sidebar, useSidebar } from '@heroui-pro/react'
 import { Typography, buttonVariants, cn } from '@heroui/react'
@@ -28,9 +29,10 @@ function RailItem({ category }: { category: Category }) {
 }
 
 /**
- * The categories, then the home link and theme toggle in the footer. The
- * desktop aside and the mobile sheet both render this body. Picking a
- * category closes the sheet through the menu items' `closeMobileOnAction`.
+ * The categories, then the home link, GitHub stars and theme toggle in the
+ * footer. The desktop aside and the mobile sheet both render this body.
+ * Picking a category closes the sheet through the menu items'
+ * `closeMobileOnAction`.
  */
 function RailBody() {
   const { meta } = useWorkspace()
@@ -55,12 +57,15 @@ function RailBody() {
         </Sidebar.Group>
       </Sidebar.Content>
       <Sidebar.Footer className="flex-row items-center justify-between ps-5">
-        <Link
-          to="/"
-          className={buttonVariants({ variant: 'ghost', isIconOnly: true, className: 'group' })}
-        >
-          <LogoMark className="h-5 w-auto" />
-        </Link>
+        <div className="flex items-center gap-1">
+          <Link
+            to="/"
+            className={buttonVariants({ variant: 'ghost', isIconOnly: true, className: 'group' })}
+          >
+            <LogoMark className="h-5 w-auto" />
+          </Link>
+          <GithubStars />
+        </div>
         <WorkspaceTheme />
       </Sidebar.Footer>
     </>
