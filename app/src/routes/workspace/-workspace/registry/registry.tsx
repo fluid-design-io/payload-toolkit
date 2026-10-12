@@ -70,7 +70,7 @@ function GridSearch() {
       aria-label="Search registry"
       value={query}
       onChange={actions.setQuery}
-      className="min-w-0 flex-1 basis-40 min-[769px]:w-full min-[769px]:max-w-sm min-[769px]:flex-none"
+      className="min-w-0 flex-1 basis-40 min-[769px]:w-full min-[769px]:max-w-sm min-[769px]:flex-initial"
     >
       <SearchGroup inputRef={inputRef} placeholder={`Search ${meta.catalog.items.length} items`}>
         {query ? (
@@ -145,7 +145,7 @@ function FactorySearch() {
         refocus.current = true
         setOpen(false)
       }}
-      className="min-w-0 flex-1 basis-40 transition-[width] duration-200 ease-out starting:w-9 motion-reduce:transition-none min-[769px]:w-full min-[769px]:max-w-sm min-[769px]:flex-none"
+      className="min-w-0 flex-1 basis-40 transition-[width] duration-200 ease-out starting:w-9 motion-reduce:transition-none min-[769px]:w-full min-[769px]:max-w-sm min-[769px]:flex-initial"
     >
       <SearchGroup inputRef={inputRef} placeholder={label} className={floating}>
         {query && <SearchField.ClearButton />}
@@ -158,7 +158,8 @@ function FactorySearch() {
  * Standalone checkboxes in a labelled group rather than a CheckboxGroup: the
  * group's shared state would re-render every card on any toggle. The grid
  * itself re-renders only when the visible list changes, and items hidden by
- * the search or category stay selected.
+ * the search or category stay selected. Columns follow the grid's own width,
+ * not the viewport: the `container` provider and the rail decide its room.
  */
 function RegistryGrid() {
   const { meta } = useWorkspace()
@@ -168,14 +169,16 @@ function RegistryGrid() {
   )
 
   return (
-    <div
-      role="group"
-      aria-label="Registry items"
-      className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-5 gap-y-7"
-    >
-      {visible.map((item) => (
-        <RegistryCard key={item.ref} item={item} />
-      ))}
+    <div className="@container">
+      <div
+        role="group"
+        aria-label="Registry items"
+        className="grid grid-cols-1 gap-x-5 gap-y-7 @md:grid-cols-2 @4xl:grid-cols-3 @6xl:grid-cols-4"
+      >
+        {visible.map((item) => (
+          <RegistryCard key={item.ref} item={item} />
+        ))}
+      </div>
     </div>
   )
 }

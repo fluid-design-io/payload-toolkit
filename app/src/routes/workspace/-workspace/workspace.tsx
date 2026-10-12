@@ -35,9 +35,9 @@ function WorkspaceRoot({ children }: PropsWithChildren) {
  */
 const layouts = {
   grid: {
-    main: 'gap-5 px-6 pt-6 pb-32',
+    main: 'gap-5 max-[769px]:px-4 px-6 pt-6 pb-32',
     toolbar:
-      'sticky top-0 order-first -mx-6 bg-surface px-4 py-2 md:-mx-8 md:px-8 min-[769px]:static min-[769px]:m-0 min-[769px]:bg-transparent min-[769px]:p-0',
+      'sticky top-0 order-first max-[769px]:-mx-4 -mx-6 bg-surface px-4 py-2 md:-mx-8 md:px-8 min-[769px]:static min-[769px]:m-0 min-[769px]:bg-transparent min-[769px]:p-0',
   },
   factory: {
     main: 'relative h-[calc(100svh-1rem)] overflow-hidden',
@@ -49,8 +49,9 @@ const layouts = {
 function WorkspaceMain({ children }: PropsWithChildren) {
   const view = useWorkspaceSelector((state) => state.view)
 
+  // HeroUI's inset main drops its start margin for the rail beside it, which is a sheet at 768px and below.
   return (
-    <Sidebar.Main className={cn('flex flex-col', layouts[view].main)}>
+    <Sidebar.Main className={cn('flex flex-col max-[769px]:m-1', layouts[view].main)}>
       {children}
     </Sidebar.Main>
   )
@@ -60,7 +61,9 @@ function WorkspaceToolbar({ children }: PropsWithChildren) {
   const view = useWorkspaceSelector((state) => state.view)
 
   return (
-    <div className={cn('z-10 flex items-center gap-2', layouts[view].toolbar)} data-scene-chrome>{children}</div>
+    <div className={cn('z-10 flex items-center gap-2', layouts[view].toolbar)} data-scene-chrome>
+      {children}
+    </div>
   )
 }
 
