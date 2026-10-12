@@ -1,5 +1,8 @@
 import type { Footprint, Framing, V3 } from '../../core/contract'
 
+/** The pick frame's centreline, which every cabinet centres on, and a flat table's back edge, just clear of the cabinet fronts. */
+export const PICK = { cx: -11.4, back: -1.75 }
+
 /**
  * A pick table's footprint and framing: its stop is a tight close-up of `pts` (its pocket rows), so single chips are
  * easy to hover; the overview already shows its neighbours. Its label leads out past its front left corner.

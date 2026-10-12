@@ -5,7 +5,7 @@ import type { Footprint, Site } from '../../../../core/contract'
 import { Track } from '../../track'
 import { BREECH, END, SPEED, START, courseOf } from '../course'
 
-/** The default campus (drawers, riser table, PCB, machines) in the transport's frame, as the layout hands it to `wrap`. */
+/** The riser campus (drawers, Riser 40 table, PCB, machines) in the transport's frame, as the layout hands it to `wrap`. */
 const site: Site = {
   pick: { x0: -18.93, x1: -8.85, z0: -4.65, z1: 4.05, h: 4.57 },
   board: { x0: 2.864, x1: 22.31, z0: -5.328, z1: 5.928, h: 0.672 },

@@ -2,11 +2,12 @@ import type { Vector3 } from 'three'
 
 import type { TableVariant } from '../../core/contract'
 import { lazyComponent } from '../../core/lazy'
-import { tableFrame } from './frame'
+import { PICK, tableFrame } from './frame'
 
 /** One bay of 20 pockets, five across and four deep, on a four-legged table. */
-export const TABLE = { x0: -13.7, x1: -7.15, z0: -1.75, z1: 3.15, y: 0.9 }
-export const PAD = { cols: 5, rows: 4, x0: -13.1, z0: -1.0, pitchX: 1.3, pitchZ: 1.12 }
+const W = 6.55, D = 4.9
+export const TABLE = { x0: PICK.cx - W / 2, x1: PICK.cx + W / 2, z0: PICK.back, z1: PICK.back + D, y: 0.9 }
+export const PAD = { cols: 5, rows: 4, x0: TABLE.x0 + 0.6, z0: TABLE.z0 + 0.75, pitchX: 1.3, pitchZ: 1.12 }
 export const POCKETS = PAD.cols * PAD.rows
 
 export function pocket(index: number, out: Vector3) {

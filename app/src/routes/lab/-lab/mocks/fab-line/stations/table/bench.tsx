@@ -6,7 +6,7 @@ import type { Sim, TableProps, Tokens } from '../../core/contract'
 import { Body } from '../../core/scene'
 import { FONT, MONO, box, quadGeometry, textTexture, useDisposable } from '../../core/three'
 import type { Piece } from '../../core/three'
-import { M, X0, Y, Z0, geometry, pocketOf } from './bench.data'
+import { M, Y, geometry, pocketOf } from './bench.data'
 import type { Bench } from './bench.data'
 import { Pockets, turnPage } from './kit'
 
@@ -41,19 +41,19 @@ function quad(corners: number[], uvs: [number, number, number, number][], cx: nu
 export function benchOf(b: Bench) {
   const g = geometry(b)
   const pockets = b.bays * binsPerBay
-  const width = g.x1 - X0, cx = (X0 + g.x1) / 2
+  const width = g.x1 - g.x0, cx = (g.x0 + g.x1) / 2
   const stripW = width - 0.3, stripPx = Math.min(ATLAS.strip.h, Math.round((ATLAS.w * STRIP_H) / stripW))
   const stripZ = g.z1 - 0.32
 
   const pocket = pocketOf(b, g)
 
   function Frame({ c }: { c: Tokens }) {
-    const pieces: Piece[] = [{ geo: box(width, 0.12, g.z1 - Z0), at: [cx, Y - 0.06, (Z0 + g.z1) / 2] }]
-    const legX = width > 8 ? [X0 + 0.15, cx, g.x1 - 0.15] : [X0 + 0.15, g.x1 - 0.15]
-    for (const x of legX) for (const z of [Z0 + 0.15, g.z1 - 0.15]) pieces.push({ geo: box(0.12, Y - 0.12, 0.12), at: [x, (Y - 0.12) / 2, z] })
-    const back = Z0 + 0.08
+    const pieces: Piece[] = [{ geo: box(width, 0.12, g.z1 - g.z0), at: [cx, Y - 0.06, (g.z0 + g.z1) / 2] }]
+    const legX = width > 8 ? [g.x0 + 0.15, cx, g.x1 - 0.15] : [g.x0 + 0.15, g.x1 - 0.15]
+    for (const x of legX) for (const z of [g.z0 + 0.15, g.z1 - 0.15]) pieces.push({ geo: box(0.12, Y - 0.12, 0.12), at: [x, (Y - 0.12) / 2, z] })
+    const back = g.z0 + 0.08
     for (let k = 1; k < levelsPerBay; k++) {
-      const z = Z0 + M.back + (levelsPerBay - k) * b.pitch.z
+      const z = g.z0 + M.back + (levelsPerBay - k) * b.pitch.z
       pieces.push({ geo: box(width - 0.16, b.rise, z - back), at: [cx, Y + (k - 0.5) * b.rise, (z + back) / 2] })
     }
     return <Body id={`table-${b.id}`} c={c} fill={c.surface} edge={c.edge} pieces={pieces} />
@@ -68,7 +68,7 @@ export function benchOf(b: Bench) {
       for (let bay = 0; bay < b.bays; bay++)
         quad(corners, uvs, g.bayX(bay) + g.bayW / 2, Y + 0.005, g.front + 0.06 + tagD / 2, g.bayW, tagD, bay * ATLAS.tags.w, ATLAS.tags.y, ATLAS.tags.w, ATLAS.tags.h)
       for (let level = 0; level < levelsPerBay; level++)
-        quad(corners, uvs, X0 + M.left / 2 + 0.04, g.topY(level) + 0.005, g.rowZ(level), 0.4, 0.4, level * ATLAS.digits.w, ATLAS.digits.y, ATLAS.digits.w, ATLAS.digits.h)
+        quad(corners, uvs, g.x0 + M.left / 2 + 0.04, g.topY(level) + 0.005, g.rowZ(level), 0.4, 0.4, level * ATLAS.digits.w, ATLAS.digits.y, ATLAS.digits.w, ATLAS.digits.h)
       return quadGeometry(uvs, corners)
     }, [])
     const map = useDisposable(

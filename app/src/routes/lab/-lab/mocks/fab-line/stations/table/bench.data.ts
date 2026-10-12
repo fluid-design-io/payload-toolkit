@@ -3,7 +3,7 @@ import type { Vector3 } from 'three'
 import { levelsPerBay, slotsPerLevel, binsPerBay } from '@/routes/lab/-lab/warehouse'
 import type { TableVariant } from '../../core/contract'
 import { lazyComponent } from '../../core/lazy'
-import { tableFrame } from './frame'
+import { PICK, tableFrame } from './frame'
 
 /**
  * A pick bench that lays out warehouse bays as they are shelved: each bay is
@@ -25,19 +25,21 @@ export type Bench = {
 }
 
 export const Y = 0.9
-export const X0 = -13.7
-export const Z0 = -1.75
 export const M = { left: 0.62, right: 0.3, back: 0.18, apron: 1.02 }
+/** How far forward a bench moves per metre its back row stands above a flat table, so its steps stay under the cabinet close-up's sight line to the lowest drawers. */
+const SETBACK = 1.5
 
 export function geometry(b: Bench) {
   const bayW = slotsPerLevel * b.pitch.x
-  const x1 = X0 + M.left + b.bays * bayW + (b.bays - 1) * b.gap + M.right
-  const z1 = Z0 + M.back + levelsPerBay * b.pitch.z + M.apron
+  const width = M.left + b.bays * bayW + (b.bays - 1) * b.gap + M.right
+  const x0 = PICK.cx - width / 2, x1 = x0 + width
+  const z0 = PICK.back + SETBACK * (levelsPerBay - 1) * b.rise
+  const z1 = z0 + M.back + levelsPerBay * b.pitch.z + M.apron
   const front = z1 - M.apron
-  const bayX = (bay: number) => X0 + M.left + bay * (bayW + b.gap)
-  const rowZ = (level: number) => Z0 + M.back + (level + 0.5) * b.pitch.z
+  const bayX = (bay: number) => x0 + M.left + bay * (bayW + b.gap)
+  const rowZ = (level: number) => z0 + M.back + (level + 0.5) * b.pitch.z
   const topY = (level: number) => Y + (levelsPerBay - 1 - level) * b.rise
-  return { bayW, x1, z1, front, bayX, rowZ, topY }
+  return { bayW, x0, x1, z0, z1, front, bayX, rowZ, topY }
 }
 
 export function pocketOf(b: Bench, g = geometry(b)) {
@@ -54,7 +56,7 @@ export function make(b: Bench): TableVariant {
     id: b.id,
     label: b.label,
     // The pocket rows, not the apron or the floor: the stop is for reading and hovering chips.
-    ...tableFrame({ x0: X0, x1: g.x1, z0: Z0, z1: g.z1, h: g.topY(0) }, [[X0, Y, g.front], [g.x1, Y, g.front], [g.x1, g.topY(0), Z0], [X0, g.topY(0), Z0]], b.el),
+    ...tableFrame({ x0: g.x0, x1: g.x1, z0: g.z0, z1: g.z1, h: g.topY(0) }, [[g.x0, Y, g.front], [g.x1, Y, g.front], [g.x1, g.topY(0), g.z0], [g.x0, g.topY(0), g.z0]], b.el),
     bays: b.bays,
     cols: slotsPerLevel,
     pocket: pocketOf(b, g),

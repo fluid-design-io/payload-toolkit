@@ -10,7 +10,7 @@ import { TABLES } from '../../../table'
 import { agv } from '../../agv.data'
 import { DECK, DRIVE, wrap } from '../route'
 
-/** The default line's site in the AGV's frame: drawers and riser, the PCB board with the machines integrator. */
+/** The riser line's site in the AGV's frame: drawers and Riser 40, the PCB board with the machines integrator. */
 const site: Site = {
   pick: { x0: -19.08, x1: -9, z0: -4.65, z1: 4.05, h: 4.57 },
   board: { x0: 2.544, x1: 21.99, z0: -5.328, z1: 5.928, h: 0.672 },
