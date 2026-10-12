@@ -2,7 +2,7 @@ import type { Agent } from '@/routes/workspace/-workspace/workspace.types'
 import type { BoardVariant, Part } from '../../core/contract'
 import { chipTop } from '../../core/spec'
 import type { Spec } from '../../core/spec'
-import { reducedMotion } from '../../core/three'
+import { clamp, reducedMotion, smoothstep } from '../../core/three'
 
 /**
  * A job is a script: a timeline of phases in natural seconds that the
@@ -176,7 +176,7 @@ export function strokeAt(s: Stroke, d: number, out: P2) {
   while (i < s.pts.length - 1 && s.cum[i] < d) i++
   const a = s.pts[i - 1], b = s.pts[i]
   const seg = s.cum[i] - s.cum[i - 1] || 1
-  const f = Math.min(1, Math.max(0, (d - s.cum[i - 1]) / seg))
+  const f = clamp((d - s.cum[i - 1]) / seg, 0, 1)
   out.x = a.x + (b.x - a.x) * f
   out.z = a.z + (b.z - a.z) * f
   return out
@@ -188,12 +188,12 @@ export function toolAt(s: Script, time: number, out: Tool) {
   let k = 0
   while (k < s.phases.length - 1 && time >= s.phases[k].t0 + s.phases[k].dur) k++
   const ph = s.phases[k]
-  const u = Math.min(1, Math.max(0, (time - ph.t0) / ph.dur))
+  const u = clamp((time - ph.t0) / ph.dur, 0, 1)
   out.phase = ph
   out.u = u
   out.on = false
   if (ph.kind === 'move' || ph.kind === 'seam') {
-    const e = ph.kind === 'move' ? u * u * (3 - 2 * u) : u
+    const e = ph.kind === 'move' ? smoothstep(u) : u
     out.x = ph.from.x + (ph.to.x - ph.from.x) * e
     out.z = ph.from.z + (ph.to.z - ph.from.z) * e
     out.on = ph.kind === 'seam'

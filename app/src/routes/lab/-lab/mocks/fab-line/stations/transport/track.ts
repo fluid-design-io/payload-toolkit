@@ -11,31 +11,18 @@ export class Track {
   readonly closed: boolean
   private readonly pts: Float32Array
   private readonly cum: Float32Array
-  private readonly n: number
 
   constructor(points: readonly (Vector3 | P3)[], closed = false) {
     const list = points.map((p) => (p instanceof Vector3 ? p.clone() : new Vector3(...p)))
     if (closed) list.push(list[0].clone())
     this.closed = closed
-    this.n = list.length
-    this.pts = new Float32Array(this.n * 3)
-    this.cum = new Float32Array(this.n)
+    this.pts = new Float32Array(list.length * 3)
+    this.cum = new Float32Array(list.length)
     list.forEach((p, i) => {
       p.toArray(this.pts, i * 3)
       if (i) this.cum[i] = this.cum[i - 1] + p.distanceTo(list[i - 1])
     })
-    this.len = this.cum[this.n - 1]
-  }
-
-  private seg(s: number) {
-    let lo = 0
-    let hi = this.n - 1
-    while (hi - lo > 1) {
-      const mid = (lo + hi) >> 1
-      if (this.cum[mid] <= s) lo = mid
-      else hi = mid
-    }
-    return lo
+    this.len = this.cum[list.length - 1]
   }
 
   private wrap(s: number) {
@@ -44,17 +31,15 @@ export class Track {
   }
 
   point(s: number, out: Vector3) {
-    const t = this.wrap(s)
-    const i = this.seg(t)
-    const span = this.cum[i + 1] - this.cum[i] || 1
+    const [i, f] = locate(this.cum, this.wrap(s))
     a.fromArray(this.pts, i * 3)
     b.fromArray(this.pts, i * 3 + 3)
-    return out.lerpVectors(a, b, (t - this.cum[i]) / span)
+    return out.lerpVectors(a, b, f)
   }
 
   /** Unit direction of travel at `s`. */
   tangent(s: number, out: Vector3) {
-    const i = this.seg(this.wrap(s))
+    const [i] = locate(this.cum, this.wrap(s))
     a.fromArray(this.pts, i * 3)
     b.fromArray(this.pts, i * 3 + 3)
     return out.subVectors(b, a).normalize()
@@ -129,45 +114,23 @@ export function rounded(corners: readonly P3[], r: number, closed = false, steps
   return out
 }
 
-/**
- * Maps the sim's path distance `u` to a distance `s` along the track, so a
- * transport can surge and settle while the sim advances `u` at a steady
- * speed. `rate(s)` is ds/du; keeping it at least 1 keeps the sim's `gap` in
- * `u` at least as wide along the track.
- */
-export class Pace {
-  readonly length: number
-  private readonly us: Float32Array
-  private readonly ss: Float32Array
-
-  constructor(len: number, rate: (s: number) => number, n = 512) {
-    this.us = new Float32Array(n + 1)
-    this.ss = new Float32Array(n + 1)
-    for (let i = 1; i <= n; i++) {
-      const s0 = (len * (i - 1)) / n
-      const s1 = (len * i) / n
-      this.ss[i] = s1
-      this.us[i] = this.us[i - 1] + (s1 - s0) / Math.max(1e-3, rate((s0 + s1) / 2))
-    }
-    this.length = this.us[n]
-  }
-
-  s(u: number) {
-    const us = this.us
-    if (u <= 0) return 0
-    if (u >= this.length) return this.ss[this.ss.length - 1]
-    let lo = 0
-    let hi = us.length - 1
-    while (hi - lo > 1) {
-      const mid = (lo + hi) >> 1
-      if (us[mid] <= u) lo = mid
-      else hi = mid
-    }
-    return this.ss[lo] + ((u - us[lo]) / (us[hi] - us[lo])) * (this.ss[hi] - this.ss[lo])
-  }
+/** Running length at each point of a polyline: `cum[0] = 0`, `cum[n - 1]` is its length. */
+export function cumulative(pts: readonly Vector3[]) {
+  const cum = new Float64Array(pts.length)
+  for (let i = 1; i < pts.length; i++) cum[i] = cum[i - 1] + pts[i].distanceTo(pts[i - 1])
+  return cum
 }
-
-export const smooth01 = (t: number) => {
-  const x = Math.min(1, Math.max(0, t))
-  return x * x * (3 - 2 * x)
+/** The segment `i` and fraction `f` in it at distance `s` along a polyline with running lengths `cum`, clamped to its ends. */
+export function locate(cum: ArrayLike<number>, s: number): readonly [number, number] {
+  const n = cum.length
+  if (n < 2 || s <= 0) return [0, 0]
+  if (s >= cum[n - 1]) return [n - 2, 1]
+  let lo = 0, hi = n - 1
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1
+    if (cum[mid] <= s) lo = mid
+    else hi = mid
+  }
+  const span = cum[hi] - cum[lo]
+  return [lo, span > 0 ? (s - cum[lo]) / span : 0]
 }

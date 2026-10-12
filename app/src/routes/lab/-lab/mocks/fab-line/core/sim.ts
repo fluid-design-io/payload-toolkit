@@ -2,8 +2,8 @@ import { Vector3 } from 'three'
 
 import type { CatalogItem } from '@/routes/workspace/-workspace/workspace.types'
 import type { Lab } from '@/routes/lab/-lab/lab.types'
-import type { Part, PartMode, Rig, RouteStyle, Sim, SimEventKind, TableVariant } from './contract'
-import { ARM, boardWorld, drawerWorld, layoutLine, pathWorld, pocketWorld, railNow } from './line'
+import type { Part, PartMode, Rig, Route, Sim, SimEventKind, TableVariant } from './contract'
+import { ARM, boardWorld, drawerWorld, lineOf, pathWorld, pocketWorld, railNow } from './line'
 import { chipTop, specCache } from './spec'
 import type { Spec } from './spec'
 import { clamp, reducedMotion } from './three'
@@ -17,6 +17,8 @@ const toss = new Vector3()
 /** Flights run at half length under reduced motion. */
 const PACE = reducedMotion ? 0.5 : 1
 const EVENT_KEEP = 64
+const FRAMES = ['pick', 'transport', 'board'] as const
+const AXES = ['x', 'y', 'z'] as const
 
 /** The scale a part rests at in a pocket. */
 export const pocketScale = (table: TableVariant, spec: Spec) => Math.min(table.fit.max, table.fit.size / Math.max(spec.fw, spec.fd))
@@ -54,7 +56,7 @@ function sendHome(sim: Sim, p: Part, dur: number, h: number) {
   startFly(p, homeOf(sim, p, tmp), dur, h, 'home', 0, p.onPage ? pocketScale(sim.rig.table, p.spec) : 0.2)
 }
 
-export function createSim(lab: Lab, rig: Rig, style: RouteStyle): Sim {
+export function createSim(lab: Lab, rig: Rig): Sim {
   const aisleIndex = new Map(lab.warehouse.aisles.map((a, i) => [a.id, i]))
   const list: Part[] = lab.catalog.items.map((item: CatalogItem) => {
     const cat = aisleIndex.get(item.category) ?? 0
@@ -64,15 +66,15 @@ export function createSim(lab: Lab, rig: Rig, style: RouteStyle): Sim {
       route: null, drawn: 0, finish: 0, flash: 0, visible: false, onPage: false, pad: 0, live: false,
     }
   })
-  const line = layoutLine(rig)
+  const line = lineOf(rig)
   const sim: Sim = {
     parts: new Map(list.map((p) => [p.item.ref, p])), list, feed: [], carried: [], removals: [],
     arm: { pos: new Vector3(), baseX: 0, steps: [], holding: null, grip: 0, job: null },
     work: { queue: [], job: null },
     time: 0, order: 0, live: new Set(), liveVersion: 0, latest: null, addSeq: 0, seat: null, lastSeat: null, lastSeatAt: -99,
     plan: { slots: new Map(), ghosts: [], hatches: [] }, version: 0, intake: 0, events: [], eventSeq: 0,
-    rig, line, at: { ...line.at }, wanted: lab.selected, agent: lab.setup.agent,
-    planned: { selected: null, target: null, style: null, framework: null, board: null },
+    rig, line, at: { pick: { ...line.at.pick }, transport: { ...line.at.transport }, board: { ...line.at.board } }, wanted: lab.selected, agent: lab.setup.agent,
+    planned: { selected: null, target: null, framework: null, board: null },
   }
   sim.arm.pos.copy(parkAt(sim))
   sim.arm.baseX = sim.arm.pos.x
@@ -85,7 +87,7 @@ export function createSim(lab: Lab, rig: Rig, style: RouteStyle): Sim {
     p.finish = 1
     p.visible = true
   }
-  replan(sim, lab, style)
+  replan(sim, lab)
   for (const p of sim.list) {
     if (p.mode !== 'seated') continue
     slotWorld(sim, p, p.pos)
@@ -98,11 +100,12 @@ export function createSim(lab: Lab, rig: Rig, style: RouteStyle): Sim {
  * Swaps in new station variants. The line reflows and slides; parts riding
  * a transport that changed go back to the feed and re-enter the new one.
  */
+/** Moves the line to `rig`; a rig with the same six entries keeps the current `sim.rig` and `sim.line`. */
 export function setRig(sim: Sim, rig: Rig) {
   const prev = sim.rig
-  if (prev === rig) return
+  if ((Object.keys(rig) as (keyof Rig)[]).every((k) => prev[k] === rig[k])) return
   sim.rig = rig
-  sim.line = layoutLine(rig)
+  sim.line = lineOf(rig)
   if (prev.transport !== rig.transport) {
     const back = sim.carried.splice(0)
     for (const p of back) {
@@ -129,15 +132,28 @@ export function inJourney(p: Part | null) {
 }
 export const inFlight = (sim: Sim) => sim.feed.length + sim.carried.length + (sim.arm.holding && sim.arm.holding.mode === 'held' && !sim.removals.includes(sim.arm.holding) ? 1 : 0)
 
-function replan(sim: Sim, lab: Lab, style: RouteStyle) {
+/**
+ * Has the board route `parts`. A route whose points match the part's previous route takes over the old `pts` array,
+ * so a replan that leaves a trace where it was does not rebuild its line.
+ */
+function routeParts(sim: Sim, parts: Part[], framework: Lab['setup']['framework'], before: readonly (Route | null)[] = parts.map((p) => p.route)) {
+  sim.rig.board.route(parts, framework)
+  parts.forEach((p, i) => {
+    const old = before[i]
+    if (old && p.route && p.route.pts.length === old.pts.length && p.route.pts.every((q, k) => q.equals(old.pts[k]))) p.route.pts = old.pts
+  })
+}
+
+function replan(sim: Sim, lab: Lab) {
   const board = sim.rig.board
   const wanted = sim.list.filter((p) => lab.selected.has(p.item.ref)).sort((a, b) => a.order - b.order)
   sim.plan = board.plan(wanted, lab.setup.target)
   for (const p of sim.list) p.slot = sim.plan.slots.get(p.item.ref) ?? p.slot
   const routed = wanted.filter((p) => p.mode !== 'toss')
+  const before = routed.map((p) => p.route)
   for (const p of routed) p.route = null
-  board.route(routed, style, lab.setup.framework)
-  sim.planned = { selected: lab.selected, target: lab.setup.target, style, framework: lab.setup.framework, board }
+  routeParts(sim, routed, lab.setup.framework, before)
+  sim.planned = { selected: lab.selected, target: lab.setup.target, framework: lab.setup.framework, board }
   sim.version++
 }
 
@@ -145,7 +161,7 @@ function replan(sim: Sim, lab: Lab, style: RouteStyle) {
 function pickable(sim: Sim) {
   if (sim.rig.transport.kind === 'path') {
     const head = sim.carried[0]
-    if (!head || head.fly || head.u < sim.rig.transport.length - 0.01) return null
+    if (!head || head.fly || head.u < (sim.line.path?.length ?? 0) - 0.01) return null
     return head
   }
   const head = sim.feed[0]
@@ -153,18 +169,21 @@ function pickable(sim: Sim) {
   return head
 }
 
-export function step(sim: Sim, lab: Lab, style: RouteStyle, dt: number) {
+export function step(sim: Sim, lab: Lab, dt: number) {
   sim.time += dt
   sim.wanted = lab.selected
   sim.agent = lab.setup.agent
   const wanted = lab.selected
   const k = 1 - Math.exp(-dt * 6)
-  for (const key of ['pick', 'transport', 'board'] as const) {
-    const d = sim.line.at[key] - sim.at[key]
-    sim.at[key] = Math.abs(d) < 1e-3 ? sim.line.at[key] : sim.at[key] + d * k
-  }
+  for (const key of FRAMES)
+    for (const axis of AXES) {
+      const d = sim.line.at[key][axis] - sim.at[key][axis]
+      sim.at[key][axis] = Math.abs(d) < 1e-3 ? sim.line.at[key][axis] : sim.at[key][axis] + d * k
+    }
   const transport = sim.rig.transport
-  const path = transport.kind === 'path' ? transport : null
+  const path = transport.kind === 'path' && sim.line.path ? transport : null
+  /** The live path's length: the wrap's when the transport has one. */
+  const end = sim.line.path?.length ?? 0
 
   for (const p of sim.list) {
     const want = wanted.has(p.item.ref)
@@ -185,7 +204,7 @@ export function step(sim: Sim, lab: Lab, style: RouteStyle, dt: number) {
     else if (want && p.mode === 'seated' && sim.removals.includes(p)) sim.removals.splice(sim.removals.indexOf(p), 1)
   }
   const planned = sim.planned
-  if (wanted !== planned.selected || planned.target !== lab.setup.target || planned.style !== style || planned.framework !== lab.setup.framework || planned.board !== sim.rig.board) replan(sim, lab, style)
+  if (wanted !== planned.selected || planned.target !== lab.setup.target || planned.framework !== lab.setup.framework || planned.board !== sim.rig.board) replan(sim, lab)
 
   if (path) {
     const last = sim.carried[sim.carried.length - 1]
@@ -204,7 +223,7 @@ export function step(sim: Sim, lab: Lab, style: RouteStyle, dt: number) {
   if (path)
     sim.carried.forEach((p, i) => {
       if (p.fly) return
-      const limit = i === 0 ? path.length : sim.carried[i - 1].u - path.gap
+      const limit = i === 0 ? end : sim.carried[i - 1].u - path.gap
       p.u = Math.max(p.u, Math.min(p.u + path.speed * dt, limit))
       pathWorld(sim, p.u, p.pos)
       if (p.u > 0.2 && p.u < 1.4) sim.intake = 0.4
@@ -242,7 +261,7 @@ export function step(sim: Sim, lab: Lab, style: RouteStyle, dt: number) {
         },
       ]
     } else if (head) {
-      const from = path ? () => pathWorld(sim, path.length, tmp2) : () => homeOf(sim, head, tmp2)
+      const from = path ? () => pathWorld(sim, end, tmp2) : () => homeOf(sim, head, tmp2)
       const pick = () => wristOver(from(), head, head.scale, tmp)
       const seatAt = () => wristOver(slotWorld(sim, head, tmp2), head, seatedScale(sim, head), tmp)
       const queue = path ? sim.carried : sim.feed
@@ -272,7 +291,7 @@ export function step(sim: Sim, lab: Lab, style: RouteStyle, dt: number) {
             head.mode = 'seated'
             head.seatedAt = sim.time
             head.drawn = 0
-            if (!head.route) sim.rig.board.route(sim.list.filter((p) => p.mode === 'seated' || p.mode === 'held'), style, lab.setup.framework)
+            if (!head.route) routeParts(sim, sim.list.filter((p) => p.mode === 'seated' || p.mode === 'held'), lab.setup.framework)
             sim.seat = { part: head, t: sim.time }
             sim.lastSeat = head
             sim.lastSeatAt = sim.time
@@ -386,7 +405,7 @@ export function step(sim: Sim, lab: Lab, style: RouteStyle, dt: number) {
 /** True while anything on the line is still moving or working. */
 export function simBusy(sim: Sim) {
   if (sim.work.job || sim.work.queue.length || sim.feed.length || sim.carried.length || sim.removals.length || sim.arm.steps.length || sim.intake > 0) return true
-  for (const key of ['pick', 'transport', 'board'] as const) if (sim.at[key] !== sim.line.at[key]) return true
+  for (const key of FRAMES) for (const axis of AXES) if (sim.at[key][axis] !== sim.line.at[key][axis]) return true
   for (const p of sim.live) if (p.fly || p.mode === 'queued' || p.mode === 'held' || p.mode === 'toss' || (p.mode === 'seated' && p.drawn < 1) || p.flash > 0) return true
   return false
 }

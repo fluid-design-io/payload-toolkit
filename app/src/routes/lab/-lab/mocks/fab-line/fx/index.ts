@@ -1,5 +1,5 @@
 import type { FxVariant } from '../core/contract'
-import { Bloom } from './bloom'
+import { lazyComponent } from '../core/lazy'
 
 /**
  * Scene-wide effects mounted last inside the Canvas. Shared primitives live
@@ -9,5 +9,5 @@ import { Bloom } from './bloom'
  */
 export const FX: readonly FxVariant[] = [
   { id: 'none', label: 'None', Component: null },
-  { id: 'bloom', label: 'Bloom', Component: Bloom },
+  { id: 'bloom', label: 'Bloom', Component: lazyComponent(() => import('./bloom').then((m) => m.Bloom)) },
 ]

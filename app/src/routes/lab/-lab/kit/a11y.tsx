@@ -6,7 +6,7 @@
  * `FocusRing` marks in 3D.
  */
 import { useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import type { FocusEvent as ReactFocusEvent, KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react'
 import { Vector3 } from 'three'
 import type { Mesh } from 'three'
@@ -14,19 +14,8 @@ import type { Mesh } from 'three'
 import { agents, databases, frameworks, packageManagers, targets } from '../../../workspace/-workspace/workspace.constants'
 import type { CatalogItem } from '../../../workspace/-workspace/workspace.types'
 import type { Lab } from '../lab.types'
+import { useReducedMotion } from './env'
 
-const motionQuery = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null
-export const prefersReducedMotion = () => !!motionQuery?.matches
-export function useReducedMotion() {
-  return useSyncExternalStore(
-    (l) => {
-      motionQuery?.addEventListener('change', l)
-      return () => motionQuery?.removeEventListener('change', l)
-    },
-    prefersReducedMotion,
-    () => false,
-  )
-}
 
 type Live = { text: string; n: number }
 let live: Live = { text: '', n: 0 }
@@ -51,7 +40,7 @@ function LiveRegion() {
 }
 
 export const itemId = (ref: string) => `lab-item-${ref.replace(/[^a-z0-9]+/gi, '-')}`
-const parts = (n: number) => `${n} ${n === 1 ? 'part' : 'parts'}`
+export const parts = (n: number) => `${n} ${n === 1 ? 'part' : 'parts'}`
 
 function Select<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: readonly { value: T; label: string }[]; onChange: (v: T) => void }) {
   return (
@@ -78,7 +67,7 @@ export function Mirror({ lab, title, children }: { lab: Lab; title: string; chil
   const [shown, setShown] = useState(false)
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set(lab.scale === 'real' ? lab.warehouse.aisles.map((a) => a.id) : []))
   const count = lab.setup.items.length
-  const byRef = useMemo(() => new Map(lab.catalog.items.map((i) => [i.ref, i])), [lab.catalog])
+  const byRef = new Map(lab.catalog.items.map((i) => [i.ref, i]))
   const prev = useRef<ReadonlySet<string> | null>(null)
   useEffect(() => {
     const before = prev.current
@@ -241,8 +230,10 @@ export function useSceneKeys(o: {
   const lastIndex = useRef(0)
   const from = useRef<HTMLElement | null>(null)
   const o2 = useRef(o)
-  o2.current = o
-  const byRef = useMemo(() => new Map(o.lab.catalog.items.map((i) => [i.ref, i])), [o.lab.catalog])
+  useLayoutEffect(() => {
+    o2.current = o
+  })
+  const byRef = new Map(o.lab.catalog.items.map((i) => [i.ref, i]))
   const move = (ref: string | null, index: number) => {
     focusRef.current = ref
     setFocused(ref)
@@ -323,7 +314,7 @@ export function useSceneKeys(o: {
  */
 export function FocusRing({ focus, locate, color }: { focus: { current: string | null }; locate: (ref: string, out: Vector3) => number; color: string }) {
   const mesh = useRef<Mesh>(null)
-  const v = useMemo(() => new Vector3(), [])
+  const v = new Vector3()
   const still = useReducedMotion()
   useFrame(({ clock }) => {
     const m = mesh.current

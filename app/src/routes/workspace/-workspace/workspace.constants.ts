@@ -28,9 +28,6 @@ export const views: readonly Option<View>[] = [
   { value: 'factory', label: 'Factory' },
 ]
 
-/** The `/lab` mock the factory view renders. Point it at another mock id to swap the scene. */
-export const factoryScene = 'fab-line'
-
 export const frameworks: readonly Option<Framework>[] = [
   { value: 'next', label: 'Next.js' },
   { value: 'tanstack', label: 'TanStack Start' },

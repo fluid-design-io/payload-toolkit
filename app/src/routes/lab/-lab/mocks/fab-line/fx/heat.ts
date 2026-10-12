@@ -21,7 +21,8 @@ export function heatColor(k: number, r: Ramp, out: Color) {
 export const cooled = (age: number, tau: number) => (age < 0 ? 0 : Math.exp(-age / tau))
 
 const L = new Color()
-const luminance = (hex: string) => {
+/** Relative luminance of a CSS color, from its linear components. */
+export const luminance = (hex: string) => {
   L.set(hex)
   return 0.2126 * L.r + 0.7152 * L.g + 0.0722 * L.b
 }

@@ -1,3 +1,5 @@
+import { clamp, damp, smoothstep } from '../core/three'
+
 /**
  * How deep the close-up has peeled a seated chip. Depth runs continuously
  * from 0 (the package) to the last stage (the circuit); scroll and pinch
@@ -24,14 +26,12 @@ export const PINCH = 1.3
 /** Seconds without input before the target snaps to a whole stage. */
 export const SNAP_AFTER = 0.32
 
-const clamp = (v: number) => Math.min(DEEPEST, Math.max(0, v))
-
 export function nudge(d: Depth, delta: number) {
-  d.target = clamp(d.target + delta)
+  d.target = clamp(d.target + delta, 0, DEEPEST)
   d.idle = 0
 }
 export function goStage(d: Depth, stage: number) {
-  d.target = clamp(Math.round(stage))
+  d.target = clamp(Math.round(stage), 0, DEEPEST)
   d.idle = SNAP_AFTER
 }
 /** Escape: one stage up. False when already on the package, so the caller can let the close-up go. */
@@ -45,13 +45,12 @@ export function climb(d: Depth) {
 export function settle(d: Depth, dt: number, instant = false) {
   d.idle += dt
   if (d.idle >= SNAP_AFTER) d.target = Math.round(d.target)
-  d.value = instant ? d.target : d.value + (d.target - d.value) * (1 - Math.exp(-dt * 5.5))
+  d.value = instant ? d.target : d.value + (d.target - d.value) * damp(dt, 5.5)
   if (Math.abs(d.target - d.value) < 1e-3) d.value = d.target
 }
-export const stageAt = (depth: number) => STAGES[Math.round(clamp(depth))]
+export const stageAt = (depth: number) => STAGES[Math.round(clamp(depth, 0, DEEPEST))]
 /** The stage the depth is heading for. */
 export const heading = (d: Depth) => Math.round(d.target)
 
-const smooth = (t: number) => t * t * (3 - 2 * t)
 /** How far stage `i` has come in at depth `d`: 0 before stage i - 1, 1 at stage i. */
-export const reveal = (d: number, i: number) => smooth(Math.min(1, Math.max(0, d - (i - 1))))
+export const reveal = (d: number, i: number) => smoothstep(d - (i - 1))

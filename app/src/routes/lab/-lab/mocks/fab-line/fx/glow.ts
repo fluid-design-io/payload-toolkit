@@ -14,7 +14,8 @@ void main() {
   float s = iSize.x;
   vec4 mv;
   if (iSize.y > 0.5) {
-    mv = modelViewMatrix * vec4(iPos + vec3(position.x * s, 0.0, position.y * s), 1.0);
+    // A flat disc in xz: z runs against the quad's y so it winds counter-clockwise from above and back-face culling keeps it.
+    mv = modelViewMatrix * vec4(iPos + vec3(position.x * s, 0.0, -position.y * s), 1.0);
   } else {
     mv = modelViewMatrix * vec4(iPos, 1.0);
     mv.xy += position.xy * s * length(modelMatrix[0].xyz);

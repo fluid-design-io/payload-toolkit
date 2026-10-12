@@ -1,20 +1,23 @@
-import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
-import { BufferAttribute, BufferGeometry, CircleGeometry, Color, CylinderGeometry, MeshBasicMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3 } from 'three'
-import type { Group, Mesh } from 'three'
+import { useFrame } from '@react-three/fiber'
+import { useLayoutEffect, useRef } from 'react'
+import type { RefObject } from 'react'
+import { CircleGeometry, Color, CylinderGeometry, MeshBasicMaterial, Quaternion, SphereGeometry, TorusGeometry, Vector3 } from 'three'
+import type { Group, LineBasicMaterial, LineSegments, Mesh } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 import { play } from '../../../../kit/sound'
-import type { IntegratorProps, Sim } from '../../core/contract'
-import { pickable } from '../../core/scene'
-import { box, clamp, cyl, fillMat, lineMat, reducedMotion } from '../../core/three'
+import type { IntegratorProps, Sim, Tokens } from '../../core/contract'
+import { Body, pickable } from '../../core/scene'
+import { box, clamp, cyl, damp, fillMat, lineMat, reducedMotion, ring, segs, smoothstep, useDisposable } from '../../core/three'
+import type { Piece } from '../../core/three'
 import type { Glows } from '../../fx/glow'
 import { heatColor, isDark } from '../../fx/heat'
 import { Particles, SPARK } from '../../fx/particles'
 import { beadRamp } from './marks'
 import type { Smoke } from '../../fx/smoke'
-import { Pad, padAt } from './pad'
-import { DynLines, Rigid, ring, useRigid } from './rigid'
+import { Pad } from './pad'
+import { padAt } from './pad.data'
+import { DynLines } from './dynlines'
 import { scriptOf, toolAt } from './script'
 import type { Report } from './report'
 import type { Surface, Tool } from './script'
@@ -35,8 +38,6 @@ const OFF = { x: -0.42, z: -0.42 }
 const UP = new Vector3(0, 1, 0)
 /** The torch tucked under the gimbal while flying, relative to it. */
 const STOWED = new Vector3(0.04, -0.16, 0.04)
-const ease = (dt: number, k: number) => 1 - Math.exp(-dt * k)
-const smooth = (u: number) => u * u * (3 - 2 * u)
 /** Critically damped follow that stays stable at any frame time (Game Programming Gems 4, 1.10). */
 function smoothDamp(pos: Vector3, vel: Vector3, goal: Vector3, time: number, dt: number, tmp: Vector3) {
   const w = 2 / time, x = w * dt
@@ -48,8 +49,9 @@ function smoothDamp(pos: Vector3, vel: Vector3, goal: Vector3, time: number, dt:
 }
 /** 2.5 Hz breathing, under the 3 Hz flash limit. */
 const breathe = (t: number) => 0.88 + Math.sin(t * Math.PI * 5) * 0.12
+const V = { want: new Vector3(), tipWant: new Vector3(), gimbal: new Vector3(), dir: new Vector3(), q: new Quaternion(), tool: { x: 0, z: 0, u: 0, on: false } as Tool, col: new Color(), ring: [] as number[] }
 
-function hull() {
+function hull(): { pieces: Piece[]; lines: number[] } {
   const lat = (y: number) => R * Math.sqrt(1 - (y / (R * 0.5)) ** 2)
   const lines: number[] = []
   ring(0, 0, 0, R + 0.004, 40, lines)
@@ -57,22 +59,22 @@ function hull() {
   ring(0, 0.21, 0, lat(0.21) + 0.003, 24, lines)
   return { pieces: [{ geo: new SphereGeometry(R, 28, 14).scale(1, 0.5, 1), threshold: 80 }], lines }
 }
-function frame() {
-  const pieces = []
+function frame(): { pieces: Piece[]; lines: number[] } {
+  const pieces: Piece[] = []
   const lines: number[] = []
   for (const [x, z] of ROTORS) {
-    pieces.push({ geo: box(Math.hypot(x, z), 0.05, 0.08), at: [x / 2, 0.02, z / 2] as [number, number, number], rot: [0, Math.atan2(-z, x), 0] as [number, number, number] })
-    pieces.push({ geo: cyl(0.075, 0.085, 0.12, 12), at: [x, 0.06, z] as [number, number, number] })
-    pieces.push({ geo: new TorusGeometry(GUARD, 0.024, 6, 40).rotateX(Math.PI / 2), at: [x, ROTOR_Y - 0.02, z] as [number, number, number], threshold: 80 })
+    pieces.push({ geo: box(Math.hypot(x, z), 0.05, 0.08), at: [x / 2, 0.02, z / 2], rot: [0, Math.atan2(-z, x), 0] })
+    pieces.push({ geo: cyl(0.075, 0.085, 0.12, 12), at: [x, 0.06, z] })
+    pieces.push({ geo: new TorusGeometry(GUARD, 0.024, 6, 40).rotateX(Math.PI / 2), at: [x, ROTOR_Y - 0.02, z], threshold: 80 })
     ring(x, ROTOR_Y - 0.02, z, GUARD + 0.026, 40, lines)
     ring(x, ROTOR_Y - 0.02, z, GUARD - 0.026, 40, lines)
   }
   for (const z of [-0.26, 0.26]) {
-    pieces.push({ geo: box(0.92, 0.035, 0.05), at: [0, -SKID + 0.018, z] as [number, number, number] })
-    for (const x of [-0.22, 0.22]) pieces.push({ geo: box(0.035, 0.2, 0.035), at: [x, -SKID + 0.12, z] as [number, number, number] })
+    pieces.push({ geo: box(0.92, 0.035, 0.05), at: [0, -SKID + 0.018, z] })
+    for (const x of [-0.22, 0.22]) pieces.push({ geo: box(0.035, 0.2, 0.035), at: [x, -SKID + 0.12, z] })
   }
-  pieces.push({ geo: new SphereGeometry(0.085, 12, 8), at: [0, GIMBAL, 0] as [number, number, number], threshold: 80 })
-  pieces.push({ geo: cyl(0.09, 0.09, 0.12, 14).rotateZ(Math.PI / 2), at: [0.3, -0.14, 0.2] as [number, number, number] })
+  pieces.push({ geo: new SphereGeometry(0.085, 12, 8), at: [0, GIMBAL, 0], threshold: 80 })
+  pieces.push({ geo: cyl(0.09, 0.09, 0.12, 14).rotateZ(Math.PI / 2), at: [0.3, -0.14, 0.2] })
   ring(0, GIMBAL, 0, 0.088, 16, lines)
   return { pieces, lines }
 }
@@ -84,9 +86,25 @@ function asterisk() {
     const r1 = i % 2 ? 0.12 : 0.17
     l.push(Math.cos(a) * 0.035, 0.252, Math.sin(a) * 0.035, Math.cos(a) * r1, 0.252 - r1 * 0.03, Math.sin(a) * r1)
   }
-  const g = new BufferGeometry()
-  g.setAttribute('position', new BufferAttribute(new Float32Array(l), 3))
-  return g
+  return segs(l)
+}
+
+/** The drone's GPU objects for one theme, built and disposed as one set. */
+function partsOf(c: Tokens) {
+  const star = asterisk()
+  const disc = mergeGeometries(ROTORS.map(([x, z]) => new CircleGeometry(BLADE + 0.01, 28).rotateX(-Math.PI / 2).translate(x, ROTOR_Y + 0.004, z)))!
+  const torchGeo = new CylinderGeometry(0.013, 0.02, 1, 8).translate(0, 0.5, 0)
+  const nozzleGeo = new CylinderGeometry(0.036, 0.012, 0.1, 10).translate(0, -0.05, 0)
+  const discMat = new MeshBasicMaterial({ color: c.dim, transparent: true, opacity: 0, depthWrite: false })
+  const sparks = new Particles(260, SPARK)
+  sparks.setGlow(isDark(c))
+  return {
+    star, disc, torchGeo, nozzleGeo, discMat, sparks,
+    blades: new DynLines(16, c.edge),
+    wire: new DynLines(3, c.claudeCable),
+    scan: new DynLines(10, c.claude, 0.85),
+    ripple: new DynLines(40, c.edge, 0.4),
+  }
 }
 
 type DroneState = {
@@ -95,49 +113,28 @@ type DroneState = {
 }
 
 /** Claude's integrator: a rounded quad drone that flies to each seated chip, scans it, tacks the corners and seams every pin row with a moving arc. */
-export function Drone({ sim, c, tip: card, guard, onCycle, surface, glows, smoke, report }: IntegratorProps & { surface: Surface; glows: Glows; smoke: Smoke; report: Report }) {
-  const { invalidate } = useThree()
+export function Drone({ sim, c, tip: card, guard, onCycle, surface, glows, smoke, reportRef }: IntegratorProps & { surface: Surface; glows: Glows; smoke: Smoke; reportRef: RefObject<Report> }) {
   const root = useRef<Group>(null)
   const tilt = useRef<Group>(null)
   const torch = useRef<Mesh>(null)
   const nozzle = useRef<Mesh>(null)
   const discs = useRef<Mesh>(null)
-  const hullGeo = useRigid(hull)
-  const frameGeo = useRigid(frame)
-  const parts = useMemo(() => {
-    const star = asterisk()
-    const disc = mergeGeometries(ROTORS.map(([x, z]) => new CircleGeometry(BLADE + 0.01, 28).rotateX(-Math.PI / 2).translate(x, ROTOR_Y + 0.004, z)))!
-    const torchGeo = new CylinderGeometry(0.013, 0.02, 1, 8).translate(0, 0.5, 0)
-    const nozzleGeo = new CylinderGeometry(0.036, 0.012, 0.1, 10).translate(0, -0.05, 0)
-    const discMat = new MeshBasicMaterial({ color: c.dim, transparent: true, opacity: 0, depthWrite: false })
-    const sparks = new Particles(260, SPARK)
-    sparks.setGlow(isDark(c))
-    return {
-      star, disc, torchGeo, nozzleGeo, discMat, sparks,
-      blades: new DynLines(16, c.edge),
-      wire: new DynLines(3, c.claudeCable),
-      scan: new DynLines(10, c.claude, 0.85),
-      ripple: new DynLines(40, c.edge, 0.4),
-    }
-  }, [c])
-  useEffect(() => () => {
-    parts.star.dispose(); parts.disc.dispose(); parts.torchGeo.dispose(); parts.nozzleGeo.dispose(); parts.discMat.dispose()
-    for (const l of [parts.blades, parts.wire, parts.scan, parts.ripple]) l.dispose()
-    parts.sparks.dispose()
-  }, [parts])
-  const pad = useMemo(() => padAt(sim, surface), [sim, surface])
-  const st = useMemo<DroneState>(() => {
+  const ripple = useRef<LineSegments>(null)
+  const parts = useDisposable(() => partsOf(c), [c])
+  const pad = padAt(surface)
+  const state = useRef<DroneState>(null)
+  useLayoutEffect(() => {
     const p = new Vector3(pad.x, SKID + pad.y, pad.z)
-    return { pos: p.clone(), vel: new Vector3(), prev: p.clone(), from: p.clone(), tip: p.clone(), reach: new Vector3(0, -0.14, 0), job: null, lastWork: -99, spin: 0, angle: [0, 0.7, 1.4, 2.1], emit: 0, puff: 0, tack: -1 }
-  }, [pad])
-  const v = useMemo(() => ({ want: new Vector3(), tipWant: new Vector3(), gimbal: new Vector3(), dir: new Vector3(), q: new Quaternion(), tool: { x: 0, z: 0, u: 0, on: false } as Tool, hot: beadRamp(c), col: new Color() }), [c])
-  const floor = useMemo(() => (x: number, z: number) => (x > surface.x0 && x < surface.x1 && z > surface.z0 && z < surface.z1 ? surface.y : 0), [surface])
+    state.current = { pos: p.clone(), vel: new Vector3(), prev: p.clone(), from: p.clone(), tip: p.clone(), reach: new Vector3(0, -0.14, 0), job: null, lastWork: -99, spin: 0, angle: [0, 0.7, 1.4, 2.1], emit: 0, puff: 0, tack: -1 }
+  }, [pad.x, pad.y, pad.z])
+  const hot = beadRamp(c)
+  const floor = (x: number, z: number) => (x > surface.x0 && x < surface.x1 && z > surface.z0 && z < surface.z1 ? surface.y : 0)
 
   useFrame((_, frameDt) => {
     const dt = Math.min(frameDt, 0.25)
-    const g = root.current, tl = tilt.current
-    if (!g || !tl) return
-    const { want, tipWant, gimbal, dir, tool } = v
+    const g = root.current, tl = tilt.current, st = state.current
+    if (!g || !tl || !st) return
+    const { want, tipWant, gimbal, dir, tool } = V
     const job = sim.work.job
     const part = job && job.part.slot && !reducedMotion ? job.part : null
     if (job !== st.job) {
@@ -157,7 +154,7 @@ export function Drone({ sim, c, tip: card, guard, onCycle, surface, glows, smoke
       const h = kind === 'scan' || kind === 'approach' || kind === 'lift' ? SCAN_H : WELD_H
       want.set(wx + OFF.x, wy + h, wz + OFF.z)
       if (kind === 'approach') {
-        const u = smooth(tool.u)
+        const u = smoothstep(tool.u)
         st.pos.lerpVectors(st.from, want, u)
         st.pos.y += Math.sin(Math.PI * Math.min(1, tool.u * 1.15)) * 0.9
         kinematic = true
@@ -186,7 +183,7 @@ export function Drone({ sim, c, tip: card, guard, onCycle, surface, glows, smoke
     st.prev.copy(st.pos)
 
     const landed = !part && Math.hypot(st.pos.x - pad.x, st.pos.z - pad.z) < 0.15 && st.pos.y < pad.y + SKID + 0.03
-    st.spin += ((landed ? 0 : 38) - st.spin) * ease(dt, landed ? 1.6 : 4)
+    st.spin += ((landed ? 0 : 38) - st.spin) * damp(dt, landed ? 1.6 : 4)
     const flying = st.spin > 4
     g.position.copy(st.pos)
     if (flying && !reducedMotion) g.position.y += Math.sin(sim.time * 6.3) * 0.022
@@ -202,25 +199,28 @@ export function Drone({ sim, c, tip: card, guard, onCycle, surface, glows, smoke
       b.add(x + sn * BLADE * 0.25, ROTOR_Y, z - cs * BLADE * 0.25, x - sn * BLADE * 0.25, ROTOR_Y, z + cs * BLADE * 0.25)
     }
     b.end()
-    parts.discMat.opacity = clamp((st.spin - 6) / 32, 0, 1) * 0.22
-    if (discs.current) discs.current.visible = parts.discMat.opacity > 0.01
+    if (discs.current) {
+      const dm = discs.current.material as MeshBasicMaterial
+      dm.opacity = clamp((st.spin - 6) / 32, 0, 1) * 0.22
+      discs.current.visible = dm.opacity > 0.01
+    }
 
     gimbal.set(st.pos.x, g.position.y + GIMBAL - 0.06, st.pos.z)
     if (reach) tipWant.sub(gimbal)
     else tipWant.copy(STOWED)
     if (arc && tool.phase.kind === 'seam') st.reach.copy(tipWant)
-    else st.reach.lerp(tipWant, ease(dt, 14))
+    else st.reach.lerp(tipWant, damp(dt, 14))
     st.tip.copy(gimbal).add(st.reach)
     dir.copy(st.tip).sub(gimbal)
     const len = Math.max(0.05, dir.length())
-    v.q.setFromUnitVectors(UP, dir.multiplyScalar(-1 / len))
+    V.q.setFromUnitVectors(UP, dir.multiplyScalar(-1 / len))
     if (torch.current && nozzle.current) {
       torch.current.position.copy(st.tip)
-      torch.current.quaternion.copy(v.q)
+      torch.current.quaternion.copy(V.q)
       torch.current.scale.set(1, Math.max(0.01, len - 0.09), 1)
       torch.current.position.addScaledVector(dir, 0.09)
       nozzle.current.position.copy(st.tip)
-      nozzle.current.quaternion.copy(v.q)
+      nozzle.current.quaternion.copy(V.q)
       nozzle.current.position.addScaledVector(dir, 0.1)
     }
     const wr = parts.wire
@@ -235,7 +235,7 @@ export function Drone({ sim, c, tip: card, guard, onCycle, surface, glows, smoke
     sc.begin()
     if (part && script && tool.phase.kind === 'scan') {
       const slot = part.slot!, s = slot.s, a = script.area
-      const u = tool.u < 0.5 ? smooth(tool.u * 2) : smooth(2 - tool.u * 2)
+      const u = smoothstep(tool.u < 0.5 ? tool.u * 2 : 2 - tool.u * 2)
       const z = slot.z + (a.z0 - 0.08 + (a.z1 - a.z0 + 0.16) * u) * s
       const x0 = slot.x + (a.x0 - 0.08) * s, x1 = slot.x + (a.x1 + 0.08) * s
       const y = wy + 0.01
@@ -253,11 +253,9 @@ export function Drone({ sim, c, tip: card, guard, onCycle, surface, glows, smoke
     if (flying && !reducedMotion && st.pos.y - ground < 2.4 && !landed) {
       const k = (sim.time % 1.25) / 1.25
       const r = 0.5 + k * 1.5
-      for (let i = 0; i < 40; i++) {
-        const a0 = (i / 40) * Math.PI * 2, a1 = ((i + 1) / 40) * Math.PI * 2
-        rp.add(st.pos.x + Math.cos(a0) * r, ground + 0.01, st.pos.z + Math.sin(a0) * r, st.pos.x + Math.cos(a1) * r, ground + 0.01, st.pos.z + Math.sin(a1) * r)
-      }
-      rp.material.opacity = (1 - k) * 0.35 * clamp((st.spin - 6) / 30, 0, 1)
+      V.ring.length = 0
+      rp.addAll(ring(st.pos.x, ground + 0.01, st.pos.z, r, 40, V.ring))
+      if (ripple.current) (ripple.current.material as LineBasicMaterial).opacity = (1 - k) * 0.35 * clamp((st.spin - 6) / 30, 0, 1)
     }
     rp.end()
 
@@ -276,17 +274,18 @@ export function Drone({ sim, c, tip: card, guard, onCycle, surface, glows, smoke
       }
       const s = slot.s
       const k = breathe(sim.time)
-      glows.add(st.tip.x, st.tip.y + 0.02, st.tip.z, 0.15 * s * k, heatColor(1, v.hot, v.col), 0.95)
-      glows.add(st.tip.x, st.tip.y + 0.02, st.tip.z, 0.42 * s * k, heatColor(0.55, v.hot, v.col), 0.3)
-      glows.add(st.tip.x, wy + 0.004, st.tip.z, 0.34 * s, heatColor(0.6, v.hot, v.col), 0.32, true)
+      glows.add(st.tip.x, st.tip.y + 0.02, st.tip.z, 0.15 * s * k, heatColor(1, hot, V.col), 0.95)
+      glows.add(st.tip.x, st.tip.y + 0.02, st.tip.z, 0.42 * s * k, heatColor(0.55, hot, V.col), 0.3)
+      glows.add(st.tip.x, wy + 0.004, st.tip.z, 0.34 * s, heatColor(0.6, hot, V.col), 0.32, true)
     }
-    parts.sparks.step(Math.min(dt, 0.05), floor, v.hot)
+    parts.sparks.step(Math.min(dt, 0.05), floor, hot)
 
+    const report = reportRef.current
     report.phase = part ? tool.phase.kind : landed ? 'parked' : 'flying'
     if (part) report.at.set(wx, wy, wz)
     else report.at.copy(st.pos)
     const settled = landed && st.spin < 0.3 && st.vel.lengthSq() < 1e-5
-    if (!settled || parts.sparks.busy) invalidate()
+    report.moving = !settled || parts.sparks.busy
   })
 
   const h = pickable(card, guard, 'Claude Code · solder drone', 'Tacks and seams each seated chip · click for the next agent', onCycle)
@@ -295,8 +294,8 @@ export function Drone({ sim, c, tip: card, guard, onCycle, surface, glows, smoke
       <Pad pad={pad} c={c} kind="drone" handlers={h} />
       <group ref={root} {...h}>
         <group ref={tilt}>
-          <Rigid geo={hullGeo} fill={c.claude} edge={c.claudeEdge} c={c} />
-          <Rigid geo={frameGeo} fill={c.surface} edge={c.edge} c={c} />
+          <Body id="drone-hull" {...hull()} fill={c.claude} edge={c.claudeEdge} c={c} />
+          <Body id="drone-frame" {...frame()} fill={c.surface} edge={c.edge} c={c} />
           <lineSegments geometry={parts.star} material={lineMat(c.claudeInk)} />
           <primitive object={parts.blades.object} />
           <mesh ref={discs} geometry={parts.disc} material={parts.discMat} />
@@ -309,7 +308,7 @@ export function Drone({ sim, c, tip: card, guard, onCycle, surface, glows, smoke
       <mesh ref={nozzle} geometry={parts.nozzleGeo} material={fillMat(c.gold, c.flat, c.rough, { metal: 0.4 })} raycast={() => null} />
       <primitive object={parts.wire.object} />
       <primitive object={parts.scan.object} />
-      <primitive object={parts.ripple.object} />
+      <primitive ref={ripple} object={parts.ripple.object} />
       <primitive object={parts.sparks.object} />
     </>
   )

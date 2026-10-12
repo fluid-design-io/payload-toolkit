@@ -1,185 +1,159 @@
-import { useMemo } from 'react'
-import { CatmullRomCurve3, Matrix4, TubeGeometry, Vector3 } from 'three'
+import { useFrame } from '@react-three/fiber'
+import { useLayoutEffect, useRef, useState } from 'react'
+import { Matrix4, Vector3 } from 'three'
+import type { InstancedMesh } from 'three'
 
+import { keepAnimating } from '../../../../kit/busy'
 import { play } from '../../../../kit/sound'
-import type { TransportProps, TransportVariant } from '../../core/contract'
+import type { SoundName } from '../../../../kit/sound'
+import type { Path, Sim, Tokens, TransportProps } from '../../core/contract'
+import { kick } from '../../core/jolt'
 import { Body } from '../../core/scene'
-import { box, fillMat, lineMat, reducedMotion } from '../../core/three'
-import type { Piece } from '../../core/three'
+import { fillMat, lineMat, reducedMotion } from '../../core/three'
 import { Batch } from './fleet'
 import type { Carrier, FleetSpec } from './fleet'
-import { ease, pose, useFleet, useSkin, yawOf } from './kit'
-import { Pace, Track, rounded, smooth01 } from './track'
+import { pitchOf, pose, useFleet, yawOf } from './kit'
+import { carPieces, structure } from './monorail/build'
+import { RIDE } from './monorail/course'
+import type { Course, Cue } from './monorail/course'
+import { Track, locate } from './track'
+import { GAP } from './monorail.data'
 
-/**
- * An overhead monorail. Trolleys run a loop of I-beam hung from gallows
- * posts; each carries a hoist and a fork tray. At the load point the tray is
- * lowered for the part, hoisted, and sent along the front rail, swinging back
- * as it pulls away and forward as it brakes; over the drop point it lowers
- * the part to the arm, hoists empty and rides the back leg home. Rail joints
- * clack under every moving trolley.
- */
-const Z = -1.2
-const ZR = -0.65
-const ZB = ZR - 1.8
-const RY = 4.0
-const PY = 3.6
-const LOAD = -7.0
-const DROP = -1.35
-const LOW = 2.49
-const UP = 1.54
-const HU = 0.8
-const SWAY = reducedMotion ? 0 : 0.14
-const TRAY = Z - ZR
-const JOINT = 0.9
+const DOG = 0.36
 
-const loop = new Track(rounded([[-7.9, RY, ZR], [-0.45, RY, ZR], [-0.45, RY, ZB], [-7.9, RY, ZB]], 0.9, true, 16), true)
-const sLoad = loop.locate([LOAD, RY, ZR])
-const sDrop = loop.locate([DROP, RY, ZR])
-const run = DROP - LOAD
-const pace = new Pace(run, (s) => 1 + 0.9 * smooth01(s / 1.2) * smooth01((run - s) / 1.2))
-const back = loop.slice(sDrop, sLoad + loop.len)
-const LENGTH = HU + pace.length + HU
+const back = new Track([[RIDE.end, RIDE.y - RIDE.cup, RIDE.z], [RIDE.start, RIDE.y - RIDE.cup, RIDE.z]])
+const SPEC: Omit<FleetSpec, 'length'> = { n: 7, speed: RIDE.lift, gap: GAP, back: back.len, spacing: 0.8, vmax: 3.2, accel: 4, dwell: 0.45 }
 
-const SPEC: FleetSpec = { n: 6, length: LENGTH, speed: 1.6, gap: 2.0, back: back.len, spacing: 1.15, vmax: 3.4, accel: 3, dwell: 0.9 }
-
-/** Hoist drop and swing angle for a riding tray `u` along the path, and the trolley's x. */
-function hang(u: number) {
-  if (u < HU) return { x: LOAD, L: LOW + (UP - LOW) * smooth01(u / HU), th: 0, s: 0 }
-  if (u > HU + pace.length) return { x: DROP, L: UP + (LOW - UP) * smooth01((u - HU - pace.length) / HU), th: 0, s: run }
-  const s = pace.s(u - HU)
-  const r = run - s
-  const th = SWAY * (-Math.exp(-s / 1.3) * Math.sin((Math.PI * s) / 1.15) + Math.exp(-r / 0.9) * Math.sin((Math.PI * r) / 1.05))
-  return { x: LOAD + s, L: UP, th, s }
+/** What a car does when it passes a cue: a sound, and a jolt scaled by its speed. */
+const CUES: Record<Cue, { sound: SoundName; jolt?: (v: number) => number; hz?: number }> = {
+  chain: { sound: 'servo' },
+  crest: { sound: 'toss' },
+  bottom: { sound: 'drawer', jolt: (v) => Math.min(0.95, v / 13), hz: 8 },
+  land: { sound: 'pick', jolt: () => 0.22, hz: 15 },
+  brake: { sound: 'zap', jolt: (v) => Math.min(0.5, v / 18), hz: 19 },
 }
 
-const partAt = (u: number, out: Vector3) => {
-  const h = hang(u)
-  return out.set(h.x + h.L * Math.sin(h.th), PY - h.L * Math.cos(h.th) + 0.04, Z)
-}
-
-const trolley = new Vector3()
-const tray = new Vector3()
-const tan = new Vector3()
-const other = new Vector3()
 const m = new Matrix4()
-const rot = new Matrix4()
-const yawM = new Matrix4()
-const stretch = new Matrix4()
+const rail = new Vector3()
+const up = new Vector3()
+const tan = new Vector3()
+const right = new Vector3()
+const cup = new Vector3()
+const other = new Vector3()
+const dogAt = new Vector3()
+const LEVEL = new Vector3(0, 1, 0)
+const WEST = new Vector3(-1, 0, 0)
 
-function railPieces(): Piece[] {
-  const pts = loop.samples(0.1)
-  const beam = new TubeGeometry(new CatmullRomCurve3(pts, true, 'catmullrom', 0), pts.length, 0.13, 4, true)
-  const out: Piece[] = [{ geo: beam, threshold: 30 }]
-  for (const x of [-7.3, -4.2, -1.1]) {
-    const zPost = ZB - 0.8
-    out.push(
-      { geo: box(0.16, RY + 0.55, 0.16), at: [x, (RY + 0.55) / 2, zPost] },
-      { geo: box(0.5, 0.06, 0.5), at: [x, 0.03, zPost] },
-      { geo: box(0.12, 0.14, ZR - zPost + 0.2), at: [x, RY + 0.48, (ZR + zPost) / 2] },
-      { geo: box(0.06, 0.36, 0.06), at: [x, RY + 0.27, ZR] },
-      { geo: box(0.06, 0.36, 0.06), at: [x, RY + 0.27, ZB] },
-    )
-  }
-  out.push({ geo: box(1.3, 0.05, 1.2), at: [LOAD, 0.025, Z] }, { geo: box(1.3, 0.05, 1.2), at: [DROP, 0.025, Z] })
-  return out
+/** The car's rail point and banked frame at `s` along the part's path. */
+function frameAt(course: Course, s: number) {
+  const [i, f] = locate(course.cum, s)
+  rail.lerpVectors(course.rail[i], course.rail[i + 1], f)
+  tan.lerpVectors(course.tan[i], course.tan[i + 1], f).normalize()
+  up.lerpVectors(course.up[i], course.up[i + 1], f)
+  right.crossVectors(tan, up).normalize()
+  up.crossVectors(right, tan).normalize()
 }
 
-function carrierPieces() {
-  const truck: Piece[] = [{ geo: box(0.62, 0.26, 0.34), at: [0, RY - 0.29 - PY, 0] }, { geo: box(0.36, 0.08, 0.5), at: [0, RY - 0.12 - PY, 0] }, { geo: box(0.18, 0.12, 0.18), at: [0, -0.04, 0] }]
-  const rod: Piece[] = [{ geo: box(0.04, 1, 0.04), at: [0, -0.5, 0] }]
-  const fork: Piece[] = [
-    { geo: box(0.2, 0.14, 0.2), at: [0, 0.03, 0] },
-    { geo: box(0.08, 0.05, TRAY + 0.3), at: [0, -0.02, (TRAY + 0.3) / 2 - 0.1] },
-    { geo: box(0.7, 0.04, 0.07), at: [0, -0.02, TRAY - 0.2] },
-    { geo: box(0.7, 0.04, 0.07), at: [0, -0.02, TRAY + 0.2] },
-  ]
-  return { truck, rod, fork }
-}
-
-function Monorail({ sim, c }: TransportProps) {
-  const pieces = useMemo(railPieces, [])
-  const layers = useMemo(() => {
-    const p = carrierPieces()
-    const fill = fillMat(c.surface, c.flat, c.rough)
-    return { truck: new Batch(p.truck, SPEC.n, fill, lineMat(c.edge)), rod: new Batch(p.rod, SPEC.n, fillMat(c.pin, c.flat, c.rough), null), fork: new Batch(p.fork, SPEC.n, fill, lineMat(c.edge)) }
-  }, [])
-  useSkin(c, () => {
-    layers.truck.mesh.material = fillMat(c.surface, c.flat, c.rough)
-    layers.truck.lines!.material = lineMat(c.edge)
-    layers.rod.mesh.material = fillMat(c.pin, c.flat, c.rough)
-    layers.fork.mesh.material = fillMat(c.surface, c.flat, c.rough)
-    layers.fork.lines!.material = lineMat(c.edge)
+/** The fleet of cars for one course; remounted when the course changes, so its spec never goes stale. */
+function Cars({ sim, course, path, c }: { sim: Sim; course: Course; path: Path; c: Tokens }) {
+  const [spec] = useState<FleetSpec>(() => ({ ...SPEC, length: path.length }))
+  const [layers] = useState(() => {
+    const p = carPieces()
+    return {
+      chassis: new Batch(p.chassis, SPEC.n, fillMat(c.accent, c.flat, c.rough), lineMat(c.edge)),
+      cup: new Batch(p.cup, SPEC.n, fillMat(c.surface, c.flat, c.rough), lineMat(c.edge)),
+    }
   })
-  const joints = useMemo(() => new Int32Array(SPEC.n), [])
-  useFleet(sim, SPEC, layers, (car: Carrier, i, dt) => {
-    let L = UP
-    let th = 0
-    let yaw = 0
-    let s = 0
+  useLayoutEffect(() => {
+    layers.chassis.skin(fillMat(c.accent, c.flat, c.rough), lineMat(c.edge))
+    layers.cup.skin(fillMat(c.surface, c.flat, c.rough), lineMat(c.edge))
+  }, [layers, c])
+
+  const seen = useRef(new Float32Array(SPEC.n).fill(-1))
+  const clack = useRef(new Float32Array(SPEC.n))
+  const fleet = useFleet(sim, spec, layers, (car: Carrier, i) => {
+    let s = -1
     if (car.state === 'back') {
-      back.point(car.b, trolley)
-      back.tangent(car.b, tan)
-      yaw = yawOf(tan)
-      ease(car, car.b > SPEC.back - 0.02 ? 1 : 0, dt, 4, reducedMotion)
-      L = UP + (LOW - UP) * car.k
-      s = sDrop + car.b
+      back.point(car.b, rail)
+      clack.current[i] = 0
+      tan.copy(WEST)
+      up.copy(LEVEL)
+      right.crossVectors(tan, up)
     } else {
-      if (car.state === 'hold') {
-        ease(car, car.t > 0.25 ? 0 : 1, dt, 3, reducedMotion)
-        car.u = SPEC.length
-      } else car.k = 1
-      const h = hang(car.u)
-      trolley.set(h.x, PY, ZR)
-      L = car.state === 'hold' ? UP + (LOW - UP) * car.k : h.L
-      th = h.th
-      s = sLoad + h.s
-      if (car.state === 'ride' && car.b < SPEC.back) {
+      s = path.along(car.state === 'hold' ? path.length : car.u)
+      frameAt(course, s)
+      if (car.state === 'ride' && car.b < spec.back) {
         back.point(car.b, other)
-        trolley.lerp(other, Math.min(1, (SPEC.back - car.b) / SPEC.spacing))
+        rail.lerp(other, Math.min(1, (spec.back - car.b) / spec.spacing))
       }
     }
-    trolley.y = PY
-    const joint = Math.floor(s / JOINT)
-    if (joint !== joints[i]) {
-      if (car.v > 0.3 || car.state === 'ride') play('tick')
-      joints[i] = joint
+    m.makeBasis(tan, up, right).setPosition(rail)
+    layers.chassis.set(i, m)
+    cup.copy(rail).addScaledVector(up, RIDE.cup)
+    layers.cup.set(i, pose(m, cup, yawOf(tan)))
+
+    const was = seen.current[i]
+    seen.current[i] = s
+    if (car.state !== 'ride' || was < 0 || s <= was) return
+    for (const b of course.beats) {
+      if (b.s <= was || b.s > s) continue
+      const cue = CUES[b.cue]
+      play(cue.sound)
+      if (cue.jolt) kick(cue.jolt(b.v), cue.hz)
     }
-    pose(m, trolley, yaw)
-    layers.truck.set(i, m)
-    yawM.makeRotationY(yaw)
-    rot.makeRotationZ(th)
-    m.makeTranslation(trolley.x, trolley.y, trolley.z).multiply(yawM).multiply(rot).multiply(stretch.makeScale(1, L, 1))
-    layers.rod.set(i, m)
-    tray.set(L * Math.sin(th), -L * Math.cos(th), 0).applyMatrix4(yawM).add(trolley)
-    pose(m, tray, yaw)
-    layers.fork.set(i, m)
-  }, {
-    depart: () => play('servo'),
-    arrive: () => play('drawer'),
+    const [k] = locate(course.cum, s)
+    if (course.kind[k] === 'lift' && s - clack.current[i] > 0.45) {
+      clack.current[i] = s
+      play('tick')
+    }
+  }, {})
+  useFrame(() => {
+    if (fleet.moving) keepAnimating()
   })
   return (
+    <>
+      <primitive object={layers.chassis.mesh} />
+      <primitive object={layers.chassis.lines!} />
+      <primitive object={layers.cup.mesh} />
+      <primitive object={layers.cup.lines!} />
+    </>
+  )
+}
+
+export function Monorail({ sim, line, c }: TransportProps<Course>) {
+  const course = line.path.data
+  const built = structure(course)
+  const id = `monorail-${course.len.toFixed(3)}`
+  const lift = new Track(built.lift)
+  const dogs = Math.floor(lift.len / DOG)
+
+  const chain = useRef<InstancedMesh>(null)
+  const laid = useRef('')
+  useFrame(({ clock }) => {
+    const mesh = chain.current
+    if (!mesh || (reducedMotion && laid.current === id)) return
+    laid.current = id
+    const offset = reducedMotion ? 0 : (clock.elapsedTime * RIDE.lift) % DOG
+    for (let i = 0; i < dogs; i++) {
+      const d = i * DOG + offset
+      lift.point(d, dogAt)
+      lift.tangent(d, tan)
+      dogAt.addScaledVector(LEVEL, -0.05)
+      mesh.setMatrixAt(i, pose(m, dogAt, yawOf(tan), pitchOf(tan)))
+    }
+    mesh.instanceMatrix.needsUpdate = true
+  })
+
+  return (
     <group>
-      <Body id="monorail" c={c} fill={c.surface} edge={c.edge} pieces={pieces} />
-      <primitive object={layers.truck.mesh} />
-      <primitive object={layers.truck.lines!} />
-      <primitive object={layers.rod.mesh} />
-      <primitive object={layers.fork.mesh} />
-      <primitive object={layers.fork.lines!} />
+      <Body id={id} c={c} fill={c.surface} edge={c.edge} pieces={built.frame} />
+      <Body id={`${id}-rails`} c={c} fill={c.pin} edge={c.edge} pieces={built.rails} />
+      <Body id={`${id}-accent`} c={c} fill={c.accent} edge={c.edge} pieces={built.accent} />
+      <instancedMesh key={`${id}-chain`} ref={chain} args={[undefined, undefined, dogs]} material={fillMat(c.accent, true)} frustumCulled={false}>
+        <boxGeometry args={[0.1, 0.05, 0.16]} />
+      </instancedMesh>
+      <Cars key={`${id}-cars`} sim={sim} course={course} path={line.path} c={c} />
     </group>
   )
 }
 
-export const monorail: TransportVariant = {
-  id: 'monorail',
-  kind: 'path',
-  label: 'Monorail',
-  footprint: { x0: -8.5, x1: 0.1, z0: ZB - 1.1, z1: Z + 0.75, h: RY + 0.55 },
-  frame: [[-8.7, 0, Z + 1.6], [0.3, 0, Z + 1.6], [0.3, RY + 0.6, ZB - 1.1], [-8.7, RY + 0.6, ZB - 1.1]],
-  length: LENGTH,
-  speed: SPEC.speed,
-  gap: SPEC.gap,
-  at: partAt,
-  load: { dur: 0.6, h: 1.1 },
-  Component: Monorail,
-}

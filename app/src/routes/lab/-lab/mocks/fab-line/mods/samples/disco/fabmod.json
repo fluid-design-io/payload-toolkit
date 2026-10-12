@@ -1,0 +1,8 @@
+{
+  "fabmod": 1,
+  "id": "disco",
+  "name": "Disco",
+  "author": "fab-line samples",
+  "description": "A row of mirror balls over the whole line, sized to its layout, whose sweeping spotlights flare and swing onto the chip on every seat and finish.",
+  "main": "mod.js"
+}

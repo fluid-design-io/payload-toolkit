@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react'
 import type { Catalog, CategoryId, Setup } from '../../workspace/-workspace/workspace.types'
 import type { Warehouse } from './warehouse'
 
@@ -21,21 +20,19 @@ export type Lab = {
   /**
    * `full` in /lab: the scene draws its own search, setup controls and
    * command. `embedded` inside /workspace: the rail, search and floating
-   * Install bar already provide those, so the scene shows only itself and
-   * follows `focus`.
+   * Install bar already provide those, so the scene shows only itself, its
+   * camera toolbar and World settings, and follows `focus`.
    */
   chrome: 'full' | 'embedded'
   focus: Focus
   setFocus: (focus: Partial<Focus>) => void
   /** Opens the workspace's detail card where one exists. */
   inspect?: (ref: string) => void
+  /**
+   * Called when the scene's own settings sheet opens or closes, so the host
+   * can move its bottom chrome (the workspace's Install bar) out of the way.
+   */
+  onSheetChange?: (open: boolean) => void
 }
 
 export type MockProps = { lab: Lab }
-
-export type Mock = {
-  id: string
-  title: string
-  pitch: string
-  load: () => Promise<{ default: ComponentType<MockProps> }>
-}

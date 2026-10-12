@@ -1,7 +1,7 @@
 import { Vector3 } from 'three'
 
 import type { Setup } from '@/routes/workspace/-workspace/workspace.types'
-import type { Ghost, Hatch, Plan, Route, Routed, RouteStyle, Slot } from '../../../core/contract'
+import type { Ghost, Hatch, Plan, Route, Routed, Slot } from '../../../core/contract'
 import { makeRoute } from '../../../core/route'
 import { BY, cpuHalf } from '../shared/dims'
 import { BANDS, bandOf, ghostIndex, packGrid, packRows, sortParts } from '../shared/pack'
@@ -76,20 +76,20 @@ export function blockLanes(parts: readonly Routed[], framework: Setup['framework
 }
 
 /** Channel above each chip, then the bus spine west of the page, then a CPU pin. */
-export function routeAll(parts: readonly Routed[], style: RouteStyle, framework: Setup['framework']) {
+export function routeAll(parts: readonly Routed[], framework: Setup['framework']) {
   const y = BY + 0.006
   const east = CPU.x + cpuHalf(framework).w
   for (const [p, { c, x, pz }] of blockLanes(parts, framework)) {
     const s = p.slot!
     const top = s.z - (p.spec.fd * s.s) / 2
     const corners = [new Vector3(s.x, y, top), new Vector3(s.x, y, c), new Vector3(x, y, c), new Vector3(x, y, pz), new Vector3(east, y, pz)]
-    p.route = makeRoute(corners.reverse(), style, [new Vector3(x, y, c), new Vector3(x, y, pz)])
+    p.route = makeRoute(corners.reverse(), [new Vector3(x, y, c), new Vector3(x, y, pz)])
   }
-  routeBase(parts, style, framework)
+  routeBase(parts, framework)
 }
 
 /** Components fan out of the CPU's south edge to the passives grid; features drop straight into the mezzanine bay. */
-export function routeBase(parts: readonly Routed[], style: RouteStyle, framework: Setup['framework']) {
+export function routeBase(parts: readonly Routed[], framework: Setup['framework']) {
   const y = BY + 0.006
   const half = cpuHalf(framework)
   const southEdge = CPU.z + half.d
@@ -98,17 +98,17 @@ export function routeBase(parts: readonly Routed[], style: RouteStyle, framework
     const lane = 0.95 - (i % 8) * 0.07
     const x = CPU.x + half.w - 0.25 - (i % 12) * 0.2
     const corners = [new Vector3(x, y, southEdge), new Vector3(x, y, southEdge + lane), new Vector3(s.x, y, southEdge + lane), new Vector3(s.x, y, s.z - 0.14 * s.s)]
-    p.route = makeRoute(corners, style, [new Vector3(s.x, y, southEdge + lane)])
+    p.route = makeRoute(corners, [new Vector3(s.x, y, southEdge + lane)])
   })
   parts.filter((p) => p.item.kind === 'feature' && p.slot).forEach((p, i) => {
     const s = p.slot!
     const x = s.x - 0.9 + (i % 3) * 0.25
     const corners = [new Vector3(x, y, southEdge), new Vector3(x, y, s.z - 0.75)]
-    p.route = makeRoute(corners, style, [])
+    p.route = makeRoute(corners, [])
   })
 }
 
-export function staticRoutes(style: RouteStyle, framework: Setup['framework']) {
+export function staticRoutes(framework: Setup['framework']) {
   const y = BY + 0.006
   const half = cpuHalf(framework)
   const power: Route[] = []
@@ -116,11 +116,11 @@ export function staticRoutes(style: RouteStyle, framework: Setup['framework']) {
   for (let i = 0; i < 5; i++) {
     const x = CPU.x - 1.1 + i * 0.55
     const x2 = -7.0 + i * 1.05
-    power.push(makeRoute([new Vector3(x2, y, -4.25), new Vector3(x2, y, -3.7 + i * 0.07), new Vector3(x, y, -3.7 + i * 0.07), new Vector3(x, y, CPU.z - half.d)], style, []))
+    power.push(makeRoute([new Vector3(x2, y, -4.25), new Vector3(x2, y, -3.7 + i * 0.07), new Vector3(x, y, -3.7 + i * 0.07), new Vector3(x, y, CPU.z - half.d)], []))
   }
   for (let i = 0; i < 8; i++) {
     const z = CPU.z - 1.05 + i * 0.3
-    memory.push(makeRoute([new Vector3(-6.85, y, z), new Vector3(-6.55, y, z), new Vector3(-6.4, y, CPU.z - 1.0 + i * 0.28), new Vector3(CPU.x - half.w, y, CPU.z - 1.0 + i * 0.28)], style, []))
+    memory.push(makeRoute([new Vector3(-6.85, y, z), new Vector3(-6.55, y, z), new Vector3(-6.4, y, CPU.z - 1.0 + i * 0.28), new Vector3(CPU.x - half.w, y, CPU.z - 1.0 + i * 0.28)], []))
   }
   return { power, memory }
 }

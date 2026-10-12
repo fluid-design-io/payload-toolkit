@@ -1,0 +1,48 @@
+{
+  "fabmod": 1,
+  "id": "vaporwave",
+  "name": "Vaporwave",
+  "author": "fab-line samples",
+  "description": "A pastel mall theme on the Clay toy set, and a conveyor that takes the grand tour behind the cabinet before it reaches the arm.",
+  "theme": [
+    {
+      "id": "mall",
+      "label": "Vaporwave",
+      "base": "clay",
+      "scene": "EXT. DEAD MALL, 1995",
+      "lens": { "fov": 18, "el": 30 },
+      "tokens": {
+        "light": {
+          "bg": "linear-gradient(180deg, #FF9CEE 0%, #B28DFF 55%, #6EB5FF 100%)",
+          "surface": "#FFF0FB", "fg": "#3A1C5C", "muted": "#7A4FA0", "edge": "#7B3FA8", "dim": "#E7B8F5",
+          "accent": "#FF2E97", "floor": "#C8F4FF", "floorEdge": "#8FD9F0",
+          "board": "#01CDFE", "boardEdge": "#0573A8", "silk": "#FFFFFF", "trace": "#05FFA1", "lit": "#FF71CE",
+          "body": "#FFF0FB", "bodyEdge": "#7B3FA8", "ink": "#3A1C5C", "pin": "#B967FF", "sub": "#F6D6FF", "ghost": "#9BE8FF",
+          "gold": "#FFFB96", "spark": "#FFFFFF", "led": "#05FFA1", "ledBusy": "#B8FFE3"
+        },
+        "dark": {
+          "bg": "radial-gradient(120% 90% at 50% 20%, #3B0F5C 0%, #120326 80%)",
+          "surface": "#2A0E4A", "fg": "#FFE3FB", "muted": "#C9A3E8", "edge": "#FF71CE", "dim": "#5B2A86",
+          "accent": "#05FFA1", "floor": "#1A0636", "floorEdge": "#4B1C7A",
+          "board": "#0B3A66", "boardEdge": "#01CDFE", "silk": "#FFE3FB", "trace": "#B967FF", "lit": "#05FFA1",
+          "body": "#2A0E4A", "bodyEdge": "#FF71CE", "ink": "#FFE3FB", "pin": "#B967FF", "sub": "#3B1466", "ghost": "#173E6B",
+          "gold": "#FFFB96", "spark": "#FFFFFF"
+        }
+      }
+    }
+  ],
+  "transport": [
+    {
+      "id": "grand-tour",
+      "label": "Grand tour",
+      "via": [
+        ["out", "front"],
+        ["pick.x0 - 1.6", "front"],
+        ["pick.x0 - 1.6", "back"],
+        ["far", "back"],
+        ["far", "front + 1.8"],
+        ["bay", "front + 1.8"]
+      ]
+    }
+  ]
+}

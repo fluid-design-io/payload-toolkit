@@ -77,6 +77,8 @@ export type WorkspaceState = {
   panel: Panel
   /** The ref whose detail card is open. */
   detail: string | null
+  /** The factory scene's settings sheet is open; the bar steps aside for it. */
+  sceneSheet: boolean
 }
 
 export type WorkspaceActions = {
@@ -97,6 +99,7 @@ export type WorkspaceActions = {
   closePanel: (panel: Exclude<Panel, null>) => void
   openDetail: (ref: string) => void
   closeDetail: () => void
+  setSceneSheet: (open: boolean) => void
 }
 
 /** Stable for the provider's lifetime; leaves subscribe to slices of `store`. */

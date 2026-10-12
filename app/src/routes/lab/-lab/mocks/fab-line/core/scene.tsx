@@ -15,11 +15,11 @@ import type { Piece } from './three'
 
 type V3 = [number, number, number]
 
-/** One rigid body: a fill mesh and a hairline mesh, each merged from its pieces. `id` keys the merge. */
-export function Body({ pieces, fill, edge, c, position, rotation, opacity, metal, id, children }: {
-  pieces: Piece[]; fill: string; edge: string; c: Tokens; position?: V3; rotation?: V3; opacity?: number; metal?: number; id: string; children?: ReactNode
+/** One rigid body: a fill mesh and a hairline mesh, each merged from its pieces; `lines` adds hand-drawn hairlines (rings, curves). `id` keys the merge. */
+export function Body({ pieces, lines, fill, edge, c, position, rotation, opacity, metal, id, children }: {
+  pieces: Piece[]; lines?: number[]; fill: string; edge: string; c: Tokens; position?: V3; rotation?: V3; opacity?: number; metal?: number; id: string; children?: ReactNode
 }) {
-  const geo = useMemo(() => ({ fill: mergeFills(pieces), edges: mergeEdges(pieces) }), [id])
+  const geo = useMemo(() => ({ fill: mergeFills(pieces), edges: mergeEdges(pieces, lines) }), [id])
   useEffect(() => () => { geo.fill.dispose(); geo.edges.dispose() }, [geo])
   const ghost = opacity !== undefined && opacity < 1
   return (
@@ -31,13 +31,15 @@ export function Body({ pieces, fill, edge, c, position, rotation, opacity, metal
   )
 }
 
-/** A station's frame: children draw in station coordinates, shifted along x by the layout's eased offset. */
+/** A station's frame: children draw in station coordinates, moved by the layout's eased placement. */
 export function StationFrame({ sim, slot, children }: { sim: Sim; slot: keyof Sim['at']; children: ReactNode }) {
   const ref = useRef<Group>(null)
   useFrame(() => {
-    if (ref.current) ref.current.position.x = sim.at[slot]
+    const at = sim.at[slot]
+    ref.current?.position.set(at.x, at.y, at.z)
   })
-  return <group ref={ref} position-x={sim.at[slot]}>{children}</group>
+  const at = sim.at[slot]
+  return <group ref={ref} position={[at.x, at.y, at.z]}>{children}</group>
 }
 
 /** The board's scaled local frame inside its station frame. */
@@ -54,7 +56,9 @@ export function BoardFrame({ sim, children }: { sim: Sim; children: ReactNode })
 export function useSimEvents(sim: Sim, fn: (e: SimEvent) => void) {
   const seen = useRef(sim.eventSeq)
   const cb = useRef(fn)
-  cb.current = fn
+  useLayoutEffect(() => {
+    cb.current = fn
+  })
   useFrame(() => {
     if (seen.current === sim.eventSeq) return
     for (const e of sim.events) if (e.seq > seen.current) cb.current(e)
@@ -120,7 +124,7 @@ export function pickable(tip: { show: (e: PointerEvent, title: string, sub: stri
   }
 }
 
-/** A group that drops in from `start` units above and settles; set `drop.current` to bounce it again. */
+/** A group that drops in from `start` units above and settles; `bounce(height)` drops it again. */
 export function useDrop(start: number, rate = 7) {
   const g = useRef<Group>(null)
   const drop = useRef(start)
@@ -128,5 +132,8 @@ export function useDrop(start: number, rate = 7) {
     drop.current += (0 - drop.current) * (1 - Math.exp(-dt * rate))
     if (g.current) g.current.position.y = drop.current
   })
-  return [g, drop] as const
+  const bounce = (height: number) => {
+    drop.current = height
+  }
+  return [g, bounce] as const
 }

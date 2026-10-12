@@ -85,11 +85,41 @@ without adding product UI. Store 0.11 uses `useSelector`; `useStore` is deprecat
 Do not create a module-level application store or QueryClient shared across SSR
 requests. The script's isolated instances are for that command only.
 
+React Compiler 1.0 is on for the whole client build. `vite.config.ts` runs
+`babel-plugin-react-compiler` through `@rolldown/plugin-babel` with plugin-react's
+`reactCompilerPreset()`, in the default `infer` mode, client environment only.
+Babel core 7.29.7 and the plugin versions are pinned exactly. Plugin-react's
+Rust `compiler` option stays off while it is experimental. Write components
+plainly and let the compiler memoize them: no new `useMemo`, `useCallback` or
+`React.memo` for render cost or prop stability. Hold an identity that matters for
+correctness in `useState(() => ...)` or `useRef`. That covers three.js objects
+you dispose, mutable simulation state, subscriptions, and values that effects or
+non-React code must see unchanged. Keep a `useMemo` only for expensive work the
+compiler cannot see, with a comment saying why. A component that breaks the
+Rules of React (reading a ref or mutating props, state or hook values during
+render) is skipped silently and runs uncompiled. `bun run compiler:report` lists
+every skipped function with the reason, plus the count of `"use no memo"`
+directives. Run it after changing components. Code inside `useFrame` callbacks and refs is outside render and may
+mutate freely. The compiler knows a ref by its name: a prop written through
+`.current` in a `useFrame` callback must be called `ref` or end in `Ref` (the
+fab line's `reportRef` and `powerRef`), or the whole component is skipped.
+
+A compiled parent re-renders a child only when the child's props change. A
+component that renders from an object edited in place, such as the fab line's
+`sim`, must take what it reads as a prop or a version number (the line passes
+`line` and `version`) rather than rely on its parent re-rendering. A kept
+`useMemo` that builds several disposable three.js objects should make one
+module-level call: the compiler may cache each object on its own inputs, and
+the dispose effect would then free objects still in use. The report proves only
+that a function compiles, so read the emitted cache keys of any component that
+renders from mutable data.
+
 ```sh
 bun install --frozen-lockfile
 bun run generate-routes
 bun run typecheck
 bun run test
+bun run compiler:report
 bun run verify:stack
 bun run build
 bun run dev
@@ -158,6 +188,58 @@ The supplied `HEROUI_AUTH_TOKEN` remains in ignored `.env` with mode 0600.
 not a runtime variable. Never prefix it with `VITE_`, import it into application
 source, or commit it. OSS HeroUI installation needs no Pro package or credential.
 
+### 3D scenes (React Three Fiber)
+
+The `/lab` mocks and the workspace's factory view are React Three Fiber 9 scenes
+on three 0.186 with drei, postprocessing and rapier installed. When you need
+help with R3F, drei, shaders, performance or scene structure, you may use the
+community R3F skills at https://github.com/EnzeD/r3f-skills. They are optional
+personal tooling: install them in your own agent setup, not in this repository,
+and the repository's code and `CONTRACT.md` files win where they disagree. The
+fab line's slot contract is `src/routes/lab/-lab/mocks/fab-line/CONTRACT.md`.
+
+Every fab line slot (stations, theme, effects, camera follow, swap style,
+chip, mod tools) is one row of `SLOTS` in `fab-line/world/slots.ts`, which the
+store, World settings, the URL, mod adoption and the entry iterate. Variant
+components load in their own chunks (`fab-line/core/lazy.tsx`) and the entry
+loads a pick's components before showing it. The fab line keeps its world (one
+pick per slot and per mod tool, and the installed mods) in one zustand 5 store,
+`fab-line/world/store.ts`, persisted to IndexedDB through `idb-keyval` (key
+`fab-line:world`). Both are pinned direct dependencies. The gear at the end of
+the camera-stop toolbar opens World settings, a non-modal bottom sheet
+(`fab-line/world/sheet.tsx`) in both `/lab` and the workspace. Its header
+holds a Pro `Segment` with two pages, World and Mods (with the installed
+count), then Reset world, a mute toggle (`setMuted` from `kit/sound.ts`, the
+fab line's only one in the workspace; `/lab`'s top bar keeps its own) and
+close. Choosing World snaps the sheet to a third of the scene's height and
+Mods to two thirds, straight from the segment's change; the handle still drags
+between the two or closes it, and a drag is never undone. Escape closes the
+sheet only from inside it, so Escape on a portaled toast stays with the toast.
+The World page's row of categories (one per picked slot, `world/categories.ts`)
+is a centred scroll picker: the category under the middle is selected, and
+changing it only swaps the strip below. The Mods page is `mods/panel.tsx`,
+which stays mounted on the World page and while closed. The strip's option cards pick on tap,
+Enter or Space, never on scroll, and a pick renders in a React transition with
+a spinner on the tapped card while its component loads and the scene rebuilds. A slot with one variant has no category until a
+mod adds a second. Cards show a variant's `thumbnail` or a swatch: theme
+tokens for themes, the registry's golden-angle hue mat for the rest. The
+camera-stop toolbar is one vertical column at the scene's bottom left in both
+views: it rests above the bottom chrome, rides 12px above the open sheet, and
+where the sheet leaves it no room under the header (a phone at the Mods snap)
+it stops there and fades out. The open sheet lifts the whole picture by 40 %
+of its height with a lens shift (`setViewOffset`), never past the header, in
+every camera mode; the camera itself does not move. While the sheet is open
+`/lab` slides its search and call sheet away, and `Lab.onSheetChange` tells
+the workspace, whose `sceneSheet` state sinks the Install bar. URL params win
+on load and are not saved until changed. `world/__test__/store.test.ts`
+round-trips the store through a fake async storage,
+`world/__test__/categories.test.ts` covers hidden categories, card options and
+the centred-item rule, and `world/__test__/slots.test.ts` covers the slot
+table's mod checks, guard fallbacks, required routes and the tools slot. The Pro `Sheet` was not used: it always mounts a React
+Aria modal, which hides the rest of the page from assistive technology and
+locks scrolling. Compose conditional class names with `cn` from `@heroui/react`, never
+template literals.
+
 ### Railway
 
 The generated Nitro integration and Node production entry are preserved.
@@ -190,16 +272,38 @@ and the rest sort by count, then label. `blockLabels` in
 `workspace.constants.ts` overrides labels that Title Case gets wrong. HeroUI
 hides the aside at 768px and below and renders the same rail body (categories
 with counts, footer with home link and theme toggle) in `Sidebar.Mobile`, a
-left sheet over a blurred backdrop. `Workspace.Toolbar` is then a slim sticky
-row at the top of the main column: `WorkspaceRail.Trigger` (`Sidebar.Trigger`
-with `RiMenuLine`, "Open categories"), the current category's label and the
-one search field. Above 768px the toolbar is `display: contents`, so the search
-sits under the intro as before. The trigger calls `setMobileOpen(true)` because
+left sheet over a blurred backdrop. `Workspace.Toolbar` holds
+`WorkspaceRail.Trigger` (`Sidebar.Trigger` with `RiMenuLine`, "Open
+categories") and the current category's label, both shown only at 768px and
+below (the label also shows in the factory view's floating header on every
+width), then the one search field and the Grid/Factory view switch, which sits
+on a `backdrop-blur-md` wrapper so it reads over the scene. The trigger
+calls `setMobileOpen(true)` because
 `collapsible="none"` makes the default `toggleSidebar` a no-op. Menu items keep
 the default `closeMobileOnAction`, so picking a category closes the sheet. The
 theme tooltip portals into `mobileOverlayContainer` inside the sheet. The sheet
 and its backdrop (z-index 50, portalled after the bar) cover the ActionBar while
-open. The main column holds the heading, search and card grid (`registry/`).
+open. The main column holds the toolbar, then the card grid (`registry/`) or
+the factory scene (`factory/`).
+
+`layouts` in `workspace.tsx` gives the column and the toolbar their classes per
+view, composed with `cn` from `@heroui/react`. In the grid view the column is
+padded (`pb-32` clears the bar); the toolbar is a slim sticky row with a
+surface background at 768px and below and a plain row that scrolls with the
+grid above that. In the factory view the column is held to the viewport with no
+padding and clips to the inset card's radius, and the scene fills it edge to
+edge. The toolbar floats over the scene's top (absolute, at the grid's
+`px-6 pt-6` insets above 768px so the search does not move when the view
+switches); it ignores pointer events itself, so the scene stays draggable
+between its controls. `factory.tsx` masks only the scene's canvas with
+Tailwind mask utilities: it fades to transparent at the top down to the
+scene's `--scene-fade` (the measured toolbar plus 48px), 3rem at the bottom
+under the bar and 1.5rem at the sides, into the scene's own background. The
+scene's overlays are not masked. The toolbar and the bar's row carry
+`data-scene-chrome`, as /lab's bar and the scene's own strip, search and call
+sheet do: the fab line measures them (`fab-line/core/insets.ts`), frames its
+shots clear of them, rests its camera-stop strip above whatever sits in its
+column and places its inspector under the header, with no breakpoints.
 The search filters the grid in
 place; "/" focuses it from anywhere except a text field (text input, textarea,
 select or contenteditable) and is ignored with Cmd, Ctrl or Alt. A `Kbd` hint

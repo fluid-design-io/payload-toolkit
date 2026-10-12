@@ -1,29 +1,15 @@
 import { useFrame } from '@react-three/fiber'
 import { Grid } from '@react-three/drei'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { DoubleSide, Matrix4, Vector3 } from 'three'
-import type { InstancedMesh } from 'three'
+import type { CanvasTexture, InstancedMesh } from 'three'
 
-import type { StageProps, ThemeVariant, Tokens } from '../core/contract'
-import { pathWorld } from '../core/line'
-import { FONT, fillMat, lineMat, segs, textTexture } from '../core/three'
+import type { StageProps } from '../core/contract'
+import { FONT, fillMat, lineMat, patch, segs, textTexture, useDisposable } from '../core/three'
 import { LineShadow, Lights, label } from './shared'
 
 type V3 = [number, number, number]
 
-const shared = { gold: '#D8B865', die: '#0C1014', led: '#3DDC84', ledBusy: '#7CFF9B', ledOff: '#1E3324', claude: '#D97757', claudeEdge: '#8C3F25', claudeInk: '#FFF4EC', claudeCable: '#BDB6AC', codex: '#0E0F10', codexInk: '#F2F2F2', codexCable: '#2A2E31', spark: '#FFFFFF' }
-const epoxy = { body: '#1A1D1F', bodyEdge: '#3D4448', ink: '#A5ADB2', pin: '#C9CED1', silk: '#EEF2EC', lit: '#F0C36A', sub: '#2E4A36' }
-
-const light: Tokens = {
-  ...shared, ...epoxy, flat: false, rough: 1, shadow: 0.18, s: 45, l: 70,
-  bg: 'linear-gradient(180deg, #FFF8DC 0%, #FBF1C9 100%)', surface: '#FFFCEF', fg: '#3B3418', muted: '#8C8150', edge: '#B4A66E', dim: '#E3D9AE', accent: '#2C7DB3', floor: '#FBF4D8', floorEdge: '#E0D5A6',
-  board: '#2C6646', boardEdge: '#1E4B33', trace: '#3B7D58', ghost: '#4B8566',
-}
-const dark: Tokens = {
-  ...shared, ...epoxy, flat: false, rough: 1, shadow: 0.5, s: 30, l: 46,
-  bg: 'radial-gradient(120% 90% at 50% 20%, #2A2412 0%, #12100A 75%)', surface: '#2A2617', fg: '#FFF4CF', muted: '#B3A374', edge: '#9C8A4C', dim: '#4A4128', accent: '#7FD0F5', floor: '#1E1B10', floorEdge: '#3C3520',
-  board: '#173A28', boardEdge: '#2E6B4C', trace: '#22513A', ghost: '#24493A',
-}
 /** The room itself: amber glass, lamps, the particle counter and the gowning mat. */
 const ROOM = {
   light: { glass: '#F2D45C', lamp: '#FFE38A', sign: '#FFF6CF', mat: '#DCEAF2', counter: '#0B0E0C', digits: '#69F0A0' },
@@ -34,37 +20,41 @@ const LIGHTS = {
   dark: { amb: 0.7, sun: 0.5, hemi: 0.5, color: '#FFE9A6', sunColor: '#FFF1C4', ground: '#3A3328' },
 }
 
-function Stage({ c, mode, sim, power, line }: StageProps) {
+const dummy = new Matrix4()
+const v = new Vector3()
+/** The particle counter steps to a new reading this often, in seconds. */
+const COUNT_EVERY = 0.7
+
+function paintCounter(ctx: CanvasRenderingContext2D, room: (typeof ROOM)['light'], reading: number) {
+  ctx.fillStyle = room.counter
+  ctx.fillRect(0, 0, 512, 160)
+  ctx.fillStyle = room.digits
+  ctx.font = `500 30px ${FONT}`
+  ctx.fillText('PARTICLES ≥0.5µm / ft³', 24, 52)
+  ctx.font = `600 64px ${FONT}`
+  ctx.fillText(String(reading).padStart(3, '0'), 24, 130)
+}
+
+export function Stage({ c, mode, sim, power, line }: StageProps) {
   const room = ROOM[mode]
   const dk = mode === 'dark'
-  const W = useMemo(() => ({ x0: line.extent.x0 - 1.3, x1: line.extent.x1 + 1.2, z0: -8.6, z1: 8.2, back: 7.5, front: 1.1 }), [line])
-  const sign = useMemo(() => label('ISO 5 · CLASS 100 · GOWN UP', { fg: c.fg, bg: room.sign, stroke: c.edge, size: 34, w: 768, h: 96 }), [c, room.sign])
-  const shower = useMemo(() => label('AIR SHOWER', { fg: c.fg, size: 36, w: 512, h: 80 }), [c])
-  useEffect(() => () => { sign.dispose(); shower.dispose() }, [sign, shower])
-  const [tick, setTick] = useState(0)
-  useEffect(() => {
-    const id = setInterval(() => setTick((n) => n + 1), 700)
-    return () => clearInterval(id)
-  }, [])
-  const counterTex = useMemo(
-    () =>
-      textTexture(512, 160, (ctx) => {
-        ctx.fillStyle = room.counter
-        ctx.fillRect(0, 0, 512, 160)
-        ctx.fillStyle = room.digits
-        ctx.font = `500 30px ${FONT}`
-        ctx.fillText('PARTICLES ≥0.5µm / ft³', 24, 52)
-        ctx.font = `600 64px ${FONT}`
-        ctx.fillText(String(Math.floor(3 + Math.abs(Math.sin(tick * 1.7)) * 9 + sim.intake * 40)).padStart(3, '0'), 24, 130)
-      }),
-    [tick, sim, room],
-  )
-  useEffect(() => () => counterTex.dispose(), [counterTex])
-  const entry = useMemo(() => (sim.rig.transport.kind === 'path' ? pathWorld({ ...sim, at: line.at }, 0, new Vector3()) : null), [sim, line])
+  const W = { x0: line.extent.x0 - 1.3, x1: line.extent.x1 + 1.2, z0: -8.6, z1: 8.2, back: 7.5, front: 1.1 }
+  const sign = useDisposable(() => label('ISO 5 · CLASS 100 · GOWN UP', { fg: c.fg, bg: room.sign, stroke: c.edge, size: 34, w: 768, h: 96 }), [c, room.sign])
+  const shower = useDisposable(() => label('AIR SHOWER', { fg: c.fg, size: 36, w: 512, h: 80 }), [c])
+  const counter = useDisposable(() => textTexture(512, 160, () => {}), [room])
+  const shown = useRef<{ tex: CanvasTexture | null; tick: number; age: number }>({ tex: null, tick: -1, age: 0 })
+  const entry = line.path ? line.path.at(0, new Vector3()).add(line.at.transport) : null
   const streaks = useRef<InstancedMesh>(null)
-  const dummy = useMemo(() => new Matrix4(), [])
-  const v = useMemo(() => new Vector3(), [])
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, dt) => {
+    const k = shown.current
+    k.age += dt
+    const tick = Math.floor(k.age / COUNT_EVERY)
+    if (k.tex !== counter || k.tick !== tick) {
+      k.tex = counter
+      k.tick = tick
+      paintCounter((counter.image as HTMLCanvasElement).getContext('2d')!, room, Math.floor(3 + Math.abs(Math.sin(tick * 1.7)) * 9 + sim.intake * 40))
+      patch(counter, { needsUpdate: true })
+    }
     const m = streaks.current
     if (!m) return
     m.visible = !!entry && sim.intake > 0
@@ -77,7 +67,7 @@ function Stage({ c, mode, sim, power, line }: StageProps) {
     }
     m.instanceMatrix.needsUpdate = true
   })
-  const walls = useMemo(() => {
+  const walls = useDisposable(() => {
     const list: number[] = []
     const panels = (from: V3, to: V3, h: number, step: number) => {
       const len = Math.hypot(to[0] - from[0], to[2] - from[2])
@@ -100,7 +90,6 @@ function Stage({ c, mode, sim, power, line }: StageProps) {
     for (let k = 0; k < beams; k++) list.push(W.x0 + k * 2.6, W.back, W.z0, W.x0 + k * 2.6, W.back, W.z0 + 2.4)
     return { geo: segs(list), planes, lamps: Math.max(1, Math.floor((W.x1 - W.x0 - 2.6) / 4.8)) }
   }, [W])
-  useEffect(() => () => walls.geo.dispose(), [walls])
   const lamps = useRef<InstancedMesh>(null)
   useEffect(() => {
     const m = new Matrix4()
@@ -134,7 +123,7 @@ function Stage({ c, mode, sim, power, line }: StageProps) {
       </mesh>
       <mesh position={[(boardStop.box.x0 + boardStop.box.x1) / 2, 4.6, W.z0 + 0.06]}>
         <planeGeometry args={[3.2, 1.0]} />
-        <meshBasicMaterial map={counterTex} toneMapped={false} />
+        <meshBasicMaterial map={counter} toneMapped={false} />
       </mesh>
       {entry && (
         <group position={[entry.x + 0.9, 0, entry.z]}>
@@ -162,13 +151,4 @@ function Stage({ c, mode, sim, power, line }: StageProps) {
       <LineShadow c={c} line={line} />
     </>
   )
-}
-
-export const cleanroom: ThemeVariant = {
-  id: 'cleanroom',
-  label: 'Cleanroom fab',
-  scene: 'INT. FAB 2',
-  lens: { fov: 17, el: 32, frame: 0.98 },
-  tokens: { light, dark },
-  Stage,
 }

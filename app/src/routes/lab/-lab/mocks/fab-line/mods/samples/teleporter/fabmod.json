@@ -1,0 +1,8 @@
+{
+  "fabmod": 1,
+  "id": "teleporter",
+  "name": "Teleporter",
+  "author": "fab-line samples",
+  "description": "A socket swap style: the old part beams up in a column of light and the new one beams down into the socket.",
+  "main": "mod.js"
+}

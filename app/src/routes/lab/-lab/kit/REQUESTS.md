@@ -1,3 +1,6 @@
+> Historical. This log records requests from the phased build and is no longer
+> maintained; CONTRACT.md and the code are current.
+
 # Kit requests (append-only)
 
 P2 appends requests below; P1 answers under each. Contract proposals for the morning go here too.

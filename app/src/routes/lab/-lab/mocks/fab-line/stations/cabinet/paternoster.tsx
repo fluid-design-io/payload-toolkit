@@ -1,32 +1,14 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import type { ThreeEvent } from '@react-three/fiber'
 import type { Matrix4 } from 'three'
-import { Vector3 } from 'three'
 
-import type { CabinetProps, CabinetVariant, Tokens } from '../../core/contract'
+import type { CabinetProps, Tokens } from '../../core/contract'
 import { Body } from '../../core/scene'
-import { FONT, MONO, box, lineMat, reducedMotion, segs, textTexture, tint } from '../../core/three'
+import { FONT, MONO, box, clamp, damp, lerp, lineMat, reducedMotion, segs, textTexture, tint, useDisposable } from '../../core/three'
 import type { Piece } from '../../core/three'
 import type { Aisle } from '@/routes/lab/-lab/warehouse'
-import { Units, aisleEvents, atlasLayout, code, countText, damp, frontQuad, paintTag, showAisle, sphereAt, topQuad, useAtlasTexture } from './units'
-
-/**
- * A rotary vertical lift: one tray per aisle hangs from twin chains on a
- * vertical loop. Opening an aisle retracts the presented tray, turns the
- * loop the short way round until that aisle's tray reaches the access
- * window, then slides it out onto the counter. Everything goes in and out
- * through that window, so it is also where parts off the table rest.
- */
-const P = { cx: -12.0, w: 3.6, d: 0.4, h: 0.34, hang: 0.1, r: 0.75, zf: -2.75, yb: 1.35, L: 10.08, win: 2.6, slide: 0.5 }
-const RUN = (P.L - 2 * Math.PI * P.r) / 2
-const YT = P.yb + RUN
-const ZC = P.zf - P.r
-const ZB = P.zf - 2 * P.r
-const SW = P.win - P.yb
-const H = YT + P.r + 0.22
-const HX = { x0: P.cx - P.w / 2 - 0.25, x1: P.cx + P.w / 2 + 0.25, z0: ZB - P.d / 2 - 0.12, z1: P.zf + P.d / 2 + 0.08 }
-const SCREEN = { x: HX.x1 + 0.86, y: 2.65, z: -2.4, w: 1.44, h: 2.3, rot: 0.32 }
-const TRAY_Y = -P.hang - P.h
+import { CROWN, H, HX, P, RUN, SCREEN, SW, TRAY_Y, YT, ZB, ZC } from './paternoster.data'
+import { Units, atlasLayout, code, countText, frontQuad, paintTag, sphereAt, topQuad, useAisleEvents, useAtlasTexture } from './units'
 
 /** Pivot height and depth `s` units round the loop: up the front run, over the top, down the back, under the bottom. */
 function loop(s: number, out: { y: number; z: number }) {
@@ -41,10 +23,6 @@ function loop(s: number, out: { y: number; z: number }) {
   const a = Math.PI + s / P.r
   out.y = P.yb + P.r * Math.sin(a); out.z = ZC + P.r * Math.cos(a)
   return out
-}
-
-function drawer(aisle: number, out: Vector3) {
-  return out.set(P.cx - 1.2 + (aisle % 6) * 0.48, P.win + TRAY_Y + 0.04, P.zf + P.slide)
 }
 
 const TRAY: Piece[] = [
@@ -63,7 +41,6 @@ const QUADS = [
   topQuad(-P.w / 2 + 0.05, P.w / 2 - 0.05, -P.d / 2 + 0.05, P.d / 2 - 0.05, TRAY_Y + 0.032),
 ]
 const KINDS = [{ w: 1024, h: 84 }, { w: 1024, h: 120 }] as const
-const CROWN = { w: 3.4, h: 0.62, y: H + 0.42 }
 const SPHERE = sphereAt(P.cx, H / 2, ZC + 0.3, 3.8)
 
 /** A tray's bed, seen from above: each registry's bays as blocks of 4 × 5 bins, a dot per part. */
@@ -73,7 +50,7 @@ function paintBed(ctx: CanvasRenderingContext2D, w: number, h: number, a: Aisle,
   ctx.globalAlpha = dim ? 0.3 : 1
   const bays = a.racks.reduce((n, r) => n + r.bays, 0)
   const gaps = a.racks.length - 1
-  const unit = Math.max(3, Math.min(11, Math.floor((w - 40 - gaps * 14) / (bays * 5))))
+  const unit = clamp(Math.floor((w - 40 - gaps * 14) / (bays * 5)), 3, 11)
   const top = h - 12 - unit * 5
   let x = 20
   const fill = tint(a.hue, c.s, c.l)
@@ -147,34 +124,32 @@ function paintScreen(ctx: CanvasRenderingContext2D, w: number, h: number, aisles
 }
 
 function Housing({ c }: { c: Tokens }) {
-  const pieces = useMemo((): Piece[] => {
-    const W = HX.x1 - HX.x0, D = HX.z1 - HX.z0, cz = (HX.z0 + HX.z1) / 2
-    const ow = P.w / 2 + 0.07, oy0 = P.win + TRAY_Y - 0.06, oy1 = P.win - P.hang + 0.06
-    return [
-      { geo: box(W, 0.15, D), at: [P.cx, 0.075, cz] },
-      { geo: box(W, 0.14, D), at: [P.cx, H - 0.07, cz] },
-      { geo: box(W, H, 0.05), at: [P.cx, H / 2, HX.z0 + 0.025] },
-      { geo: box(0.05, H, D), at: [HX.x0 + 0.025, H / 2, cz] },
-      { geo: box(0.08, H, 0.08), at: [HX.x0 + 0.04, H / 2, HX.z1 - 0.04] },
-      { geo: box(0.08, H, 0.08), at: [HX.x1 - 0.04, H / 2, HX.z1 - 0.04] },
-      { geo: box(0.08, H, 0.08), at: [HX.x1 - 0.04, H / 2, HX.z0 + 0.04] },
-      { geo: box(0.05, 0.05, D), at: [HX.x1 - 0.04, YT + 0.2, cz] },
-      { geo: box(0.05, 0.05, D), at: [HX.x1 - 0.04, P.yb - 0.2, cz] },
-      { geo: box(P.w + 0.3, 0.05, 0.5), at: [P.cx, P.win + TRAY_Y - 0.026, HX.z1 + 0.17] },
-      { geo: box(P.w + 0.24, 0.05, 0.05), at: [P.cx, oy1, HX.z1 - 0.02] },
-      { geo: box(P.w + 0.24, 0.05, 0.05), at: [P.cx, oy0, HX.z1 - 0.02] },
-      { geo: box(0.05, oy1 - oy0, 0.05), at: [P.cx - ow - 0.05, (oy0 + oy1) / 2, HX.z1 - 0.02] },
-      { geo: box(0.05, oy1 - oy0, 0.05), at: [P.cx + ow + 0.05, (oy0 + oy1) / 2, HX.z1 - 0.02] },
-      { geo: box(0.5, 0.06, 0.06), at: [HX.x1 + 0.2, SCREEN.y, SCREEN.z - 0.04] },
-      { geo: box(P.w + 0.02, YT - P.yb, 0.04), at: [P.cx, (YT + P.yb) / 2, ZC] },
-    ]
-  }, [])
+  const W = HX.x1 - HX.x0, D = HX.z1 - HX.z0, cz = (HX.z0 + HX.z1) / 2
+  const ow = P.w / 2 + 0.07, oy0 = P.win + TRAY_Y - 0.06, oy1 = P.win - P.hang + 0.06
+  const pieces: Piece[] = [
+    { geo: box(W, 0.15, D), at: [P.cx, 0.075, cz] },
+    { geo: box(W, 0.14, D), at: [P.cx, H - 0.07, cz] },
+    { geo: box(W, H, 0.05), at: [P.cx, H / 2, HX.z0 + 0.025] },
+    { geo: box(0.05, H, D), at: [HX.x0 + 0.025, H / 2, cz] },
+    { geo: box(0.08, H, 0.08), at: [HX.x0 + 0.04, H / 2, HX.z1 - 0.04] },
+    { geo: box(0.08, H, 0.08), at: [HX.x1 - 0.04, H / 2, HX.z1 - 0.04] },
+    { geo: box(0.08, H, 0.08), at: [HX.x1 - 0.04, H / 2, HX.z0 + 0.04] },
+    { geo: box(0.05, 0.05, D), at: [HX.x1 - 0.04, YT + 0.2, cz] },
+    { geo: box(0.05, 0.05, D), at: [HX.x1 - 0.04, P.yb - 0.2, cz] },
+    { geo: box(P.w + 0.3, 0.05, 0.5), at: [P.cx, P.win + TRAY_Y - 0.026, HX.z1 + 0.17] },
+    { geo: box(P.w + 0.24, 0.05, 0.05), at: [P.cx, oy1, HX.z1 - 0.02] },
+    { geo: box(P.w + 0.24, 0.05, 0.05), at: [P.cx, oy0, HX.z1 - 0.02] },
+    { geo: box(0.05, oy1 - oy0, 0.05), at: [P.cx - ow - 0.05, (oy0 + oy1) / 2, HX.z1 - 0.02] },
+    { geo: box(0.05, oy1 - oy0, 0.05), at: [P.cx + ow + 0.05, (oy0 + oy1) / 2, HX.z1 - 0.02] },
+    { geo: box(0.5, 0.06, 0.06), at: [HX.x1 + 0.2, SCREEN.y, SCREEN.z - 0.04] },
+    { geo: box(P.w + 0.02, YT - P.yb, 0.04), at: [P.cx, (YT + P.yb) / 2, ZC] },
+  ]
   return <Body id="paternoster-housing" c={c} fill={c.surface} edge={c.edge} pieces={pieces} />
 }
 
 /** Chains, sprockets and the glazing ticks on the front and the open side. */
 function Rigging({ c }: { c: Tokens }) {
-  const geo = useMemo(() => {
+  const geo = useDisposable(() => {
     const out: number[] = []
     const p = { y: 0, z: 0 }, q = { y: 0, z: 0 }
     for (const x of [P.cx - P.w / 2 - 0.04, P.cx + P.w / 2 + 0.04]) {
@@ -208,30 +183,27 @@ function Rigging({ c }: { c: Tokens }) {
     hatch(HX.x1 + 0.01, 0.7, HX.z1 - 0.8, true)
     return segs(out)
   }, [])
-  useEffect(() => () => geo.dispose(), [geo])
   return <lineSegments geometry={geo} material={lineMat(c.dim)} />
 }
 
-function Screen({ aisles, active, matches, onOpen, c, tip, guard }: CabinetProps) {
-  const tex = useMemo(() => textTexture(KEYS.px.w, KEYS.px.h, (ctx) => paintScreen(ctx, KEYS.px.w, KEYS.px.h, aisles, active, matches, c)), [aisles, active, matches, c])
-  useEffect(() => () => tex.dispose(), [tex])
-  const row = (e: ThreeEvent<PointerEvent | MouseEvent>) => {
-    if (!e.uv) return -1
-    const x = e.uv.x * KEYS.px.w, y = (1 - e.uv.y) * KEYS.px.h
-    const col = Math.floor((x - KEYS.pad) / ((KEYS.px.w - KEYS.pad * 2) / KEYS.cols))
-    const r = Math.floor((y - KEYS.header) / ((KEYS.px.h - KEYS.header - KEYS.pad) / keyRows(aisles.length)))
-    const i = r * KEYS.cols + col
-    return col >= 0 && col < KEYS.cols && r >= 0 && i < aisles.length ? i : -1
-  }
-  const hover = useRef(-1)
+/** The call panel's key under a pointer event, from where it hits the panel's texture. */
+const keyAt = (e: ThreeEvent<PointerEvent | MouseEvent>, n: number) => {
+  if (!e.uv) return -1
+  const x = e.uv.x * KEYS.px.w, y = (1 - e.uv.y) * KEYS.px.h
+  const col = Math.floor((x - KEYS.pad) / ((KEYS.px.w - KEYS.pad * 2) / KEYS.cols))
+  const r = Math.floor((y - KEYS.header) / ((KEYS.px.h - KEYS.header - KEYS.pad) / keyRows(n)))
+  const i = r * KEYS.cols + col
+  return col >= 0 && col < KEYS.cols && r >= 0 && i < n ? i : -1
+}
+
+function Screen(props: CabinetProps) {
+  const { aisles, active, matches, c } = props
+  const tex = useDisposable(() => textTexture(KEYS.px.w, KEYS.px.h, (ctx) => paintScreen(ctx, KEYS.px.w, KEYS.px.h, aisles, active, matches, c)), [aisles, active, matches, c])
+  const { events } = useAisleEvents(props, keyAt)
   return (
     <group position={[SCREEN.x, SCREEN.y, SCREEN.z]} rotation={[0, SCREEN.rot, 0]}>
       <Body id="paternoster-bezel" c={c} fill={c.surface} edge={c.edge} pieces={[{ geo: box(SCREEN.w + 0.1, SCREEN.h + 0.1, 0.06), at: [0, 0, -0.035] }]} />
-      <mesh
-        onClick={(e) => { e.stopPropagation(); const i = row(e); if (i >= 0 && !guard.moved) onOpen(i) }}
-        onPointerMove={(e) => { e.stopPropagation(); const i = row(e); if (i !== hover.current) { hover.current = i; if (i >= 0) showAisle({ aisles, tip }, e.nativeEvent, i); else tip.hide() } tip.move(e.nativeEvent) }}
-        onPointerOut={() => { hover.current = -1; tip.hide() }}
-      >
+      <mesh {...events}>
         <planeGeometry args={[SCREEN.w, SCREEN.h]} />
         <meshBasicMaterial map={tex} toneMapped={false} />
       </mesh>
@@ -241,7 +213,7 @@ function Screen({ aisles, active, matches, onOpen, c, tip, guard }: CabinetProps
 
 /** The "now serving" sign on the crown: the tray at the window, large enough to read from the overview. */
 function Crown({ aisle, i, matches, c }: { aisle: Aisle; i: number; matches: number[] | null; c: Tokens }) {
-  const tex = useMemo(
+  const tex = useDisposable(
     () =>
       textTexture(1024, 188, (ctx) => {
         ctx.fillStyle = c.surface
@@ -269,12 +241,11 @@ function Crown({ aisle, i, matches, c }: { aisle: Aisle; i: number; matches: num
       }),
     [aisle, i, matches, c],
   )
-  useEffect(() => () => tex.dispose(), [tex])
-  const pieces = useMemo((): Piece[] => [
+  const pieces: Piece[] = [
     { geo: box(CROWN.w + 0.1, CROWN.h + 0.1, 0.08), at: [0, 0, -0.045] },
     { geo: box(0.06, CROWN.y - CROWN.h / 2 - H, 0.06), at: [-CROWN.w / 2 + 0.3, -(CROWN.y - H) / 2 - CROWN.h / 4, -0.05] },
     { geo: box(0.06, CROWN.y - CROWN.h / 2 - H, 0.06), at: [CROWN.w / 2 - 0.3, -(CROWN.y - H) / 2 - CROWN.h / 4, -0.05] },
-  ], [])
+  ]
   return (
     <group position={[P.cx, CROWN.y, HX.z1 - 0.3]}>
       <Body id="paternoster-crown" c={c} fill={c.surface} edge={c.edge} pieces={pieces} />
@@ -286,10 +257,10 @@ function Crown({ aisle, i, matches, c }: { aisle: Aisle; i: number; matches: num
   )
 }
 
-function Paternoster(props: CabinetProps) {
+export function Paternoster(props: CabinetProps) {
   const { aisles, active, matches, c } = props
   const n = aisles.length
-  const atlas = useMemo(() => atlasLayout(n, KINDS), [n])
+  const atlas = atlasLayout(n, KINDS)
   const tex = useAtlasTexture(
     atlas,
     n,
@@ -301,8 +272,10 @@ function Paternoster(props: CabinetProps) {
     [atlas, aisles, matches, active, c],
   )
   const st = useRef({ phase: active, vel: 0, off: new Float32Array(n), p: { y: 0, z: 0 } })
-  if (st.current.off.length !== n) st.current.off = new Float32Array(n)
-  const hover = useRef(-1)
+  useLayoutEffect(() => {
+    if (st.current.off.length !== n) st.current.off = new Float32Array(n)
+  })
+  const { hover, events } = useAisleEvents(props)
   const spacing = P.L / Math.max(1, n)
   const tick = (dt: number) => {
     const s = st.current
@@ -312,7 +285,7 @@ function Paternoster(props: CabinetProps) {
     let moved = false, out = false
     for (let i = 0; i < n; i++) {
       const want = parked && i === active ? P.slide : parked && i === hover.current ? 0.07 : 0
-      const next = reducedMotion ? want : damp(s.off[i], want, i === active ? 7 : 12, dt)
+      const next = reducedMotion ? want : lerp(s.off[i], want, damp(dt, i === active ? 7 : 12))
       if (Math.abs(next - s.off[i]) > 1e-4) moved = true
       s.off[i] = next
       if (i !== active && next > 0.05) out = true
@@ -321,7 +294,7 @@ function Paternoster(props: CabinetProps) {
     if (!out && (Math.abs(delta) > 1e-3 || Math.abs(s.vel) > 1e-3)) {
       const W = 4.2
       s.vel += (W * W * delta - 2 * W * s.vel) * dt
-      s.vel = Math.max(-7, Math.min(7, s.vel))
+      s.vel = clamp(s.vel, -7, 7)
       s.phase += s.vel * dt
       moved = true
     } else if (Math.abs(delta) <= 1e-3) {
@@ -335,7 +308,6 @@ function Paternoster(props: CabinetProps) {
     const p = loop(SW + (i - s.phase) * spacing, s.p)
     m.makeTranslation(P.cx, p.y, p.z + s.off[i])
   }
-  const events = useMemo(() => aisleEvents(props, hover), [props.aisles, props.onOpen, props.tip, props.guard])
   return (
     <group>
       <Units n={n} pieces={TRAY} quads={QUADS} atlas={atlas} texture={tex} place={place} tick={tick} active={active} sphere={SPHERE} c={c} events={events} keyId="paternoster" />
@@ -347,12 +319,3 @@ function Paternoster(props: CabinetProps) {
   )
 }
 
-export const paternoster: CabinetVariant = {
-  id: 'paternoster',
-  label: 'Paternoster',
-  footprint: { x0: HX.x0, x1: SCREEN.x + SCREEN.w / 2 + 0.05, z0: HX.z0, z1: HX.z1 + 0.45, h: CROWN.y + CROWN.h / 2 },
-  frame: [[HX.x0 - 0.2, 0.9, HX.z1], [HX.x0 - 0.2, H, HX.z0], [HX.x0 - 0.2, CROWN.y + 0.4, HX.z1], [SCREEN.x + 0.7, CROWN.y + 0.4, HX.z1], [SCREEN.x + 0.7, 0.9, HX.z1 + 0.6]],
-  el: 16,
-  drawer,
-  Component: Paternoster,
-}

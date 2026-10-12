@@ -31,6 +31,7 @@ function createWorkspaceStore(setup: Setup, view: View) {
     output: 'command',
     panel: null,
     detail: null,
+    sceneSheet: false,
   }
   return createStore(initial, ({ setState }): WorkspaceActions => {
     const patchSetup = (patch: Partial<Setup>) =>
@@ -60,6 +61,7 @@ function createWorkspaceStore(setup: Setup, view: View) {
         setState((state) => (state.panel === panel ? { ...state, panel: null } : state)),
       openDetail: (detail) => setState((state) => ({ ...state, detail })),
       closeDetail: () => setState((state) => ({ ...state, detail: null })),
+      setSceneSheet: (sceneSheet) => setState((state) => ({ ...state, sceneSheet })),
     }
   })
 }

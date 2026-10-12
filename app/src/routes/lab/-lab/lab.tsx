@@ -1,177 +1,137 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
-import type { ComponentType } from 'react'
+import { Button, ToggleButton, Tooltip } from '@heroui/react'
+import { RiMoonLine, RiSunLine, RiVolumeMuteLine, RiVolumeUpLine } from '@remixicon/react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 
 import { catalog as rawCatalog } from '../../workspace/-workspace/workspace.catalog'
 import { defaultSetup } from '../../workspace/-workspace/workspace.constants'
+import { toggleTheme, useWorkspaceTheme } from '../../workspace/-workspace/workspace.theme'
 import { toCatalog, toCommand } from '../../workspace/-workspace/workspace.utils'
-import type { Setup } from '../../workspace/-workspace/workspace.types'
+import type { Catalog, Setup } from '../../workspace/-workspace/workspace.types'
 import { setMuted, useMuted } from './kit/sound'
-import { mocks } from './lab.mocks'
-import type { Focus, Lab, MockProps } from './lab.types'
+import type { Focus, Lab } from './lab.types'
 import { toWarehouse, viralItems } from './warehouse'
 
-const catalogs = {
-  real: toCatalog(rawCatalog),
-  viral: toCatalog(viralItems(rawCatalog)),
-}
-const warehouses = { real: toWarehouse(catalogs.real), viral: toWarehouse(catalogs.viral) }
-const order = new Map(catalogs.viral.items.map((item, index) => [item.ref, index]))
-const views = new Map<string, ComponentType<MockProps>>(mocks.map((mock) => [mock.id, lazy(mock.load)]))
+const FabLine = lazy(() => import('./mocks/fab-line'))
 
-function useTheme(): Lab['theme'] {
-  const read = (): Lab['theme'] => (document.documentElement.dataset.theme === 'mouve-dark' ? 'dark' : 'light')
-  const [theme, setTheme] = useState(read)
-  useEffect(() => {
-    const observer = new MutationObserver(() => setTheme(read()))
-    observer.observe(document.documentElement, { attributeFilter: ['data-theme'] })
-    return () => observer.disconnect()
-  }, [])
-  return theme
+function toScale(catalog: Catalog) {
+  return {
+    catalog,
+    warehouse: toWarehouse(catalog),
+    order: new Map(catalog.items.map((item, index) => [item.ref, index])),
+  }
 }
+
+const real = toScale(toCatalog(rawCatalog))
+let viral: ReturnType<typeof toScale> | undefined
+
+/** The viral catalog is about 2,400 items, so it is built the first time something asks for it. */
+function scaleOf(scale: Lab['scale']) {
+  if (scale === 'real') return real
+  viral ??= toScale(toCatalog(viralItems(rawCatalog)))
+  return viral
+}
+
+/**
+ * The viral catalog starts with the real items in their order and adds only
+ * synthetic refs, so refs that are all real command and sort the same against
+ * the real catalog and never build the viral one.
+ */
+const scaleFor = (refs: readonly string[]) => scaleOf(refs.every((ref) => real.order.has(ref)) ? 'real' : 'viral')
 
 function useLab(scale: Lab['scale']): Lab {
   const [setup, setSetup] = useState<Setup>({ ...defaultSetup, items: [] })
   const [focus, setFocus] = useState<Focus>({ category: 'all', query: '' })
-  const theme = useTheme()
-  return useMemo(() => {
-    const selected = new Set(setup.items)
-    return {
-      catalog: catalogs[scale],
-      warehouse: warehouses[scale],
-      scale,
-      setup,
-      selected,
-      theme,
-      chrome: new URLSearchParams(location.search).get('chrome') === 'embedded' ? 'embedded' : 'full',
-      focus,
-      setFocus: (next) => setFocus((current) => ({ ...current, ...next })),
-      command: toCommand(setup, catalogs.viral.items),
-      toggle: (ref) =>
-        setSetup((current) => {
-          const items = current.items.includes(ref)
-            ? current.items.filter((item) => item !== ref)
-            : [...current.items, ref].sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0))
-          return { ...current, items }
-        }),
-      clear: () => setSetup((current) => ({ ...current, items: [] })),
-      set: (key, value) => setSetup((current) => ({ ...current, [key]: value })),
-    }
-  }, [setup, theme, scale, focus])
+  const theme = useWorkspaceTheme()
+  const { catalog, warehouse } = scaleOf(scale)
+  return {
+    catalog,
+    warehouse,
+    scale,
+    setup,
+    selected: new Set(setup.items),
+    theme,
+    chrome: new URLSearchParams(location.search).get('chrome') === 'embedded' ? 'embedded' : 'full',
+    focus,
+    setFocus: (next) => setFocus((current) => ({ ...current, ...next })),
+    command: toCommand(setup, scaleFor(setup.items).catalog.items),
+    toggle: (ref) =>
+      setSetup((current) => {
+        if (current.items.includes(ref)) return { ...current, items: current.items.filter((item) => item !== ref) }
+        const items = [...current.items, ref]
+        const { order } = scaleFor(items)
+        return { ...current, items: items.sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0)) }
+      }),
+    clear: () => setSetup((current) => ({ ...current, items: [] })),
+    set: (key, value) => setSetup((current) => ({ ...current, [key]: value })),
+  }
 }
-
-function toggleTheme() {
-  const root = document.documentElement
-  const next = root.dataset.theme === 'mouve-dark' ? 'light' : 'dark'
-  root.dataset.theme = `mouve-${next}`
-  try {
-    localStorage.setItem('theme', next)
-  } catch {}
-}
-
-const pillButton = 'shrink-0 rounded-full px-3 py-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent'
 
 /**
- * A throwaway bench for 3D workspace concepts. Every mock gets the real
- * catalog and one shared Setup, so switching keeps the build. Keys 1 to 9
- * and the arrows switch mocks; the URL keeps the current one. On phones the
- * mock list is a native select; the sound toggle is shared by every mock
- * through the kit's `lab-sound` store.
+ * A throwaway bench for the fab line, the 3D scene the workspace's factory
+ * view embeds. It gets the catalog and one Setup, which the item-count toggle
+ * keeps while it remounts the scene at the other scale; the URL keeps the
+ * scale. The sound toggle reaches the scene through the kit's `lab-sound`
+ * store.
  */
 export function LabScreen() {
   const [scale, setScale] = useState<Lab['scale']>(() =>
     new URLSearchParams(location.search).get('scale') === 'viral' ? 'viral' : 'real',
   )
   const lab = useLab(scale)
-  const muted = useMuted(lab.chrome)
-  const [id, setId] = useState(() => new URLSearchParams(location.search).get('mock') ?? mocks[0].id)
-  const index = Math.max(0, mocks.findIndex((mock) => mock.id === id))
-  const current = mocks[index]
-  const View = views.get(current.id)!
+  const muted = useMuted()
 
   useEffect(() => {
     const url = new URL(location.href)
-    url.searchParams.set('mock', current.id)
     if (scale === 'viral') url.searchParams.set('scale', 'viral')
     else url.searchParams.delete('scale')
     history.replaceState(null, '', url)
-  }, [current.id, scale])
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement) return
-      const digit = Number(event.key)
-      if (digit >= 1 && digit <= mocks.length) setId(mocks[digit - 1].id)
-      if (event.key === 'ArrowRight' && event.shiftKey) setId(mocks[(index + 1) % mocks.length].id)
-      if (event.key === 'ArrowLeft' && event.shiftKey) setId(mocks[(index - 1 + mocks.length) % mocks.length].id)
-    }
-    addEventListener('keydown', onKey)
-    return () => removeEventListener('keydown', onKey)
-  }, [index])
+  }, [scale])
 
   return (
     <div className="relative h-svh w-full overflow-hidden bg-background text-foreground">
-      <Suspense fallback={<div className="grid h-full place-items-center text-muted">Loading {current.title}…</div>}>
-        <View key={`${current.id}-${scale}`} lab={lab} />
+      <Suspense fallback={<div className="grid h-full place-items-center text-muted">Loading Fab line…</div>}>
+        <FabLine key={scale} lab={lab} />
       </Suspense>
       <nav
         aria-label="Lab"
-        className="pointer-events-auto absolute inset-x-0 top-3 z-50 mx-auto flex w-fit max-w-[calc(100%-24px)] items-center gap-1 overflow-x-auto rounded-full border border-border bg-surface/85 p-1 text-xs shadow-lg backdrop-blur"
+        className="pointer-events-auto absolute inset-x-0 top-3 z-50 mx-auto flex w-fit max-w-[calc(100%-24px)] items-center gap-1 overflow-x-auto rounded-full border border-border bg-surface/85 p-1 shadow-overlay backdrop-blur"
         style={{ marginTop: 'env(safe-area-inset-top)' }}
+        data-scene-chrome
       >
-        <label className="flex shrink-0 items-center gap-1.5 pl-2 sm:hidden">
-          <span className="sr-only">Mock</span>
-          <select
-            value={current.id}
-            onChange={(e) => setId(e.target.value)}
-            className="max-w-[46vw] rounded-full bg-transparent py-1.5 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-accent"
-            data-mock-select
+        <Tooltip delay={400} closeDelay={0}>
+          <ToggleButton
+            size="sm"
+            variant="ghost"
+            isSelected={scale === 'viral'}
+            onChange={(on) => setScale(on ? 'viral' : 'real')}
+            className="shrink-0 tabular-nums"
           >
-            {mocks.map((mock, position) => (
-              <option key={mock.id} value={mock.id}>
-                {position + 1} {mock.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="hidden items-center gap-1 sm:flex">
-          {mocks.map((mock, position) => (
-            <button
-              key={mock.id}
-              type="button"
-              title={mock.pitch}
-              aria-current={mock.id === current.id ? 'page' : undefined}
-              onClick={() => setId(mock.id)}
-              className={`${pillButton} ${mock.id === current.id ? 'bg-accent text-accent-foreground' : 'text-muted hover:bg-default'}`}
-            >
-              <span className="mr-1 opacity-60">{position + 1}</span>
-              {mock.title}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          title="Swap in about 2,400 synthetic items to test organization at scale"
-          aria-pressed={scale === 'viral'}
-          onClick={() => setScale(scale === 'real' ? 'viral' : 'real')}
-          className={`${pillButton} tabular-nums ${scale === 'viral' ? 'bg-warning text-warning-foreground' : 'text-muted hover:bg-default'}`}
-        >
-          {lab.catalog.items.length.toLocaleString()}
-          <span className="max-sm:sr-only"> items</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setMuted(!muted)}
-          aria-pressed={!muted}
-          aria-label={muted ? 'Sound off' : 'Sound on'}
-          title={muted ? 'Sound is off. Turn it on.' : 'Sound is on. Mute.'}
-          data-sound-toggle={muted ? 'off' : 'on'}
-          className={`${pillButton} min-w-10 text-center ${muted ? 'text-muted line-through decoration-2 hover:bg-default' : 'text-foreground hover:bg-default'}`}
-        >
-          ♪
-        </button>
-        <button type="button" onClick={toggleTheme} aria-label={lab.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} className={`${pillButton} min-w-10 text-center text-muted hover:bg-default`}>
-          {lab.theme === 'dark' ? '☀' : '☾'}
-        </button>
+            {lab.catalog.items.length.toLocaleString()}
+            <span className="max-sm:sr-only"> items</span>
+          </ToggleButton>
+          <Tooltip.Content placement="bottom">{scale === 'viral' ? 'Back to the real catalog' : 'Swap in about 2,400 synthetic items to test organization at scale'}</Tooltip.Content>
+        </Tooltip>
+        <Tooltip delay={400} closeDelay={0}>
+          <ToggleButton
+            size="sm"
+            variant="ghost"
+            isIconOnly
+            isSelected={!muted}
+            onChange={(on) => setMuted(!on)}
+            aria-label={muted ? 'Sound off' : 'Sound on'}
+            className="shrink-0"
+            data-sound-toggle={muted ? 'off' : 'on'}
+          >
+            {muted ? <RiVolumeMuteLine aria-hidden /> : <RiVolumeUpLine aria-hidden />}
+          </ToggleButton>
+          <Tooltip.Content placement="bottom">{muted ? 'Turn sound on' : 'Mute'}</Tooltip.Content>
+        </Tooltip>
+        <Tooltip delay={400} closeDelay={0}>
+          <Button size="sm" variant="ghost" isIconOnly onPress={toggleTheme} aria-label={lab.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} className="shrink-0">
+            {lab.theme === 'dark' ? <RiSunLine aria-hidden /> : <RiMoonLine aria-hidden />}
+          </Button>
+          <Tooltip.Content placement="bottom">{lab.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}</Tooltip.Content>
+        </Tooltip>
       </nav>
     </div>
   )

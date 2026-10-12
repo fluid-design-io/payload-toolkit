@@ -1,11 +1,12 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import { Color, NoToneMapping } from 'three'
-import type { Group, Texture } from 'three'
+import type { Group } from 'three'
 
-import type { LineLayout } from '../core/contract'
-import { textTexture } from '../core/three'
+import { keepAnimating } from '../../../kit/busy'
+import type { LineLayout, Mode } from '../core/contract'
+import { quadGeometry, seeded, textTexture, useDisposable } from '../core/three'
 
 /**
  * What a theme does to the finished frame, without an EffectComposer (the fx
@@ -20,11 +21,16 @@ export type Grade = {
   exact?: boolean
 }
 
+/** A grade built once per mode, on first use. */
+export function perMode(make: (mode: Mode) => Grade) {
+  const made: Partial<Record<Mode, Grade>> = {}
+  return (mode: Mode) => (made[mode] ??= make(mode))
+}
+
 let seq = 0
 export function Screen({ grade }: { grade: Grade }) {
   const gl = useThree((s) => s.gl)
   const scene = useThree((s) => s.scene)
-  const invalidate = useThree((s) => s.invalidate)
   useEffect(() => {
     const canvas = gl.domElement
     const host = canvas.parentElement
@@ -52,15 +58,15 @@ export function Screen({ grade }: { grade: Grade }) {
     }
     if (grade.paper) scene.background = new Color(grade.paper)
     if (grade.exact) gl.toneMapping = NoToneMapping
-    invalidate()
+    keepAnimating()
     return () => {
       canvas.style.filter = prev.filter
       scene.background = prev.background
       gl.toneMapping = prev.tone
       added.forEach((el) => el.remove())
-      invalidate()
+      keepAnimating()
     }
-  }, [gl, scene, invalidate, grade])
+  }, [gl, scene, grade])
   return null
 }
 
@@ -71,8 +77,7 @@ export function grainUrl(size = 192, seed = 7) {
   canvas.width = canvas.height = size
   const ctx = canvas.getContext('2d')!
   const img = ctx.createImageData(size, size)
-  let s = seed
-  const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647)
+  const rnd = seeded(seed)
   for (let i = 0; i < size * size; i++) {
     const v = 255 - Math.floor(Math.pow(rnd(), 6) * 255)
     img.data.set([v, v, v, 255], i * 4)
@@ -96,13 +101,6 @@ export function useHideOnCloseUp(cam: { closeUp: boolean }) {
   return ref
 }
 
-/** Canvas textures made from `deps`, disposed when they change or unmount. */
-export function useTextures<T extends Texture[]>(make: () => T, deps: unknown[]) {
-  const list = useMemo(make, deps)
-  useEffect(() => () => list.forEach((t) => t.dispose()), [list])
-  return list
-}
-
 export const hexOf = (rgb: readonly number[]) => `#${rgb.map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, '0')).join('')}`
 export const rgbOf = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
 /** `t` of the way from `a` to `b`. */
@@ -115,39 +113,47 @@ export { textTexture }
 
 /**
  * A soft shadow pooled under each station's footprint, leaning toward +x +z,
- * baked into one canvas texture per size so it follows the layout without a
- * depth pass. `strength` is the darkest opacity under the body.
+ * baked into one canvas atlas with a cell per station and drawn as one mesh
+ * of quads, so it follows the layout without a depth pass. `strength` is the
+ * darkest opacity under the body.
  */
 export function FootShadows({ line, color, strength, lean = [0.25, 0.35], pad = 0.9 }: { line: LineLayout; color: string; strength: number; lean?: [number, number]; pad?: number }) {
-  const blobs = useMemo(
-    () =>
-      line.stops.map((stop) => {
-        const b = stop.box
-        const w = b.x1 - b.x0 + pad * 2, d = b.z1 - b.z0 + pad * 2
-        const tex = textTexture(256, Math.max(32, Math.round((256 * d) / w)), (ctx) => {
-          const W = ctx.canvas.width, H = ctx.canvas.height
-          const px = (pad / w) * W, pz = (pad / d) * H
-          ctx.filter = `blur(${Math.round(Math.min(px, pz) * 0.55)}px)`
-          ctx.fillStyle = color
-          ctx.beginPath()
-          ctx.roundRect(px * 0.75, pz * 0.75, W - px * 1.5, H - pz * 1.5, Math.min(px, pz))
-          ctx.fill()
-        })
-        const h = Math.min(b.h, 3)
-        return { tex, w, d, x: (b.x0 + b.x1) / 2 + lean[0] * h, z: (b.z0 + b.z1) / 2 + lean[1] * h, id: stop.id }
-      }),
-    [line, color, pad, lean[0], lean[1]],
-  )
-  useEffect(() => () => blobs.forEach((b) => b.tex.dispose()), [blobs])
+  const shadow = useDisposable(() => {
+    const W = 256, GAP = 2
+    let top = 0
+    const cells = line.stops.map((stop) => {
+      const b = stop.box
+      const w = b.x1 - b.x0 + pad * 2, d = b.z1 - b.z0 + pad * 2
+      const H = Math.max(32, Math.round((W * d) / w)), y = top
+      top += H + GAP
+      const h = Math.min(b.h, 3)
+      return { w, d, H, y, x: (b.x0 + b.x1) / 2 + lean[0] * h, z: (b.z0 + b.z1) / 2 + lean[1] * h }
+    })
+    const height = Math.max(1, top - GAP)
+    const map = textTexture(W, height, (ctx) => {
+      for (const { w, d, H, y } of cells) {
+        const px = (pad / w) * W, pz = (pad / d) * H
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(0, y, W, H)
+        ctx.clip()
+        ctx.translate(0, y)
+        ctx.filter = `blur(${Math.round(Math.min(px, pz) * 0.55)}px)`
+        ctx.fillStyle = color
+        ctx.beginPath()
+        ctx.roundRect(px * 0.75, pz * 0.75, W - px * 1.5, H - pz * 1.5, Math.min(px, pz))
+        ctx.fill()
+        ctx.restore()
+      }
+    })
+    const corners = cells.flatMap(({ x, z, w, d }) => [x - w / 2, 0.003, z + d / 2, x + w / 2, 0.003, z + d / 2, x + w / 2, 0.003, z - d / 2, x - w / 2, 0.003, z - d / 2])
+    const geo = quadGeometry(cells.map(({ y, H }) => [0, 1 - (y + H) / height, 1, 1 - y / height] as const), corners)
+    return { map, geo }
+  }, [line, color, pad, lean[0], lean[1]])
   if (strength <= 0) return null
   return (
-    <>
-      {blobs.map((b) => (
-        <mesh key={b.id} position={[b.x, 0.003, b.z]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1}>
-          <planeGeometry args={[b.w, b.d]} />
-          <meshBasicMaterial map={b.tex} transparent opacity={strength} depthWrite={false} toneMapped={false} />
-        </mesh>
-      ))}
-    </>
+    <mesh geometry={shadow.geo} renderOrder={-1}>
+      <meshBasicMaterial map={shadow.map} transparent opacity={strength} depthWrite={false} toneMapped={false} />
+    </mesh>
   )
 }

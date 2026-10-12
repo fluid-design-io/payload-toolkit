@@ -1,7 +1,6 @@
-import { CatmullRomCurve3 } from 'three'
 import type { Vector3 } from 'three'
 
-import type { Route, RouteStyle } from './contract'
+import type { Route } from './contract'
 
 function chamfer(corners: Vector3[], r: number) {
   const out = [corners[0]]
@@ -24,20 +23,38 @@ function densify(poly: Vector3[], step = 0.06) {
   return pts
 }
 
-/** A trace through `corners` in the given style, densified so it can be drawn and sampled by length. */
-export function makeRoute(corners: Vector3[], style: RouteStyle, vias: Vector3[]): Route {
-  let pts: Vector3[]
-  if (style === 'manhattan') pts = densify(corners)
-  else if (style === 'diagonal') pts = densify(chamfer(corners, 0.32))
-  else {
-    const soft = chamfer(corners, 0.9)
-    const curve = new CatmullRomCurve3(soft, false, 'centripetal', 0.5)
-    const len = curve.getLength()
-    pts = curve.getSpacedPoints(Math.max(8, Math.ceil(len / 0.06)))
-  }
+/** A trace through `corners` with 45° chamfers (or `square` corners), densified so it can be drawn and sampled by length. */
+export function makeRoute(corners: Vector3[], vias: Vector3[], square = false): Route {
+  return polyRoute(densify(square ? corners : chamfer(corners, 0.32)), vias)
+}
+
+/** A polyline as a route, with its cumulative lengths. */
+export function polyRoute(pts: Vector3[], vias: Vector3[]): Route {
   const cum = [0]
   for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]))
   return { pts, vias, len: cum[cum.length - 1], cum }
+}
+
+const viaCache = new WeakMap<Route, Float32Array>()
+
+/**
+ * Each via's distance along `route`, taken where the trace passes nearest it, so a via on a chamfered corner sits on the
+ * copper. Routes never change once made, so the answer is cached per route.
+ */
+export function viaDistances(route: Route): Float32Array {
+  let out = viaCache.get(route)
+  if (out) return out
+  out = new Float32Array(route.vias.length)
+  for (let i = 0; i < route.vias.length; i++) {
+    let best = 0, bd = Infinity
+    for (let k = 0; k < route.pts.length; k++) {
+      const d = route.pts[k].distanceToSquared(route.vias[i])
+      if (d < bd) { bd = d; best = k }
+    }
+    out[i] = route.cum[best]
+  }
+  viaCache.set(route, out)
+  return out
 }
 
 export function sampleRoute(route: Route, t: number, out: Vector3) {

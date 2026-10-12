@@ -1,14 +1,16 @@
-import { useFrame } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
-import { Float32BufferAttribute, Matrix4, Vector3 } from 'three'
-import type { BufferAttribute, Group, InstancedMesh, LineSegments as ThreeLineSegments, MeshBasicMaterial, Points } from 'three'
+import { useFrame, useThree } from '@react-three/fiber'
+import { useRef, useState } from 'react'
+import { Float32BufferAttribute } from 'three'
+import type { BufferAttribute, LineSegments as ThreeLineSegments, Matrix4, MeshBasicMaterial } from 'three'
 
 import type { CatalogItem, CategoryId } from '@/routes/workspace/-workspace/workspace.types'
-import type { ChipVariant, Ghost, Part, Route, Sim, Tokens } from '../../../core/contract'
-import { sampleRoute } from '../../../core/route'
+import type { BoardProps, ChipVariant, Ghost, Part, Sim, Statics, Tokens, V3 } from '../../../core/contract'
+import type { BatchEntry, BatchLook } from '../../../core/batch'
+import { ChipBatch } from '../../../core/parts'
 import { TraceLine } from '../../../core/scene'
 import { reducedMotion } from '../../../core/three'
 import { BANDS } from './pack'
+import { Cpu, Memory, Power } from './sockets'
 
 /** The catalog-shaped stand-in for a block the existing app already owns. */
 const ghostItem = (g: Ghost): CatalogItem => {
@@ -19,145 +21,74 @@ const ghostItem = (g: Ghost): CatalogItem => {
   }
 }
 
-/** An existing app's blocks, dropped in as hatched, owned packages. */
-export function Ghosts({ sim, c, chip, version }: { sim: Sim; c: Tokens; chip: ChipVariant; version: number }) {
-  const groups = useRef<(Group | null)[]>([])
-  const born = useRef(new Map<string, number>())
-  const marks = useMemo(
-    () => sim.plan.ghosts.map((g) => chip.marking(ghostItem(g), 'OWNED', g.spec, { body: c.ghost, ink: c.muted })),
-    [version, c.ghost, c.muted, chip],
-  )
-  useEffect(() => () => marks.forEach((m) => m.dispose()), [marks])
-  useFrame(({ clock }) => {
-    sim.plan.ghosts.forEach((g, i) => {
-      const grp = groups.current[i]
-      if (!grp) return
-      if (!born.current.has(g.title)) born.current.set(g.title, clock.elapsedTime + i * 0.12)
-      const t = Math.min(1, Math.max(0, (clock.elapsedTime - born.current.get(g.title)!) / 0.6))
-      grp.position.set(g.slot.x, g.slot.y + (1 - t * t) * 2.5, g.slot.z)
-      grp.scale.setScalar(g.slot.s)
-    })
-  })
-  const Package = chip.Package
-  return (
-    <>
-      {sim.plan.ghosts.map((g, i) => (
-        <group key={`${g.title}${i}`} ref={(r) => { groups.current[i] = r }}>
-          <Package spec={g.spec} top={marks[i] ?? null} c={c} ghost />
-        </group>
-      ))}
-    </>
-  )
+/**
+ * `value` as of plan `version`. The sim swaps plans and edits parts in place, so the version is an
+ * argument: a compiled cache keyed only on the object would miss replans.
+ */
+export function atVersion<T>(value: T, version: number): T {
+  void version
+  return value
 }
 
-/** Each placed part's trace, drawn as it seats, with a hot head and its vias. `colorOf` tints a trace per part. */
+/** An existing app's blocks, dropped in as see-through, owned packages, one after another. */
+export function Ghosts({ sim, c, chip, version }: { sim: Sim; c: Tokens; chip: ChipVariant; version: number }) {
+  const clock = useThree((s) => s.clock)
+  const born = useRef(new Map<string, number>())
+  const ghosts = atVersion(sim.plan.ghosts, version)
+  const entries = ghosts.map((g, i): BatchEntry => ({ key: `${g.title}${i}`, item: ghostItem(g), code: 'OWNED', spec: g.spec }))
+  const look: BatchLook = { flat: c.flat, opacity: 0.7, body: c.ghost, pin: c.pin, edge: c.edge, edgeOpacity: 0.6 }
+  const print = { body: c.ghost, ink: c.muted }
+  const pose = (i: number, out: Matrix4) => {
+    const g = ghosts[i]
+    const now = clock.elapsedTime
+    let t0 = born.current.get(g.title)
+    if (t0 === undefined) born.current.set(g.title, (t0 = now + i * 0.12))
+    const t = Math.min(1, Math.max(0, (now - t0) / 0.6))
+    out.makeScale(g.slot.s, g.slot.s, g.slot.s).setPosition(g.slot.x, g.slot.y + (1 - t * t) * 2.5, g.slot.z)
+    return true
+  }
+  return <ChipBatch chip={chip} entries={entries} look={look} print={print} pose={pose} />
+}
+
+/**
+ * Parts routed in plan `version`. Routes are written onto parts in place, so the version is
+ * an argument: a compiled cache keyed only on `sim.list` would never see new traces.
+ */
+function routedIn(list: readonly Part[], version: number) {
+  void version
+  return list.filter((p) => p.route)
+}
+
+/** Each placed part's trace, drawn as it seats. `colorOf` tints a trace per part; the dots on it are the board's `signals`. */
 export function Routes({ sim, c, version, colorOf, width = 1.7 }: { sim: Sim; c: Tokens; version: number; colorOf?: (p: Part) => string; width?: number }) {
-  const list = useMemo(() => sim.list.filter((p) => p.route), [version, sim])
-  const heads = useRef<InstancedMesh>(null)
-  const vias = useRef<InstancedMesh>(null)
-  const tmp = useMemo(() => ({ m: new Matrix4(), v: new Vector3(), s: new Vector3() }), [])
-  useFrame(() => {
-    let h = 0, v = 0
-    for (const p of sim.list) {
-      if (!p.route || p.mode !== 'seated') continue
-      if (p.drawn < 1 && h < 6 && heads.current) {
-        sampleRoute(p.route, p.drawn, tmp.v)
-        heads.current.setMatrixAt(h++, tmp.m.makeScale(1, 1, 1).setPosition(tmp.v))
-      }
-      for (const via of p.route.vias) {
-        if (!vias.current || v >= 400) break
-        const k = p.route.pts.findIndex((q) => q.distanceToSquared(via) < 0.004)
-        const on = p.drawn >= (k < 0 ? 1 : k / p.route.pts.length)
-        vias.current.setMatrixAt(v++, tmp.m.makeTranslation(via.x, via.y + 0.003, via.z).scale(tmp.s.setScalar(on ? 1 : 0)))
-      }
-    }
-    if (heads.current) {
-      heads.current.count = h
-      heads.current.instanceMatrix.needsUpdate = true
-    }
-    if (vias.current) {
-      vias.current.count = v
-      vias.current.instanceMatrix.needsUpdate = true
-    }
-  })
+  const list = routedIn(sim.list, version)
   return (
     <>
       {list.map((p) => (
         <TraceLine key={`${p.item.ref}-${p.route!.len.toFixed(3)}-${p.route!.pts.length}`} route={p.route!} color={colorOf ? colorOf(p) : c.lit} width={width} progress={() => (p.mode === 'seated' ? p.drawn : 0)} />
       ))}
-      <instancedMesh ref={heads} args={[undefined, undefined, 6]} frustumCulled={false}>
-        <sphereGeometry args={[0.07, 10, 10]} />
-        <meshBasicMaterial color={c.spark} toneMapped={false} />
-      </instancedMesh>
-      <instancedMesh ref={vias} args={[undefined, undefined, 400]} frustumCulled={false}>
-        <cylinderGeometry args={[0.07, 0.07, 0.006, 16]} />
-        <meshBasicMaterial color={c.pin} />
-      </instancedMesh>
     </>
   )
 }
 
-/** Fixed buses a board pulses along: `data` both ways, `power` outward. */
-export type Statics = { power: Route[]; memory: Route[] }
-
-type Pulse = { route: Route; t: number; speed: number }
-/** Signal pulses: a burst down each new seat's trace, a trickle on live traces, and the board's fixed buses. */
-export function Pulses({ sim, c, statics, lift = 0.02 }: { sim: Sim; c: Tokens; statics: Statics; lift?: number }) {
-  const N = 600, P = 160
-  const data = useRef<Points>(null)
-  const power = useRef<Points>(null)
-  const state = useMemo(() => ({ data: [] as Pulse[], power: [] as Pulse[], dataPos: new Float32Array(N * 3), powerPos: new Float32Array(P * 3) }), [])
-  const seen = useRef(-1)
-  const tmp = useMemo(() => new Vector3(), [])
-  useFrame((_, dt) => {
-    if (sim.lastSeatAt !== seen.current && sim.lastSeat?.route) {
-      seen.current = sim.lastSeatAt
-      for (let k = 0; k < 4; k++) state.data.push({ route: sim.lastSeat.route, t: -k * 0.12 - 0.6, speed: 1.1 })
-    }
-    if (!reducedMotion) {
-      for (const p of sim.list) {
-        if (p.mode !== 'seated' || !p.route || p.drawn < 1) continue
-        if (Math.random() < dt * 0.55 && state.data.length < N) state.data.push({ route: p.route, t: 0, speed: 6 / p.route.len })
-      }
-      for (const r of statics.memory) if (Math.random() < dt * 1.4 && state.data.length < N) state.data.push({ route: r, t: 0, speed: Math.random() < 0.5 ? 1.6 : -1.6 })
-      for (const r of statics.power) if (Math.random() < dt * 2 && state.power.length < P) state.power.push({ route: r, t: 0, speed: 0.9 })
-    }
-    const run = (list: Pulse[], arr: Float32Array, cap: number, pts: Points | null) => {
-      let w = 0, keep = 0
-      for (let i = 0; i < list.length; i++) {
-        const pulse = list[i]
-        pulse.t += pulse.speed * dt
-        const t = pulse.speed < 0 ? 1 + pulse.t : pulse.t
-        const alive = pulse.speed < 0 ? 1 + pulse.t >= 0 : pulse.t <= 1
-        if (alive) list[keep++] = pulse
-        if (t > 1 || (t < -0.0001 && pulse.speed < 0)) continue
-        if (w < cap && t >= 0) {
-          sampleRoute(pulse.route, t, tmp)
-          arr[w * 3] = tmp.x; arr[w * 3 + 1] = tmp.y + lift; arr[w * 3 + 2] = tmp.z
-          w++
-        }
-      }
-      list.length = keep
-      for (let i = w; i < cap; i++) arr[i * 3 + 1] = -99
-      if (pts) (pts.geometry.getAttribute('position') as BufferAttribute).needsUpdate = true
-    }
-    run(state.data, state.dataPos, N, data.current)
-    run(state.power, state.powerPos, P, power.current)
-  })
+/**
+ * What every board draws over its own art: ghosts, traces, the CPU at `cpu`, memory and power moved by their offsets,
+ * the dots along the traces and `statics`, and the footprints. Without `statics` the board draws traces and dots itself.
+ */
+export function BoardLive({ lab, sim, c, version, chip, cycle, swap, signals, tip, guard, statics, lift = 0.02, cpu, memory, power, colorOf, width }: BoardProps & {
+  statics?: Statics; lift?: number; cpu: V3; memory?: V3; power?: V3; colorOf?: (p: Part) => string; width?: number
+}) {
+  const { target, framework, database, packageManager } = lab.setup
+  const Signals = signals.Component
   return (
     <>
-      <points ref={data} frustumCulled={false}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[state.dataPos, 3]} />
-        </bufferGeometry>
-        <pointsMaterial color={c.lit} size={5} sizeAttenuation={false} toneMapped={false} />
-      </points>
-      <points ref={power} frustumCulled={false}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[state.powerPos, 3]} />
-        </bufferGeometry>
-        <pointsMaterial color={c.lit} size={6} sizeAttenuation={false} toneMapped={false} transparent opacity={0.7} />
-      </points>
+      <Ghosts key={target} sim={sim} c={c} chip={chip} version={version} />
+      {statics && <Routes sim={sim} c={c} version={version} colorOf={colorOf} width={width} />}
+      <Cpu framework={framework} at={cpu} c={c} swap={swap} onClick={cycle.framework} tip={tip} guard={guard} />
+      <Memory database={database} offset={memory} c={c} swap={swap} onClick={cycle.database} tip={tip} guard={guard} />
+      <Power pm={packageManager} offset={power} c={c} swap={swap} onClick={cycle.pm} tip={tip} guard={guard} />
+      {statics && <Signals sim={sim} c={c} version={version} statics={statics} lift={lift} colorOf={colorOf} />}
+      <Footprints sim={sim} c={c} />
     </>
   )
 }
@@ -167,11 +98,12 @@ const FOOT_MAX = 48
 const CORNERS = [[-1, -1, 1, 1], [1, -1, -1, 1], [1, 1, -1, -1], [-1, 1, 1, -1]] as const
 export function Footprints({ sim, c }: { sim: Sim; c: Tokens }) {
   const ref = useRef<ThreeLineSegments>(null)
-  const buffer = useMemo(() => new Float32BufferAttribute(new Float32Array(FOOT_MAX * 4 * 12), 3), [])
+  const [buffer] = useState(() => new Float32BufferAttribute(new Float32Array(FOOT_MAX * 4 * 12), 3))
   useFrame(({ clock }) => {
     const seg = ref.current
     if (!seg) return
-    const arr = buffer.array as Float32Array
+    const attr = seg.geometry.getAttribute('position') as BufferAttribute
+    const arr = attr.array as Float32Array
     let n = 0
     for (const p of sim.live) {
       if (n >= FOOT_MAX * 48 || !p.slot || p.mode === 'seated' || p.mode === 'toss' || p.mode === 'home' || !sim.wanted.has(p.item.ref)) continue
@@ -186,7 +118,7 @@ export function Footprints({ sim, c }: { sim: Sim; c: Tokens }) {
       }
     }
     seg.geometry.setDrawRange(0, n / 3)
-    buffer.needsUpdate = n > 0
+    attr.needsUpdate = n > 0
     seg.visible = n > 0
     ;(seg.material as MeshBasicMaterial).opacity = reducedMotion ? 0.8 : 0.55 + Math.sin(clock.elapsedTime * 8) * 0.45
   })

@@ -1,8 +1,8 @@
 import { CatmullRomCurve3, Vector3 } from 'three'
 
 import type { Setup } from '@/routes/workspace/-workspace/workspace.types'
-import type { Ghost, Hatch, Plan, Route, Routed, RouteStyle, Slot } from '../../../core/contract'
-import { makeRoute } from '../../../core/route'
+import type { Ghost, Hatch, Plan, Routed, Slot } from '../../../core/contract'
+import { makeRoute, polyRoute } from '../../../core/route'
 import { BY, cpuHalf } from '../shared/dims'
 import { bandOf, ghostIndex, packGrid, sortParts } from '../shared/pack'
 import type { Entry } from '../shared/pack'
@@ -84,28 +84,17 @@ export function plan(parts: readonly Routed[], target: Setup['target']): Plan {
   return { slots, ghosts, hatches }
 }
 
-/** A polyline as a route, with its cumulative lengths. */
-function asRoute(pts: Vector3[], vias: Vector3[]): Route {
-  const cum = [0]
-  for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]))
-  return { pts, vias, len: cum[cum.length - 1], cum }
-}
-
 /** A loose jumper that arcs from hole to hole, higher the further it reaches. */
 export function arc(a: Vector3, b: Vector3, rise = 1) {
   const up = (p: Vector3, h: number) => p.clone().setY(p.y + h)
   const d = a.distanceTo(b)
   const mid = a.clone().lerp(b, 0.5).setY(Math.max(a.y, b.y) + (0.55 + d * 0.07) * rise)
   const curve = new CatmullRomCurve3([a, up(a, 0.22), mid, up(b, 0.22), b], false, 'centripetal', 0.5)
-  return asRoute(curve.getSpacedPoints(Math.max(16, Math.ceil(curve.getLength() / 0.06))), [a, b])
+  return polyRoute(curve.getSpacedPoints(Math.max(16, Math.ceil(curve.getLength() / 0.06))), [a, b])
 }
 
-/**
- * Wires from the hole above each package's first pin to a CPU pin. Manhattan
- * and 45° lay pre-cut jumpers flat along the PCB's bus lanes; organic plugs in
- * loose jumpers that arc over the board.
- */
-export function route(parts: readonly Routed[], style: RouteStyle, framework: Setup['framework']) {
+/** Pre-cut jumpers from the hole above each package's first pin to a CPU pin, laid flat along the PCB's bus lanes. */
+export function route(parts: readonly Routed[], framework: Setup['framework']) {
   const east = CPU.x + cpuHalf(framework).w
   const flat = BY + 0.04
   for (const [p, { c, x, pz }] of blockLanes(parts, framework)) {
@@ -114,12 +103,8 @@ export function route(parts: readonly Routed[], style: RouteStyle, framework: Se
     const hz = Math.max(bandZ(bandOf(p.item.category)) + STRIP.top[0] + 0.06, s.z - (p.spec.fd * s.s) / 2 - 0.1)
     const hole = new Vector3(hx, BY, hz)
     const pin = new Vector3(east, BY, pz)
-    if (style === 'organic') {
-      p.route = arc(pin, hole)
-      continue
-    }
     const corners = [pin, pin.clone().setY(flat), new Vector3(x, flat, pz), new Vector3(x, flat, c), new Vector3(hole.x, flat, c), hole.clone().setY(flat), hole]
-    p.route = makeRoute(corners, style, [pin, hole])
+    p.route = makeRoute(corners, [pin, hole])
   }
-  routeBase(parts, style, framework)
+  routeBase(parts, framework)
 }

@@ -1,7 +1,7 @@
 import { Vector3 } from 'three'
 
 import type { Setup } from '@/routes/workspace/-workspace/workspace.types'
-import type { Ghost, Hatch, Plan, Routed, RouteStyle, Slot } from '../../../core/contract'
+import type { Ghost, Hatch, Plan, Routed, Slot } from '../../../core/contract'
 import { makeRoute } from '../../../core/route'
 import { BY, cpuHalf } from '../shared/dims'
 import { BANDS, bandOf, ghostIndex, packGrid, packRows, sortParts } from '../shared/pack'
@@ -56,7 +56,7 @@ export function plan(parts: readonly Routed[], target: Setup['target']): Plan {
 }
 
 /** The PCB's bus, with a fall down the layer's flex between the band channel and the spine. Heights are closed-stack. */
-export function route(parts: readonly Routed[], style: RouteStyle, framework: Setup['framework']) {
+export function route(parts: readonly Routed[], framework: Setup['framework']) {
   const y = BY + 0.006
   const east = CPU.x + cpuHalf(framework).w
   for (const [p, { c, x, pz }] of blockLanes(parts, framework)) {
@@ -67,7 +67,7 @@ export function route(parts: readonly Routed[], style: RouteStyle, framework: Se
       new Vector3(s.x, yt, top), new Vector3(s.x, yt, c), new Vector3(DROP_X + 0.3, yt, c), new Vector3(DROP_X, yt - SLAB, c),
       new Vector3(DROP_X, y, c), new Vector3(x, y, c), new Vector3(x, y, pz), new Vector3(east, y, pz),
     ]
-    p.route = makeRoute(corners.reverse(), style, [new Vector3(x, y, c), new Vector3(x, y, pz)])
+    p.route = makeRoute(corners.reverse(), [new Vector3(x, y, c), new Vector3(x, y, pz)])
   }
-  routeBase(parts, style, framework)
+  routeBase(parts, framework)
 }

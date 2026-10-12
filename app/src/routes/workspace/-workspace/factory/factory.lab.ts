@@ -1,5 +1,4 @@
 import { shallow } from '@tanstack/react-store'
-import { useMemo } from 'react'
 import type { Lab } from '@/routes/lab/-lab/lab.types'
 import { toWarehouse } from '@/routes/lab/-lab/warehouse'
 import { useWorkspace, useWorkspaceSelector } from '../workspace.context'
@@ -35,35 +34,26 @@ export function useFactoryLab(): Lab {
     shallow,
   )
   const theme = useWorkspaceTheme()
-  const warehouse = useMemo(() => toWarehouse(meta.catalog), [meta.catalog])
+  const set = setters(actions)
 
-  const callbacks = useMemo(() => {
-    const set = setters(actions)
-    return {
-      toggle: (ref: string) => actions.toggleItem(ref, !store.state.setup.items.includes(ref)),
-      clear: actions.clearItems,
-      set: <K extends Field>(key: K, value: Setup[K]) => set[key](value),
-      setFocus: ({ category, query }: Partial<Lab['focus']>) => {
-        if (category !== undefined) actions.setCategory(category)
-        if (query !== undefined) actions.setQuery(query)
-      },
-      inspect: actions.openDetail,
-    }
-  }, [store, actions])
-
-  return useMemo(
-    () => ({
-      ...callbacks,
-      catalog: meta.catalog,
-      warehouse,
-      scale: 'real',
-      setup,
-      selected: new Set(setup.items),
-      command: toCommand(setup, meta.catalog.items),
-      theme,
-      chrome: 'embedded',
-      focus,
-    }),
-    [callbacks, meta.catalog, warehouse, setup, theme, focus],
-  )
+  return {
+    toggle: (ref) => actions.toggleItem(ref, !store.state.setup.items.includes(ref)),
+    clear: actions.clearItems,
+    set: (key, value) => set[key](value),
+    setFocus: ({ category, query }) => {
+      if (category !== undefined) actions.setCategory(category)
+      if (query !== undefined) actions.setQuery(query)
+    },
+    inspect: actions.openDetail,
+    onSheetChange: actions.setSceneSheet,
+    catalog: meta.catalog,
+    warehouse: toWarehouse(meta.catalog),
+    scale: 'real',
+    setup,
+    selected: new Set(setup.items),
+    command: toCommand(setup, meta.catalog.items),
+    theme,
+    chrome: 'embedded',
+    focus,
+  }
 }

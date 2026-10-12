@@ -4,10 +4,12 @@
 @import '@heroui-pro/react/css/components/sidebar.css' layer(components);
 @import '@heroui-pro/react/css/components/sheet.css' layer(components);
 @import '@heroui-pro/react/css/components/action-bar.css' layer(components);
+@import '@heroui-pro/react/css/components/list-view.css' layer(components);
 @import '@heroui-pro/react/css/components/empty-state.css' layer(components);
 @import '@heroui-pro/react/css/components/segment.css' layer(components);
 @import '@heroui-pro/react/css/components/widget.css' layer(components);
 @import '@heroui-pro/react/css/components/radio-button-group.css' layer(components);
+@import '@heroui-pro/react/css/components/native-select.css' layer(components);
 
 /* heroui-design-system:start eb54f1e3-c413-45cc-9ec2-bbfe398d7baf updatedAt=1791502589293 */
 @import '@heroui-pro/react/themes/mouve';
@@ -110,6 +112,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  overscroll-behavior: none;
 }
 body {
   background: var(--background);

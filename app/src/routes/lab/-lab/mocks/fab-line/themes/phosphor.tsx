@@ -1,13 +1,14 @@
 import { Grid } from '@react-three/drei'
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { CircleGeometry, Matrix4, PlaneGeometry } from 'three'
 import type { InstancedMesh } from 'three'
 
-import type { StageProps, ThemeVariant, Tokens } from '../core/contract'
-import { MONO, fillMat, lineMat, segs } from '../core/three'
-import { Screen, rgbOf, sheetOf, textTexture, useHideOnCloseUp, useTextures } from './grade'
+import type { StageProps, Tokens } from '../core/contract'
+import { MONO, fillMat, lineMat, segs, useDisposable } from '../core/three'
+import { Screen, rgbOf, sheetOf, textTexture, useHideOnCloseUp } from './grade'
 import type { Grade } from './grade'
-import { Lights } from './shared'
+import { Lights, printPose } from './shared'
+import { P1 } from './phosphor.data'
 
 /**
  * A monochrome terminal. Dark is the P1 green phosphor tube: the canvas
@@ -15,25 +16,6 @@ import { Lights } from './shared'
  * add the scanlines and the tube's vignette. Light is the same session on a
  * line printer: greenbar fanfold paper, sprocket margins, a two-colour ribbon.
  */
-const P1 = '#33FF66'
-
-const dark: Tokens = {
-  bg: 'radial-gradient(120% 100% at 50% 45%, #07140B 0%, #020603 80%)', surface: '#04100A', fg: '#8DFFAA', muted: '#2C9C4E', edge: P1, dim: '#0F4A24', accent: '#D4FFE0', floor: '#030A06', floorEdge: '#0C3A1C',
-  flat: true, rough: 1, shadow: 0, s: 30, l: 45,
-  board: '#03130A', boardEdge: P1, silk: '#2BD957', trace: '#13652E', lit: '#D4FFE0', body: '#020805', bodyEdge: P1, ink: '#8DFFAA', pin: '#1F9E45', sub: '#06200F', ghost: '#05170C',
-  gold: '#7DE89A', die: '#010402', led: '#8DFFAA', ledBusy: '#E8FFEE', ledOff: '#0A2A14', spark: '#F2FFF5',
-  claude: '#9DFFB4', claudeEdge: '#1F9E45', claudeInk: '#021006', claudeCable: '#1C7438',
-  codex: '#0B3A1B', codexInk: '#9DFFB4', codexCable: '#145A2B',
-}
-const light: Tokens = {
-  bg: '#F3F5EE', surface: '#F7F8F3', fg: '#1E2A23', muted: '#5D6B62', edge: '#25332B', dim: '#B8C4BA', accent: '#C8372D', floor: '#F3F5EE', floorEdge: '#C9D6CA',
-  flat: true, rough: 1, shadow: 0, s: 35, l: 52,
-  board: '#F7F8F3', boardEdge: '#25332B', silk: '#25332B', trace: '#B8C4BA', lit: '#C8372D', body: '#F7F8F3', bodyEdge: '#25332B', ink: '#1E2A23', pin: '#6F7D74', sub: '#E5ECE3', ghost: '#ECF1EA',
-  gold: '#7E8C82', die: '#25332B', led: '#C8372D', ledBusy: '#F06A5E', ledOff: '#D5DDD4', spark: '#C8372D',
-  claude: '#F7F8F3', claudeEdge: '#C8372D', claudeInk: '#C8372D', claudeCable: '#6F7D74',
-  codex: '#25332B', codexInk: '#F7F8F3', codexCable: '#6F7D74',
-}
-
 /** Every color folds to phosphor luminance, then one blurred halo adds back on top (a second, wider halo halved the frame rate in SwiftShader). */
 function tubeFilter() {
   const p = rgbOf(P1)
@@ -60,8 +42,7 @@ const BAND = 0.9
 function Fanfold({ sheet, c }: { sheet: ReturnType<typeof sheetOf>; c: Tokens }) {
   const bands = useRef<InstancedMesh>(null)
   const holes = useRef<InstancedMesh>(null)
-  const geo = useMemo(() => ({ band: new PlaneGeometry(1, 1).rotateX(-Math.PI / 2), hole: new CircleGeometry(0.11, 14).rotateX(-Math.PI / 2) }), [])
-  useEffect(() => () => { geo.band.dispose(); geo.hole.dispose() }, [geo])
+  const geo = useDisposable(() => ({ band: new PlaneGeometry(1, 1).rotateX(-Math.PI / 2), hole: new CircleGeometry(0.11, 14).rotateX(-Math.PI / 2) }), [])
   const inner = { z0: sheet.z0 + 0.95, z1: sheet.z1 - 0.95 }
   const nb = Math.floor(sheet.w / (BAND * 2))
   const nh = Math.floor(sheet.w / 0.5)
@@ -75,7 +56,7 @@ function Fanfold({ sheet, c }: { sheet: ReturnType<typeof sheetOf>; c: Tokens })
     if (bands.current) bands.current.instanceMatrix.needsUpdate = true
     if (holes.current) holes.current.instanceMatrix.needsUpdate = true
   }, [sheet, nb, nh, inner.z0, inner.z1])
-  const lines = useMemo(() => {
+  const lines = useDisposable(() => {
     const l: number[] = []
     const y = 0.006
     const dash = (x0: number, z0: number, x1: number, z1: number, on: number, off: number) => {
@@ -88,7 +69,6 @@ function Fanfold({ sheet, c }: { sheet: ReturnType<typeof sheetOf>; c: Tokens })
     l.push(sheet.x0, y, sheet.z0, sheet.x1, y, sheet.z0, sheet.x0, y, sheet.z1, sheet.x1, y, sheet.z1)
     return segs(l)
   }, [sheet, inner.z0, inner.z1])
-  useEffect(() => () => lines.dispose(), [lines])
   return (
     <>
       <mesh position={[sheet.cx, -0.002, sheet.cz]} rotation={[-Math.PI / 2, 0, 0]} material={fillMat(c.surface, true)}>
@@ -101,33 +81,29 @@ function Fanfold({ sheet, c }: { sheet: ReturnType<typeof sheetOf>; c: Tokens })
   )
 }
 
-const STATUS: Record<string, string> = { cabinet: 'MOUNTED', table: 'READY', transport: 'RUNNING', board: 'ONLINE' }
+/** Station prints: one 50px mono line on a 768 by 96 texture. */
+const TAG = { w: 768, h: 96 }
 
-function Stage({ c, mode, power, cam, line }: StageProps) {
-  const sheet = useMemo(() => sheetOf(line), [line])
+export function Stage({ c, mode, power, cam, line }: StageProps) {
+  const sheet = sheetOf(line)
   const dk = mode === 'dark'
   const labels = useHideOnCloseUp(cam)
   const stops = line.stops
-  const prints = useTextures(
+  const prints = useDisposable(
     () =>
       stops.map((stop, i) =>
-        textTexture(1024, 128, (ctx) => {
+        textTexture(TAG.w, TAG.h, (ctx) => {
           ctx.font = `600 50px ${MONO}`
           ctx.textBaseline = 'middle'
-          const name = `${String(i + 1).padStart(2, '0')} ${stop.label.toUpperCase().replace(/ /g, '_')}`
-          const status = STATUS[stop.id] ?? 'OK'
-          const dots = '.'.repeat(Math.max(2, 26 - name.length - status.length))
+          const text = `${dk ? '>' : '*'} ${String(i + 1).padStart(2, '0')} ${stop.label.toUpperCase().replace(/ /g, '_')}`
           ctx.fillStyle = c.fg
-          ctx.fillText(`${dk ? '>' : '*'} ${name} ${dots} `, 8, 66)
-          const w = ctx.measureText(`${dk ? '>' : '*'} ${name} ${dots} `).width
-          ctx.fillStyle = c.accent
-          ctx.fillText(status, 8 + w, 66)
-          if (dk && i === stops.length - 1) ctx.fillRect(8 + w + ctx.measureText(status).width + 16, 36, 28, 56)
+          ctx.fillText(text, 8, 50)
+          if (dk && i === stops.length - 1) ctx.fillRect(8 + ctx.measureText(text).width + 16, 22, 28, 56)
         }),
       ),
     [stops, c, dk],
   )
-  const ticks = useMemo(() => {
+  const ticks = useDisposable(() => {
     if (!dk) return null
     const l: number[] = []
     for (const stop of stops) {
@@ -140,7 +116,6 @@ function Stage({ c, mode, power, cam, line }: StageProps) {
     }
     return segs(l)
   }, [stops, dk])
-  useEffect(() => () => ticks?.dispose(), [ticks])
   return (
     <>
       <Screen grade={dk ? TUBE : PAPER} />
@@ -155,15 +130,9 @@ function Stage({ c, mode, power, cam, line }: StageProps) {
       )}
       <group ref={labels}>
         {stops.map((stop, i) => {
-          const b = stop.box
-          const h = 0.85, w = h * 8
-          const side = stop.id === 'cabinet'
+          const h = 0.42, w = (h * TAG.w) / TAG.h
           return (
-            <mesh
-              key={stop.id}
-              position={side ? [b.x0 - 0.9, 0.012, (b.z0 + b.z1) / 2 + 1.4] : [b.x0 + w / 2, 0.012, b.z1 + 1.0]}
-              rotation={side ? [-Math.PI / 2, 0, Math.PI / 2] : [-Math.PI / 2, 0, 0]}
-            >
+            <mesh key={stop.id} {...printPose(stop, w)}>
               <planeGeometry args={[w, h]} />
               <meshBasicMaterial map={prints[i]} transparent depthWrite={false} toneMapped={false} />
             </mesh>
@@ -172,14 +141,5 @@ function Stage({ c, mode, power, cam, line }: StageProps) {
       </group>
     </>
   )
-}
-
-export const phosphor: ThemeVariant = {
-  id: 'phosphor',
-  label: 'Phosphor',
-  scene: 'INT. TERMINAL ROOM',
-  lens: { fov: 13, el: 34, frame: 1.0 },
-  tokens: { light, dark },
-  Stage,
 }
 

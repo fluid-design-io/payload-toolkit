@@ -340,13 +340,13 @@ export function InstallView() {
   )
 }
 
-function useCopied() {
+export function useCopied(duration = 1500) {
   const [copied, setCopied] = useState(false)
   useEffect(() => {
     if (!copied) return
-    const timer = setTimeout(() => setCopied(false), 1500)
+    const timer = setTimeout(() => setCopied(false), duration)
     return () => clearTimeout(timer)
-  }, [copied])
+  }, [copied, duration])
   return [copied, () => setCopied(true)] as const
 }
 

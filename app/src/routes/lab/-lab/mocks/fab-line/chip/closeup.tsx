@@ -1,17 +1,17 @@
 import { Html, Line } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { RefObject } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Color, DoubleSide, LineBasicMaterial, MeshBasicMaterial, MeshStandardMaterial, Object3D, PlaneGeometry, ShaderMaterial, Vector3 } from 'three'
 import type { Group, InstancedMesh, Mesh, Texture } from 'three'
 
-import type { Lab } from '@/routes/lab/-lab/lab.types'
 import { announce } from '@/routes/lab/-lab/kit/a11y'
+import { keepAnimating } from '@/routes/lab/-lab/kit/busy'
+import { isTyping } from '@/routes/lab/-lab/kit/env'
 import { play } from '@/routes/lab/-lab/kit/sound'
-import type { ChipCam, Part, Tokens } from '../core/contract'
+import type { CloseUpProps, Part } from '../core/contract'
 import { chipTop, PKG_NAME } from '../core/spec'
-import { lineMat, reducedMotion } from '../core/three'
-import { circuitArt, dieArt, fingerAt, hatch, inkOn, PLATE, plateArt, plateToDie, variantWord } from './art'
+import { lerp, lineMat, patch, reducedMotion, smoothstep, textTexture, useDisposable } from '../core/three'
+import { chipMarking, circuitArt, dieArt, fingerAt, hatch, inkOn, PLATE, plateArt, plateToDie, variantWord } from './art'
 import { climb, createDepth, DEEPEST, goStage, heading, nudge, PINCH, reveal, settle, STAGES, WHEEL } from './depth'
 import { along, floorplan } from './floorplan'
 import { gutsOf } from './guts'
@@ -20,8 +20,7 @@ import { buildPieces, cavityOf, piecesOf } from './pieces'
 import type { Layer } from './pieces'
 
 type V3 = [number, number, number]
-const ease = (t: number) => t * t * (3 - 2 * t)
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t
+const scratch = { v: new Vector3(), dummy: new Object3D(), uv: [0, 0] as [number, number] }
 
 const DIE_VERT = /* glsl */ `varying vec2 vUv;
 void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`
@@ -62,6 +61,20 @@ function bondWires(spec: Part['spec'], cav: ReturnType<typeof cavityOf>) {
   return pts
 }
 
+/** The close-up's materials and the hatch texture they own, built in one call so disposal frees exactly what it built. */
+function closeupMats(flat: boolean, bodyEdge: string, edge: string, cut: { d: number; h: number }, top: Texture | null) {
+  const fill = () => (flat ? new MeshBasicMaterial({ vertexColors: true, transparent: true }) : new MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0.18, transparent: true }))
+  const tex = hatch(edge).clone()
+  tex.repeat.set(cut.d / 0.05, cut.h / 0.05)
+  tex.needsUpdate = true
+  return {
+    pos: fill(), cap: fill(), posEdge: new LineBasicMaterial({ color: bodyEdge, transparent: true }), capEdge: new LineBasicMaterial({ color: bodyEdge, transparent: true }),
+    print: new MeshBasicMaterial({ map: top, transparent: true, toneMapped: false }),
+    hatch: new MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false }),
+    hatchTex: tex,
+  }
+}
+
 /** A label pinned to a 3D point with a short leader, shown on the section stage. */
 function Callout({ at, title, sub, show, reach = 56, flip = false }: { at: V3; title: string; sub: string; show: boolean; reach?: number; flip?: boolean }) {
   return (
@@ -80,16 +93,14 @@ function Callout({ at, title, sub, show, reach = 56, flip = false }: { at: V3; t
 
 /** The die's printed top over the span x0..x1 of the cavity, so each half of a cut die keeps its half of the print. */
 function DieTop({ tex, cav, x0, x1, opacity }: { tex: Texture; cav: ReturnType<typeof cavityOf>; x0: number; x1: number; opacity?: { opacity: number } }) {
-  const map = useMemo(() => {
-    const t = tex.clone()
-    t.repeat.set((x1 - x0) / cav.w, 1)
-    t.offset.set((x0 - (cav.x - cav.w / 2)) / cav.w, 0)
-    t.needsUpdate = true
-    return t
+  const { mat } = useDisposable(() => {
+    const map = tex.clone()
+    map.repeat.set((x1 - x0) / cav.w, 1)
+    map.offset.set((x0 - (cav.x - cav.w / 2)) / cav.w, 0)
+    map.needsUpdate = true
+    return { map, mat: new MeshBasicMaterial({ map, transparent: true, toneMapped: false }) }
   }, [tex, cav, x0, x1])
-  const mat = useMemo(() => new MeshBasicMaterial({ map, transparent: true, toneMapped: false }), [map])
-  useEffect(() => () => { map.dispose(); mat.dispose() }, [map, mat])
-  useFrame(() => { if (opacity) mat.opacity = opacity.opacity })
+  useFrame(() => { if (opacity) patch(mat, { opacity: opacity.opacity }) })
   return (
     <mesh position={[(x0 + x1) / 2, cav.y + 0.019, 0]} rotation-x={-Math.PI / 2} material={mat}>
       <planeGeometry args={[x1 - x0, cav.d]} />
@@ -143,16 +154,19 @@ function Gauge({ stage, onGo, phone }: { stage: number; onGo: (i: number) => voi
  * its signal path. Scroll, pinch and +/− drive depth while the camera is on
  * the chip; Escape climbs a stage before it lets the close-up go.
  */
-export function CloseUp({ p, lab, c, cam, top, body, code }: {
-  p: Part; lab: Lab; c: Tokens; cam: ChipCam; top: Texture | null; body: RefObject<Group | null>; code: string
-}) {
+export function CloseUp({ p, lab, c, cam, code, hideRef }: CloseUpProps) {
   const { camera, gl, size } = useThree()
   const spec = p.spec
   const r = Math.max(spec.fw, spec.fd)
-  const cav = useMemo(() => cavityOf(spec), [spec])
+  const cav = cavityOf(spec)
   const lid = lidOf(spec)
+  const top = useDisposable(() => {
+    if (!lid) return null
+    const h = Math.round((512 * lid.d) / lid.w)
+    return textTexture(512, h, (ctx) => chipMarking(ctx, 512, h, p.item, code, spec, c))
+  }, [lid?.w, lid?.d, p.item, code, spec, c.body, c.ink])
   const tip = chipTop(spec)
-  const depth = useRef(createDepth()).current
+  const [depth] = useState(createDepth)
   const [stage, setStage] = useState(0)
   const shown = useRef(0)
   const [here, setHere] = useState(false)
@@ -173,25 +187,14 @@ export function CloseUp({ p, lab, c, cam, top, body, code }: {
       paddleY: paddle.at[1],
     }
   }, [spec, bodyColor, c.pin, c.die])
-  const mats = useMemo(() => {
-    const fill = () => (c.flat ? new MeshBasicMaterial({ vertexColors: true, transparent: true }) : new MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0.18, transparent: true }))
-    const tex = hatch(c.edge).clone()
-    tex.repeat.set(model.cut.d / 0.05, model.cut.h / 0.05)
-    tex.needsUpdate = true
-    return {
-      pos: fill(), cap: fill(), posEdge: new LineBasicMaterial({ color: c.bodyEdge, transparent: true }), capEdge: new LineBasicMaterial({ color: c.bodyEdge, transparent: true }),
-      print: new MeshBasicMaterial({ map: top, transparent: true, toneMapped: false }),
-      hatch: new MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false }),
-    }
-  }, [c.flat, c.bodyEdge, c.edge, model, top])
   useEffect(() => () => {
     for (const g of Object.values(model)) if (g && typeof g === 'object' && 'fill' in g) { g.fill?.dispose(); g.edges?.dispose() }
   }, [model])
-  useEffect(() => () => { mats.hatch.map?.dispose(); Object.values(mats).forEach((m) => m.dispose()) }, [mats])
-  const wires = useMemo(() => bondWires(spec, cav), [spec, cav])
+  const mats = useDisposable(() => closeupMats(c.flat, c.bodyEdge, c.edge, model.cut, top), [c.flat, c.bodyEdge, c.edge, model.cut, top])
+  const wires = bondWires(spec, cav)
 
-  const guts = useMemo(() => gutsOf(p.item, lab.setup), [p.item, lab.setup.framework, lab.setup.database])
-  const plan = useMemo(() => floorplan(guts), [guts])
+  const guts = gutsOf(p.item, { framework: lab.setup.framework, database: lab.setup.database })
+  const plan = floorplan(guts)
   const image = lab.theme === 'dark' ? (p.item.imageDark ?? p.item.image) : p.item.image
   const [dieTex, setDieTex] = useState<Texture | null>(null)
   useEffect(() => {
@@ -199,49 +202,44 @@ export function CloseUp({ p, lab, c, cam, top, body, code }: {
     void dieArt(image, p.item.hue, p.item.title, c).then((t) => live && setDieTex(t))
     return () => { live = false }
   }, [image, p.item.hue, p.item.title, c])
-  const sheets = useMemo(() => (deep ? { circuit: circuitArt(guts, plan, c), plate: plateArt(p.item, guts, plan, spec, code, c) } : null), [deep, guts, plan, c, p.item, spec, code])
-  useEffect(() => () => { sheets?.circuit.dispose(); sheets?.plate.dispose() }, [sheets])
-  const dieMat = useMemo(() => new ShaderMaterial({
+  const sheets = useDisposable(() => (deep ? { circuit: circuitArt(guts, plan, c), plate: plateArt(p.item, guts, plan, spec, code, c) } : null), [deep, guts, plan, c, p.item, spec, code])
+  const dieMat = useDisposable(() => new ShaderMaterial({
     uniforms: { a: { value: null }, b: { value: null }, t: { value: 0 }, hasA: { value: 0 }, hasB: { value: 0 }, opacity: { value: 0 }, edge: { value: new Color(c.lit) }, base: { value: new Color(c.die) } },
     vertexShader: DIE_VERT, fragmentShader: DIE_FRAG, transparent: true,
   }), [c.lit, c.die])
-  useEffect(() => () => dieMat.dispose(), [dieMat])
   useEffect(() => {
     const u = dieMat.uniforms
-    u.a.value = dieTex; u.hasA.value = dieTex ? 1 : 0
-    u.b.value = sheets?.circuit ?? null; u.hasB.value = sheets ? 1 : 0
+    patch(u.a, { value: dieTex }); patch(u.hasA, { value: dieTex ? 1 : 0 })
+    patch(u.b, { value: sheets?.circuit ?? null }); patch(u.hasB, { value: sheets ? 1 : 0 })
   }, [dieMat, dieTex, sheets])
-  const plateMat = useMemo(() => new MeshBasicMaterial({ transparent: true, toneMapped: false, opacity: 0 }), [])
-  useEffect(() => { plateMat.map = sheets?.plate ?? null; plateMat.needsUpdate = true }, [plateMat, sheets])
-  useEffect(() => () => plateMat.dispose(), [plateMat])
+  const { plateMat, pulseGeo } = useDisposable(() => ({
+    plateMat: new MeshBasicMaterial({ transparent: true, toneMapped: false, opacity: 0 }),
+    pulseGeo: new PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
+  }), [])
+  useEffect(() => patch(plateMat, { map: sheets?.plate ?? null, needsUpdate: true }), [plateMat, sheets])
 
   /** Plate-local points: canvas units measured from the die window's centre, y up off the sheet. */
   const at = (u: number, v: number, y = 0): V3 => [u - PLATE.cx, y, v - PLATE.cy]
-  const plateWires = useMemo(() => {
-    const pts: V3[] = []
-    for (const pad of plan.pads) {
-      const [ax, ay] = plateToDie(pad)
-      const [bx, by] = fingerAt(pad)
-      const h = 0.018
-      pts.push(at(ax, ay, 0.004), at(lerp(ax, bx, 0.3), lerp(ay, by, 0.3), h), at(lerp(ax, bx, 0.3), lerp(ay, by, 0.3), h), at(bx, by, 0.004))
-    }
-    return pts
-  }, [plan])
-  const pulses = useMemo(() => {
-    const list: { w: number; phase: number }[] = []
-    plan.wires.forEach((w, i) => {
-      const n = Math.min(3, 1 + Math.floor(w.len * 2.2))
-      for (let k = 0; k < n && list.length < 64; k++) list.push({ w: i, phase: k / n + i * 0.137 })
-    })
-    return list
-  }, [plan])
-  const pulseGeo = useMemo(() => new PlaneGeometry(1, 1).rotateX(-Math.PI / 2), [])
-  useEffect(() => () => pulseGeo.dispose(), [pulseGeo])
+  const plateWires: V3[] = []
+  for (const pad of plan.pads) {
+    const [ax, ay] = plateToDie(pad)
+    const [bx, by] = fingerAt(pad)
+    const h = 0.018
+    plateWires.push(at(ax, ay, 0.004), at(lerp(ax, bx, 0.3), lerp(ay, by, 0.3), h), at(lerp(ax, bx, 0.3), lerp(ay, by, 0.3), h), at(bx, by, 0.004))
+  }
+  const pulses: { w: number; phase: number }[] = []
+  plan.wires.forEach((w, i) => {
+    const n = Math.min(3, 1 + Math.floor(w.len * 2.2))
+    for (let k = 0; k < n && pulses.length < 64; k++) pulses.push({ w: i, phase: k / n + i * 0.137 })
+  })
 
   const root = useRef<Group>(null)
   const cap = useRef<Group>(null)
   const pos = useRef<Group>(null)
-  const layers = { lead: useRef<Group>(null), body: useRef<Group>(null), paddle: useRef<Group>(null), die: useRef<Group>(null) }
+  const leadLayer = useRef<Group>(null)
+  const bodyLayer = useRef<Group>(null)
+  const paddleLayer = useRef<Group>(null)
+  const dieLayer = useRef<Group>(null)
   const bond = useRef<Group>(null)
   const plate = useRef<Group>(null)
   const dieMesh = useRef<Mesh>(null)
@@ -249,7 +247,6 @@ export function CloseUp({ p, lab, c, cam, top, body, code }: {
   const pulseMesh = useRef<InstancedMesh>(null)
   const wrote = useRef(cam.decap)
   const yaw = useRef(0)
-  const scratch = useMemo(() => ({ v: new Vector3(), dummy: new Object3D(), uv: [0, 0] as [number, number] }), [])
 
   const near = () => {
     if (cam.focusRef !== p.item.ref || p.mode !== 'seated') return false
@@ -257,7 +254,9 @@ export function CloseUp({ p, lab, c, cam, top, body, code }: {
     return camera.position.distanceTo(scratch.v) < r * p.scale * 12
   }
   const nearRef = useRef(near)
-  nearRef.current = near
+  useLayoutEffect(() => {
+    nearRef.current = near
+  })
 
   useEffect(() => {
     const scene = gl.domElement.closest('[role=application]') ?? gl.domElement.parentElement
@@ -297,7 +296,7 @@ export function CloseUp({ p, lab, c, cam, top, body, code }: {
       span = 0
     }
     const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return
+      if (e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return
       if (cam.focusRef !== p.item.ref || p.mode !== 'seated') return
       const at = heading(depth)
       let used = false
@@ -340,6 +339,7 @@ export function CloseUp({ p, lab, c, cam, top, body, code }: {
       wrote.current = cam.decap
     }
     settle(depth, Math.min(dt, 0.1), reducedMotion)
+    if (depth.value !== depth.target) keepAnimating()
     const head = heading(depth)
     if (head !== shown.current) {
       shown.current = head
@@ -349,11 +349,14 @@ export function CloseUp({ p, lab, c, cam, top, body, code }: {
     const isNear = near()
     if (isNear !== here) setHere(isNear)
     if (head >= 2 && !deep) setDeep(true)
-    if (STAGES[head].top !== cam.decap) cam.decap = wrote.current = STAGES[head].top
+    if (STAGES[head].top !== cam.decap) {
+      patch(cam, { decap: STAGES[head].top })
+      wrote.current = cam.decap
+    }
 
     const d = depth.value
     const open = d > 0.002
-    if (body.current) body.current.visible = !open
+    hideRef.current = open
     if (root.current) root.current.visible = open
     if (!open) return
     const lidT = reveal(d, 1), sec = reveal(d, 2), rise = reveal(d, 3), etch = reveal(d, 4)
@@ -361,37 +364,37 @@ export function CloseUp({ p, lab, c, cam, top, body, code }: {
       cap.current.visible = sec < 0.999
       cap.current.position.set(-0.12 * r * lidT, (0.45 * lidT + 0.9 * sec) * r, -0.08 * r * lidT)
       cap.current.rotation.set(0.16 * lidT, 0, 0.3 * lidT + 0.3 * sec)
-      mats.cap.opacity = mats.capEdge.opacity = mats.print.opacity = 1 - sec
+      for (const m of [mats.cap, mats.capEdge, mats.print]) patch(m, { opacity: 1 - sec })
     }
     if (pos.current) {
       pos.current.visible = sec < 0.999
       pos.current.position.x = sec * r * 0.9
-      mats.pos.opacity = mats.posEdge.opacity = 1 - sec
+      for (const m of [mats.pos, mats.posEdge]) patch(m, { opacity: 1 - sec })
     }
-    const g = 0.26 * r * sec * (1 - ease(rise))
-    layers.body.current?.position.setY(g)
-    layers.paddle.current?.position.setY(g * 2.1)
-    if (layers.die.current) {
-      layers.die.current.position.setY(g * 3.2)
-      layers.die.current.visible = rise < 0.25
+    const g = 0.26 * r * sec * (1 - smoothstep(rise))
+    bodyLayer.current?.position.setY(g)
+    paddleLayer.current?.position.setY(g * 2.1)
+    if (dieLayer.current) {
+      dieLayer.current.position.setY(g * 3.2)
+      dieLayer.current.visible = rise < 0.25
     }
-    mats.hatch.opacity = sec * 0.9
+    patch(mats.hatch, { opacity: sec * 0.9 })
     if (bond.current) bond.current.visible = lidT > 0.25 && sec < 0.04
 
     const P = plate.current
     if (P) {
       P.visible = rise > 0.001
       if (P.visible) {
-        const e = ease(rise)
+        const e = smoothstep(rise)
         const end = 2 * Math.min(0.62 * r * 0.66, 0.62 * r * (size.width / Math.max(1, size.height)) * 0.76)
         P.scale.setScalar(lerp(cav.w / PLATE.die, end, e))
         P.position.set(lerp(cav.x, 0, e), lerp(cav.y + 0.02 + g * 3.2, tip + 0.2 * r, e), 0)
         const m = camera.matrixWorld.elements
         if (Math.hypot(m[4], m[6]) > 1e-3) yaw.current = Math.atan2(-m[4], -m[6]) - p.spin
         P.rotation.y = lerp(0, yaw.current, e)
-        plateMat.opacity = Math.min(1, Math.max(0, (rise - 0.3) / 0.5))
-        dieMat.uniforms.opacity.value = Math.min(1, rise * 5)
-        dieMat.uniforms.t.value = etch
+        patch(plateMat, { opacity: Math.min(1, Math.max(0, (rise - 0.3) / 0.5)) })
+        patch(dieMat.uniforms.opacity, { value: Math.min(1, rise * 5) })
+        patch(dieMat.uniforms.t, { value: etch })
         if (bondPlate.current) bondPlate.current.visible = rise > 0.7
         const pm = pulseMesh.current
         if (pm) {
@@ -413,7 +416,7 @@ export function CloseUp({ p, lab, c, cam, top, body, code }: {
     }
   })
 
-  const fill = chipMat(c.flat, false)
+  const fill = chipMat(c.flat)
   const edge = lineMat(c.bodyEdge)
   const ghostOf = (geo: { fill: import('three').BufferGeometry | null; edges: import('three').BufferGeometry | null }) => (
     <>
@@ -427,22 +430,22 @@ export function CloseUp({ p, lab, c, cam, top, body, code }: {
   return (
     <>
       <group ref={root} visible={false}>
-        <group ref={layers.lead}>
+        <group ref={leadLayer}>
           {ghostOf(model.lead)}
           <Callout at={[-0.06, 0.02, -(spec.d / 2 + Math.max(0.02, spec.lead * 0.6))]} title="LEAD FRAME" sub={`Cu alloy · ${PKG_NAME[spec.pkg]}`} flip={phone} show={sectionShown} reach={40} />
         </group>
-        <group ref={layers.body}>
+        <group ref={bodyLayer}>
           {ghostOf(model.body)}
           <mesh position={[0.0015, model.cut.y, 0]} rotation-y={Math.PI / 2} material={mats.hatch}>
             <planeGeometry args={[model.cut.d, model.cut.h]} />
           </mesh>
           <Callout at={[0.002, model.cut.y, -model.cut.d * 0.44]} title="MOLD" sub="epoxy compound · cut face" flip={phone} show={sectionShown} reach={72} />
         </group>
-        <group ref={layers.paddle}>
+        <group ref={paddleLayer}>
           {ghostOf(model.paddle)}
           <Callout at={[cav.x + 0.004, model.paddleY, -cav.d * 0.6]} title="PADDLE" sub="die attach · Ag epoxy" flip={phone} show={sectionShown} reach={96} />
         </group>
-        <group ref={layers.die}>
+        <group ref={dieLayer}>
           {ghostOf(model.die)}
           <Callout at={[cav.x + 0.004, cav.y + 0.012, -cav.d * 0.5]} title={`DIE · ${word}`} sub={`${guts.units.length} units · ${plan.pads.length} pads`} flip={phone} show={sectionShown} reach={110} />
           {dieTex && <DieTop tex={dieTex} cav={cav} x0={cav.x - cav.w / 2} x1={0.004} />}
@@ -455,7 +458,7 @@ export function CloseUp({ p, lab, c, cam, top, body, code }: {
         <group ref={cap}>
           {model.cap.fill && <mesh geometry={model.cap.fill} material={mats.cap} />}
           {model.cap.edges && <lineSegments geometry={model.cap.edges} material={mats.capEdge} />}
-          {top && spec.pkg !== 'passive' && (
+          {top && lid && (
             <mesh position={[lid.x, lid.y, 0]} rotation-x={-Math.PI / 2} material={mats.print}>
               <planeGeometry args={[lid.w, lid.d]} />
             </mesh>

@@ -1,23 +1,16 @@
-import { useEffect, useMemo } from 'react'
-
-import type { Sim, Tokens } from '../../core/contract'
-import { cyl, lineMat, segs } from '../../core/three'
+import type { Tokens } from '../../core/contract'
+import { Body } from '../../core/scene'
+import { cyl, lineMat, ring, segs, useDisposable } from '../../core/three'
 import { contrastOn } from '../../fx/heat'
-import { Rigid, ring, useRigid } from './rigid'
-import type { Surface } from './script'
-
-export type PadSpot = { x: number; y: number; z: number }
-const TOP = 0.05
-
-/** Where a machine parks: on the floor just past the board's front edge, beside its dock. */
-export const padAt = (sim: Sim, surface: Surface): PadSpot => ({ x: sim.rig.board.dock[0] + 0.6, y: TOP, z: surface.z1 + 1.3 })
+import { TOP } from './pad.data'
+import type { PadSpot } from './pad.data'
 
 type Handlers = Record<string, unknown>
 
 /** The landing pad (drone) or the dock plate (hexapod), with the brand's mark painted on it. */
 export function Pad({ pad, c, kind, handlers }: { pad: PadSpot; c: Tokens; kind: 'drone' | 'hexapod'; handlers: Handlers }) {
   const hex = kind === 'hexapod'
-  const geo = useRigid(() => {
+  const plate = () => {
     const lines: number[] = []
     if (hex) {
       for (const r of [0.98, 0.78]) {
@@ -34,8 +27,8 @@ export function Pad({ pad, c, kind, handlers }: { pad: PadSpot; c: Tokens; kind:
       }
     }
     return { pieces: [{ geo: cyl(1.02, 1.06, TOP, hex ? 6 : 40), at: [pad.x, TOP / 2, pad.z] as [number, number, number], rot: [0, hex ? Math.PI / 6 : 0, 0] as [number, number, number] }], lines }
-  }, [pad.x, pad.z, hex])
-  const mark = useMemo(() => {
+  }
+  const mark = useDisposable(() => {
     const lines: number[] = []
     if (hex) {
       const y = TOP + 0.006, s = 0.26
@@ -50,10 +43,9 @@ export function Pad({ pad, c, kind, handlers }: { pad: PadSpot; c: Tokens; kind:
     }
     return segs(lines)
   }, [pad.x, pad.z, hex])
-  useEffect(() => () => mark.dispose(), [mark])
   return (
     <group {...handlers}>
-      <Rigid geo={geo} fill={c.surface} edge={c.edge} c={c} />
+      <Body id={`pad-${kind}-${pad.x}-${pad.z}`} {...plate()} fill={c.surface} edge={c.edge} c={c} />
       <lineSegments geometry={mark} material={lineMat(hex ? contrastOn(c.surface, c.codex, c.codexInk) : c.claude)} />
     </group>
   )

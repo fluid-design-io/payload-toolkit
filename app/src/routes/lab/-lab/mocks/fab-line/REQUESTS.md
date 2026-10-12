@@ -1,3 +1,6 @@
+> Historical. This log records requests from the phased build and is no longer
+> maintained; CONTRACT.md and the code are current.
+
 # Fab line requests
 
 Append-only. One section per request: who you are (your folder), what you need
@@ -24,6 +27,11 @@ Package requests (new dependencies) go here too; nobody edits package.json.
    stutters. Workaround: the machines call `invalidate()` from their own
    `useFrame` until they are settled (bounded: landed, rotors stopped, no live
    particles), so the frame governor's dpr adaptation does not see those frames.
+
+   Answer (core, shared fixes): landed as `busyRef` on `IntegratorProps`; the
+   machines set it and the `invalidate()` loops are gone. The machines also
+   declare `footprint(board)` for their pad, which now parks past the board's
+   far end.
 2. `cam: ChipCam` on `IntegratorProps` (core). Why: lid etch marks must hide
    while the chip close-up lifts the lid. Workaround: marks skip a chip when
    the camera is within 2.6 footprints of it.
@@ -147,6 +155,15 @@ the focus go. Requests for frozen files:
    on the `path` variant, OR-ed into the entry's `busy`. Each transport would
    return its fleet's `busy()`. Meanwhile returns mostly finish inside the
    arm's seat steps; when they don't, they ease at 30 Hz.
+
+   Answer (core, shared fixes): 1 landed as `hum?: number` on `PathTransport`
+   with default 0, so an unknown transport is silent; the Conveyor sets 1,
+   the monorail 0.4, the rest 0. 3 landed as a `busyRef` prop (a ref you set
+   from your frame loop) rather than `busy()` on the variant, because the
+   state it reads lives in the Component; tube, monorail, AGV and maglev set
+   it. 2 stays open with the kit owner. `wrap` now returns
+   `{ pts, pace, data }` and `line.path.data` / `line.path.along(u)` replace
+   the module caches and duplicate pacing; see CONTRACT.md.
 
 ## board (`stations/board/`)
 

@@ -1,7 +1,7 @@
 import { Vector3 } from 'three'
 
 import type { Setup } from '@/routes/workspace/-workspace/workspace.types'
-import type { Ghost, Hatch, Plan, Route, Routed, RouteStyle, Slot } from '../../../core/contract'
+import type { Ghost, Hatch, Plan, Route, Routed, Slot } from '../../../core/contract'
 import { makeRoute } from '../../../core/route'
 import { BY, cpuHalf } from '../shared/dims'
 import { BANDS, bandOf, ghostIndex, packGrid, sortParts } from '../shared/pack'
@@ -120,7 +120,7 @@ function cpuEdge(a: number, framework: Setup['framework'], out: Vector3) {
  * Polar manhattan: each package drops square onto its sector's spoke, then
  * runs the spoke into the core. Lanes fan across the spoke in seat order.
  */
-export function route(parts: readonly Routed[], style: RouteStyle, framework: Setup['framework']) {
+export function route(parts: readonly Routed[], framework: Setup['framework']) {
   const y = WY + 0.006
   const byBand = new Map<number, Routed[]>()
   for (const p of parts) if (p.item.kind === 'block' && p.slot) byBand.set(bandOf(p.item.category), [...(byBand.get(bandOf(p.item.category)) ?? []), p])
@@ -136,7 +136,7 @@ export function route(parts: readonly Routed[], style: RouteStyle, framework: Se
       const foot = new Vector3(d.x * along + n.x * off, y, d.z * along + n.z * off)
       const inner = new Vector3(d.x * (R0 - 0.2) + n.x * off, y, d.z * (R0 - 0.2) + n.z * off)
       const core = cpuEdge(a, framework, new Vector3()).addScaledVector(new Vector3(n.x, 0, n.z), off)
-      p.route = makeRoute([core, inner, foot, new Vector3(s.x, y, s.z)], style, [inner.clone()])
+      p.route = makeRoute([core, inner, foot, new Vector3(s.x, y, s.z)], [inner.clone()])
     })
   }
   const h = cpuHalf(framework)
@@ -146,23 +146,23 @@ export function route(parts: readonly Routed[], style: RouteStyle, framework: Se
     const z = -0.02 + (i % 4) * 0.035
     const xl = -7.15 + (i % 4) * 0.07
     const corners = [new Vector3(-h.w - 0.05, y, z), new Vector3(-R + 0.2, y, z), new Vector3(xl, BY + 0.006, z), new Vector3(xl, BY + 0.006, s.z), new Vector3(s.x, BY + 0.006, s.z)]
-    p.route = makeRoute(corners, style, [corners[2].clone()])
+    p.route = makeRoute(corners, [corners[2].clone()])
   })
 }
 
 /** Memory and power buses down the west street from the deck to the core. */
-export function staticRoutes(style: RouteStyle, framework: Setup['framework']) {
+export function staticRoutes(framework: Setup['framework']) {
   const y = WY + 0.006, yd = BY + 0.006
   const h = cpuHalf(framework)
   const memory: Route[] = []
   const power: Route[] = []
   for (let i = 0; i < 6; i++) {
     const z = -0.36 + i * 0.06
-    memory.push(makeRoute([new Vector3(-10.75, yd, -1.8 + (i - 2.5) * 0.3), new Vector3(-9.0, yd, -1.8 + (i - 2.5) * 0.3), new Vector3(-8.0, yd, z), new Vector3(-R + 0.2, y, z), new Vector3(-h.w - 0.05, y, z)], style, []))
+    memory.push(makeRoute([new Vector3(-10.75, yd, -1.8 + (i - 2.5) * 0.3), new Vector3(-9.0, yd, -1.8 + (i - 2.5) * 0.3), new Vector3(-8.0, yd, z), new Vector3(-R + 0.2, y, z), new Vector3(-h.w - 0.05, y, z)], []))
   }
   for (let i = 0; i < 3; i++) {
     const z = 0.15 + i * 0.09
-    power.push(makeRoute([new Vector3(-9.4 + i * 0.4, yd, -4.2), new Vector3(-9.4 + i * 0.4, yd, z), new Vector3(-R + 0.2, y, z), new Vector3(-h.w - 0.05, y, z)], style, []))
+    power.push(makeRoute([new Vector3(-9.4 + i * 0.4, yd, -4.2), new Vector3(-9.4 + i * 0.4, yd, z), new Vector3(-R + 0.2, y, z), new Vector3(-h.w - 0.05, y, z)], []))
   }
   return { memory, power }
 }

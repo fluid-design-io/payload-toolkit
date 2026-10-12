@@ -20,14 +20,14 @@ export const PKG_NAME: Record<Pkg, string> = {
   qfp: 'LQFP', qfn: 'QFN', soic: 'SOIC', dip: 'PDIP', passive: '1206 SMD', module: 'Mezzanine',
 }
 
-const hash = (s: string) => {
+export function fnv1a(s: string) {
   let h = 2166136261
   for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619)
-  return (h >>> 0) / 4294967295
+  return h >>> 0
 }
 
 export function specOf(item: Pick<CatalogItem, 'kind' | 'category' | 'description' | 'title' | 'ref'>): Spec {
-  const c = Math.min(1, (item.description.length + item.title.length * 4) / 220) * 0.75 + hash(item.ref) * 0.25
+  const c = Math.min(1, (item.description.length + item.title.length * 4) / 220) * 0.75 + (fnv1a(item.ref) / 4294967295) * 0.25
   const q = (v: number) => Math.round(v * 20) / 20
   const make = (pkg: Pkg, w: number, d: number, h: number, lead: number, leadX: boolean, leadZ: boolean): Spec => ({
     pkg, w: q(w), d: q(d), h, lead, c,

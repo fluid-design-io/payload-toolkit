@@ -61,11 +61,13 @@ function useCardSize() {
  * footer, and closing morphs it back. The row is the only part in normal
  * flow, so the closed glass sizes to it with `auto`. The wrapper centers it
  * on the main column, past the 240px rail. Escape and the scrim close the
- * card; if focus was inside, it returns to the row's call to action.
+ * card; if focus was inside, it returns to the row's call to action. While
+ * the factory scene's settings sheet is open the bar sinks out of the way.
  */
 function BarRoot({ children }: PropsWithChildren) {
   const { actions } = useWorkspace()
   const panel = useWorkspaceSelector((state) => state.panel)
+  const isAside = useWorkspaceSelector((state) => state.sceneSheet)
   const size = useCardSize()
   const isReduced = useReducedMotion() ?? false
   const shell = useRef<HTMLDivElement>(null)
@@ -106,14 +108,16 @@ function BarRoot({ children }: PropsWithChildren) {
           ref={shell}
           initial={{ opacity: 0, y: 8, ...glass.closed }}
           animate={{
-            opacity: 1,
-            y: 0,
+            opacity: isAside ? 0 : 1,
+            y: isAside ? 32 : 0,
             width: isOpen ? size.width : 'auto',
             height: isOpen ? size.height : 'auto',
             ...glass[isOpen ? 'open' : 'closed'],
           }}
           transition={isReduced ? { duration: 0 } : glassMorph[isOpen ? 'open' : 'close']}
-          className="pointer-events-auto relative flex flex-col justify-end overflow-hidden rounded-[1.875rem] glass text-white ring-1 ring-white/10"
+          inert={isAside}
+          data-aside={isAside}
+          className="pointer-events-auto relative flex flex-col justify-end overflow-hidden rounded-[1.875rem] glass text-white ring-1 ring-white/10 data-[aside=true]:pointer-events-none"
         >
           <AnimatePresence mode="wait" custom={entry}>
             {view && (
@@ -125,6 +129,7 @@ function BarRoot({ children }: PropsWithChildren) {
           <Toolbar
             aria-label="Build actions"
             className="flex w-full items-center justify-between gap-1 p-2"
+            data-scene-chrome
           >
             {children}
           </Toolbar>

@@ -1,3 +1,4 @@
+import type { Lab } from '@/routes/lab/-lab/lab.types'
 import type { CategoryId, Setup } from '@/routes/workspace/-workspace/workspace.types'
 import type { Routed } from '../../../core/contract'
 import { PKG_BY_GROUP, groupOf, specOf } from '../../../core/spec'
@@ -19,6 +20,8 @@ export function bandOf(category: CategoryId) {
   const at = BANDS.findIndex((band) => band.groups.includes(g))
   return at === -1 ? BANDS.length - 1 : at
 }
+/** The page band the lab is focused on, or -1. */
+export const focusedBand = (lab: Lab) => (lab.focus.category.startsWith('block:') ? bandOf(lab.focus.category) : -1)
 
 /** Blocks an existing app already has, drawn as hatched, owned chips. */
 export const GHOSTS: { band: number; pkg: Pkg; c: number; title: string }[] = [

@@ -1,14 +1,13 @@
 /**
  * A procedural WebAudio engine for the lab: short synthesized voices, a belt
- * hum that follows the queue, one master limiter. The AudioContext is created
+ * patter that follows the queue, one master limiter. The AudioContext is created
  * on the first `play` after a user gesture, never earlier. One mute choice in
  * localStorage `lab-sound` is shared by every variant and the shell; without a
- * choice, sound is off in embedded chrome and under reduced motion.
+ * choice, sound is off only under reduced motion.
  */
 import { useEffect, useSyncExternalStore } from 'react'
 
-import type { Lab } from '../lab.types'
-import { prefersReducedMotion } from './a11y'
+import { prefersReducedMotion } from './env'
 
 export type SoundName = 'tick' | 'page' | 'pick' | 'drawer' | 'seat' | 'toss' | 'servo' | 'chirp' | 'zap' | 'copy' | 'swap' | 'error'
 
@@ -67,6 +66,7 @@ const VOICES: Record<SoundName, Voice> = {
   swap: { gap: 120, play: (c, o, t) => { tone(c, o, t, { type: 'triangle', f0: 400, f1: 520, dur: 0.1, gain: 0.09 }); noise(c, o, t, { dur: 0.03, gain: 0.08, hz: 2600 }) } },
   error: { gap: 250, play: (c, o, t) => tone(c, o, t, { type: 'square', f0: 220, f1: 180, dur: 0.12, gain: 0.05 }) },
 }
+export const SOUND_NAMES = Object.keys(VOICES) as readonly SoundName[]
 
 type Choice = 'on' | 'off' | null
 const listeners = new Set<() => void>()
@@ -76,7 +76,6 @@ const engine = {
   hum: null as { gain: GainNode } | null,
   humLevel: 0,
   gestured: false,
-  chrome: 'full' as Lab['chrome'],
   last: new Map<SoundName, number>(),
   choice: null as Choice,
 }
@@ -97,8 +96,7 @@ const subscribe = (l: () => void) => {
   return () => listeners.delete(l)
 }
 
-export const defaultMuted = (chrome: Lab['chrome']) => chrome === 'embedded' || prefersReducedMotion()
-export const isMuted = (chrome: Lab['chrome'] = engine.chrome) => (engine.choice ? engine.choice === 'off' : defaultMuted(chrome))
+const isMuted = () => (engine.choice ? engine.choice === 'off' : prefersReducedMotion())
 
 function reflect() {
   document.documentElement.dataset.sound = isMuted() ? 'off' : engine.ctx ? 'on' : 'armed'
@@ -167,7 +165,11 @@ export function play(name: SoundName) {
   voice.play(ctx, engine.bus, ctx.currentTime)
 }
 
-/** The belt hum. `level` 0..1 follows how much is moving; it ramps and idles silently. */
+/**
+ * The belt: a light roller patter, not a motor drone. Airy band-passed noise
+ * is clicked by a pulse train at 7.5 Hz, the slats passing over a roller.
+ * `level` 0..1 follows how much is moving; it ramps and idles silently.
+ */
 export function hum(level: number) {
   const target = Math.min(1, Math.max(0, level))
   if (target === engine.humLevel && (target === 0 || engine.hum)) return
@@ -176,42 +178,44 @@ export function hum(level: number) {
   const ctx = context()
   if (!ctx || !engine.bus) return
   if (!engine.hum) {
+    const length = ctx.sampleRate
+    const buffer = ctx.createBuffer(1, length, ctx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1
+    const src = ctx.createBufferSource()
+    src.buffer = buffer
+    src.loop = true
+    const band = ctx.createBiquadFilter()
+    band.type = 'bandpass'
+    band.frequency.value = 2600
+    band.Q.value = 0.9
+    // Each slat is a short tick: a sine LFO shaped into narrow positive pulses drives the gain.
+    const click = ctx.createGain()
+    click.gain.value = 0
+    const lfo = ctx.createOscillator()
+    lfo.frequency.value = 7.5
+    const shape = ctx.createWaveShaper()
+    const curve = new Float32Array(256)
+    for (let i = 0; i < curve.length; i++) curve[i] = ((i / (curve.length - 1)) ** 10)
+    shape.curve = curve
+    lfo.connect(shape).connect(click.gain)
     const gain = ctx.createGain()
     gain.gain.value = 0
-    const low = ctx.createBiquadFilter()
-    low.type = 'lowpass'
-    low.frequency.value = 240
-    const osc = ctx.createOscillator()
-    osc.type = 'sawtooth'
-    osc.frequency.value = 55
-    const lfo = ctx.createOscillator()
-    lfo.frequency.value = 2.3
-    const depth = ctx.createGain()
-    depth.gain.value = 3
-    lfo.connect(depth).connect(osc.frequency)
-    osc.connect(low).connect(gain).connect(engine.bus)
-    osc.start()
+    src.connect(band).connect(click).connect(gain).connect(engine.bus)
+    src.start()
     lfo.start()
     engine.hum = { gain }
   }
-  engine.hum.gain.gain.setTargetAtTime(target * 0.045, ctx.currentTime, 0.25)
+  engine.hum.gain.gain.setTargetAtTime(target * 0.12, ctx.currentTime, 0.3)
 }
 
-export const sound = { play, hum, isMuted, setMuted }
-
-/** Subscribes to the mute choice; `chrome` decides the default when no choice is stored. */
-export function useMuted(chrome: Lab['chrome']) {
-  return useSyncExternalStore(
-    subscribe,
-    () => isMuted(chrome),
-    () => chrome === 'embedded',
-  )
+/** Subscribes to the mute choice. */
+export function useMuted() {
+  return useSyncExternalStore(subscribe, isMuted, () => false)
 }
 
-/** Mount once per scene: arms the gesture gate and tells the engine which chrome it runs in. */
-export function useSound(lab: Pick<Lab, 'chrome'>) {
-  engine.chrome = lab.chrome
-  const muted = useMuted(lab.chrome)
+/** Mount once per scene: arms the gesture gate. It does not subscribe to the mute choice; `useMuted` does. */
+export function useSound() {
   useEffect(() => {
     arm()
     const onStorage = (e: StorageEvent) => {
@@ -226,5 +230,4 @@ export function useSound(lab: Pick<Lab, 'chrome'>) {
       hum(0)
     }
   }, [])
-  return { play, hum, muted, setMuted }
 }

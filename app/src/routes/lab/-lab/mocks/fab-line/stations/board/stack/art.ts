@@ -3,13 +3,14 @@ import { MONO } from '../../../core/three'
 import { BANDS } from '../shared/pack'
 import { frameTexture, pageHints } from '../shared/paint'
 import { coreSilk } from '../pcb/art'
+import type { Printed } from '../pcb/art'
 import { BOARD, PAGE, bandZ } from '../pcb/plan'
 import { LAYERS, layerZ } from './plan'
 
 export const ATLAS = { x0: PAGE.x0, x1: PAGE.x1, z0: PAGE.z0, z1: PAGE.z1 }
 
 /** The core board's silk; the page area is left for the layers. */
-export function baseSilk(setup: Setup, silk: string) {
+export function baseSilk(setup: Printed, silk: string) {
   return frameTexture(BOARD, 2560, (p) => {
     p.ctx.fillStyle = silk
     coreSilk(p, setup, 'PAYLOAD/APP  REV 4.1  ·  MEZZANINE')

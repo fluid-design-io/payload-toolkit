@@ -1,32 +1,18 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Color, ExtrudeGeometry, Matrix4, Object3D, Shape, Vector3 } from 'three'
+import { useLayoutEffect, useRef } from 'react'
+import { Color, ExtrudeGeometry, Matrix4, Object3D, Shape } from 'three'
 import type { InstancedMesh } from 'three'
 
-import type { CabinetProps, CabinetVariant, Tokens } from '../../core/contract'
+import type { CabinetProps, Tokens } from '../../core/contract'
 import { Body } from '../../core/scene'
-import { FONT, MONO, box, fillMat, reducedMotion, textTexture, tint } from '../../core/three'
+import { FONT, MONO, box, damp, fillMat, lerp, reducedMotion, smoothstep, textTexture, tint, useDisposable } from '../../core/three'
 import type { Piece } from '../../core/three'
 import type { Aisle } from '@/routes/lab/-lab/warehouse'
-import { Units, aisleEvents, atlasLayout, code, damp, frontQuad, paintTag, paler, sphereAt, useAtlasTexture } from './units'
+import { B, BIN, CELL, OPEN, cell } from './pegboard.data'
+import { Units, atlasLayout, code, frontQuad, paintTag, paler, sphereAt, useAisleEvents, useAtlasTexture } from './units'
 
-/**
- * A shadow board: hopper bins hang on a pegboard, one per aisle, in a
- * grid that reads like the rail (features, components, then blocks). A
- * bin's width grows with its aisle's part count on a log scale and the heap
- * inside shows how full it is, so the busiest aisles stand out at viral
- * scale. Opening an aisle lifts its bin off the hooks and tips it toward
- * the table; the outline painted behind it lights up where it hung.
- */
-const B = { x0: -14.5, x1: -7.3, y0: 1.0, y1: 4.84, z: -2.775, rows: [3.78, 2.98, 2.18], pad: 0.12 }
-const BIN = { h: 0.58, lip: 0.3, d: 0.46, t: 0.025 }
-const OPEN = { lift: 0.3, out: 0.5, tilt: 0.24 }
 const PX = 284
 
 type Spot = { x: number; y: number; w: number; fill: number }
-const COLS = 6
-const CELL = (B.x1 - B.x0 - B.pad * 2) / COLS
-/** Aisle i hangs in a fixed cell, so its place never depends on counts (the sim asks for it before the wall mounts). */
-const cell = (i: number) => ({ x: B.x0 + B.pad + ((i % COLS) + 0.5) * CELL, y: B.rows[Math.floor(i / COLS) % B.rows.length] })
 /** One cell per aisle in rail order; the bin's width inside its cell grows with its part count on a log scale. */
 function layout(aisles: readonly Aisle[]): Spot[] {
   const counts = aisles.map((a) => Math.max(1, a.count))
@@ -35,11 +21,6 @@ function layout(aisles: readonly Aisle[]): Spot[] {
     const t = hi > lo ? (Math.log(counts[i]) - lo) / (hi - lo) : 0.5
     return { ...cell(i), w: 0.62 + (CELL - 0.12 - 0.62) * t, fill: t }
   })
-}
-
-function drawer(aisle: number, out: Vector3) {
-  const s = cell(aisle)
-  return out.set(s.x, s.y + OPEN.lift + 0.06, B.z + BIN.d / 2 + OPEN.out)
 }
 
 /** A unit-wide hopper bin, bottom centre at the origin, back against the board. */
@@ -118,28 +99,24 @@ function paintBoard(ctx: CanvasRenderingContext2D, W: number, H: number, aisles:
 
 function Frame({ c, spots: at }: { c: Tokens; spots: Spot[] }) {
   const key = at.map((s) => `${s.x.toFixed(2)}:${s.y}:${s.w.toFixed(2)}`).join('|')
-  const pieces = useMemo((): Piece[] => {
-    const W = B.x1 - B.x0, Hb = B.y1 - B.y0
-    const out: Piece[] = [
-      { geo: box(W, Hb, 0.05), at: [(B.x0 + B.x1) / 2, (B.y0 + B.y1) / 2, B.z - 0.027] },
-      { geo: box(0.14, B.y1 + 0.2, 0.14), at: [B.x0 - 0.07, (B.y1 + 0.2) / 2, B.z - 0.09] },
-      { geo: box(0.14, B.y1 + 0.2, 0.14), at: [B.x1 + 0.07, (B.y1 + 0.2) / 2, B.z - 0.09] },
-      { geo: box(0.2, 0.08, 0.9), at: [B.x0 - 0.07, 0.04, B.z - 0.09] },
-      { geo: box(0.2, 0.08, 0.9), at: [B.x1 + 0.07, 0.04, B.z - 0.09] },
-      { geo: box(W + 0.42, 0.12, 0.24), at: [(B.x0 + B.x1) / 2, B.y1 + 0.14, B.z - 0.06] },
-    ]
-    for (const s of at) {
-      for (const dx of [-s.w / 2 + 0.12, s.w / 2 - 0.12]) out.push({ geo: box(0.03, 0.03, 0.1), at: [s.x + dx, s.y + BIN.h - 0.06, B.z + 0.05] })
-    }
-    return out
-  }, [key])
+  const W = B.x1 - B.x0, Hb = B.y1 - B.y0
+  const pieces: Piece[] = [
+    { geo: box(W, Hb, 0.05), at: [(B.x0 + B.x1) / 2, (B.y0 + B.y1) / 2, B.z - 0.027] },
+    { geo: box(0.14, B.y1 + 0.2, 0.14), at: [B.x0 - 0.07, (B.y1 + 0.2) / 2, B.z - 0.09] },
+    { geo: box(0.14, B.y1 + 0.2, 0.14), at: [B.x1 + 0.07, (B.y1 + 0.2) / 2, B.z - 0.09] },
+    { geo: box(0.2, 0.08, 0.9), at: [B.x0 - 0.07, 0.04, B.z - 0.09] },
+    { geo: box(0.2, 0.08, 0.9), at: [B.x1 + 0.07, 0.04, B.z - 0.09] },
+    { geo: box(W + 0.42, 0.12, 0.24), at: [(B.x0 + B.x1) / 2, B.y1 + 0.14, B.z - 0.06] },
+  ]
+  for (const s of at) {
+    for (const dx of [-s.w / 2 + 0.12, s.w / 2 - 0.12]) pieces.push({ geo: box(0.03, 0.03, 0.1), at: [s.x + dx, s.y + BIN.h - 0.06, B.z + 0.05] })
+  }
   return <Body id={`pegboard-frame-${key}`} c={c} fill={c.surface} edge={c.edge} pieces={pieces} />
 }
 
 function Board({ aisles, at, active, c }: { aisles: readonly Aisle[]; at: Spot[]; active: number; c: Tokens }) {
   const W = Math.round((B.x1 - B.x0) * PX), H = Math.round((B.y1 - B.y0) * PX)
-  const tex = useMemo(() => textTexture(W, H, (ctx) => paintBoard(ctx, W, H, aisles, at, active, c)), [aisles, at, active, c])
-  useEffect(() => () => tex.dispose(), [tex])
+  const tex = useDisposable(() => textTexture(W, H, (ctx) => paintBoard(ctx, W, H, aisles, at, active, c)), [aisles, at, active, c])
   return (
     <mesh position={[(B.x0 + B.x1) / 2, (B.y0 + B.y1) / 2, B.z + 0.001]}>
       <planeGeometry args={[B.x1 - B.x0, B.y1 - B.y0]} />
@@ -148,30 +125,34 @@ function Board({ aisles, at, active, c }: { aisles: readonly Aisle[]; at: Spot[]
   )
 }
 
-function Pegboard(props: CabinetProps) {
+const tmp = { o: new Object3D(), local: new Matrix4(), color: new Color() }
+
+export function Pegboard(props: CabinetProps) {
   const { aisles, active, matches, c } = props
   const n = aisles.length
-  const at = useMemo(() => layout(aisles), [aisles])
-  const atlas = useMemo(() => atlasLayout(n, KINDS), [n])
+  const at = layout(aisles)
+  const keyId = `peg-${at.map((s) => s.w.toFixed(2)).join(',')}`
+  const atlas = atlasLayout(n, KINDS)
   const tex = useAtlasTexture(atlas, n, 1, (ctx, i, _k, w, h) => paintTag(ctx, w, h, aisles[i], i, { c, matches, active: i === active, squeeze: 1 / at[i].w, size: h * 0.5 }), [atlas, aisles, matches, active, c, at])
   const st = useRef({ open: new Float32Array(n), hov: new Float32Array(n) })
-  if (st.current.open.length !== n) st.current = { open: new Float32Array(n), hov: new Float32Array(n) }
-  const hover = useRef(-1)
+  useLayoutEffect(() => {
+    if (st.current.open.length !== n) st.current = { open: new Float32Array(n), hov: new Float32Array(n) }
+  })
+  const { hover, events } = useAisleEvents(props)
   const heap = useRef<InstancedMesh>(null)
-  const tmp = useMemo(() => ({ o: new Object3D(), local: new Matrix4(), color: new Color() }), [])
   const tick = (dt: number) => {
     const s = st.current
     let moved = false
     for (let i = 0; i < n; i++) {
       const o = i === active ? 1 : 0, h = i === hover.current && i !== active ? 1 : 0
-      const no = reducedMotion ? o : damp(s.open[i], o, 6, dt), nh = reducedMotion ? h : damp(s.hov[i], h, 14, dt)
+      const no = reducedMotion ? o : lerp(s.open[i], o, damp(dt, 6)), nh = reducedMotion ? h : lerp(s.hov[i], h, damp(dt, 14))
       if (Math.abs(no - s.open[i]) > 1e-4 || Math.abs(nh - s.hov[i]) > 1e-4) moved = true
       s.open[i] = no; s.hov[i] = nh
     }
     return moved
   }
   const place = (i: number, m: Matrix4) => {
-    const s = st.current, p = at[i], k = s.open[i], e = k * k * (3 - 2 * k)
+    const s = st.current, p = at[i], e = smoothstep(s.open[i])
     const o = tmp.o
     o.position.set(p.x, p.y + OPEN.lift * e + 0.03 * s.hov[i], B.z + BIN.d / 2 + OPEN.out * e + 0.05 * s.hov[i])
     o.rotation.set(OPEN.tilt * e, 0, 0)
@@ -192,10 +173,9 @@ function Pegboard(props: CabinetProps) {
     aisles.forEach((a, i) => hm.setColorAt(i, tmp.color.set(tint(a.hue, c.s, c.l)).multiplyScalar(matches && !matches[i] ? 0.55 : 1)))
     if (hm.instanceColor) hm.instanceColor.needsUpdate = true
   }, [aisles, c, matches, n])
-  const events = useMemo(() => aisleEvents(props, hover), [props.aisles, props.onOpen, props.tip, props.guard])
   return (
     <group>
-      <Units n={n} pieces={HOPPER} quads={QUADS} atlas={atlas} texture={tex} place={place} tick={tick} active={active} sphere={SPHERE} c={c} events={events} keyId={`peg-${at.map((s) => s.w.toFixed(2)).join(',')}`} />
+      <Units n={n} pieces={HOPPER} quads={QUADS} atlas={atlas} texture={tex} place={place} tick={tick} active={active} sphere={SPHERE} c={c} events={events} keyId={keyId} />
       <instancedMesh key={n} ref={heap} args={[undefined, undefined, n]} material={fillMat(paler(c), c.flat, c.rough)} frustumCulled={false} raycast={() => null}>
         <boxGeometry args={[1, 1, 1]} />
       </instancedMesh>
@@ -205,12 +185,3 @@ function Pegboard(props: CabinetProps) {
   )
 }
 
-export const pegboard: CabinetVariant = {
-  id: 'pegboard',
-  label: 'Pegboard',
-  footprint: { x0: B.x0 - 0.25, x1: B.x1 + 0.25, z0: B.z - 0.5, z1: B.z + BIN.d + OPEN.out, h: B.y1 + 0.2 },
-  frame: [[B.x0 - 0.2, 1.4, B.z + 0.5], [B.x0 - 0.2, B.y1 + 0.3, B.z - 0.2], [B.x1 + 0.2, B.y1 + 0.3, B.z + 0.5], [B.x1 + 0.2, 1.4, B.z + 0.9]],
-  el: 16,
-  drawer,
-  Component: Pegboard,
-}

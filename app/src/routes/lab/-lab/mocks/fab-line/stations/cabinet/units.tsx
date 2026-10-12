@@ -1,11 +1,13 @@
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame } from '@react-three/fiber'
 import type { ThreeEvent } from '@react-three/fiber'
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { BufferGeometry, Color, Float32BufferAttribute, Matrix4, Sphere, Vector3 } from 'three'
+import { useEffect, useLayoutEffect, useRef } from 'react'
+import { BufferGeometry, Float32BufferAttribute, Matrix4, Sphere, Vector3 } from 'three'
 import type { InstancedMesh, LineSegments, Mesh, Texture } from 'three'
 
+import { keepAnimating } from '../../../../kit/busy'
 import type { CabinetProps, Tokens, V3 } from '../../core/contract'
-import { FONT, MONO, fillMat, lineMat, mergeEdges, mergeFills, textTexture, tint } from '../../core/three'
+import { FONT, MONO, fillMat, lineMat, mergeEdges, mergeFills, quadGeometry, textTexture, tint, useDisposable } from '../../core/three'
+import { luminance } from '../../fx/heat'
 import type { Piece } from '../../core/three'
 import type { Aisle } from '@/routes/lab/-lab/warehouse'
 
@@ -40,7 +42,7 @@ export type Atlas = ReturnType<typeof atlasLayout>
 
 /** Draws every unit's cells; `draw(ctx, i, k, w, h)` paints cell k of unit i in its own coordinates. */
 export function useAtlasTexture(atlas: Atlas, n: number, kinds: number, draw: (ctx: CanvasRenderingContext2D, i: number, k: number, w: number, h: number) => void, deps: unknown[]) {
-  const tex = useMemo(
+  return useDisposable(
     () =>
       textTexture(atlas.width, atlas.height, (ctx) => {
         for (let i = 0; i < n; i++)
@@ -57,23 +59,33 @@ export function useAtlasTexture(atlas: Atlas, n: number, kinds: number, draw: (c
       }),
     deps,
   )
-  useEffect(() => () => tex.dispose(), [tex])
-  return tex
 }
 
-/** Hover card and open-on-click for instanced aisle units, behind the drag guard. */
-export function aisleEvents(p: Pick<CabinetProps, 'aisles' | 'onOpen' | 'tip' | 'guard'>, hover?: { current: number }) {
-  const at = (e: ThreeEvent<PointerEvent | MouseEvent>) => (e.instanceId !== undefined && e.instanceId < p.aisles.length ? e.instanceId : -1)
-  return {
-    onClick: (e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); const i = at(e); if (i >= 0 && !p.guard.moved) p.onOpen(i) },
-    onPointerOver: (e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); const i = at(e); if (i < 0) return; if (hover) hover.current = i; showAisle(p, e.nativeEvent, i) },
+type AisleEvent = ThreeEvent<PointerEvent | MouseEvent>
+const instanceAt = (e: AisleEvent, n: number) => (e.instanceId !== undefined && e.instanceId < n ? e.instanceId : -1)
+/**
+ * Hover card and open-on-click for a cabinet's aisles, behind the drag guard. `at` names the aisle under an
+ * event (-1 for none): the instance by default, or a cell on a panel. `hover` is that aisle for the frame loop.
+ */
+export function useAisleEvents(p: Pick<CabinetProps, 'aisles' | 'onOpen' | 'tip' | 'guard'>, at: (e: AisleEvent, n: number) => number = instanceAt) {
+  const hover = useRef(-1)
+  const n = p.aisles.length
+  const events = {
+    onClick: (e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); const i = at(e, n); if (i >= 0 && !p.guard.moved) p.onOpen(i) },
+    onPointerOver: (e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); const i = at(e, n); if (i < 0) return; hover.current = i; showAisle(p, e.nativeEvent, i) },
     onPointerMove: (e: ThreeEvent<PointerEvent>) => {
-      const i = at(e)
-      if (hover && i >= 0 && hover.current !== i) { hover.current = i; showAisle(p, e.nativeEvent, i) }
+      e.stopPropagation()
+      const i = at(e, n)
+      if (hover.current !== i) {
+        hover.current = i
+        if (i >= 0) showAisle(p, e.nativeEvent, i)
+        else p.tip.hide()
+      }
       p.tip.move(e.nativeEvent)
     },
-    onPointerOut: () => { if (hover) hover.current = -1; p.tip.hide() },
+    onPointerOut: () => { hover.current = -1; p.tip.hide() },
   }
+  return { hover, events }
 }
 export function showAisle(p: Pick<CabinetProps, 'aisles' | 'tip'>, e: PointerEvent, i: number) {
   const a = p.aisles[i]
@@ -121,61 +133,47 @@ export function paintTag(ctx: CanvasRenderingContext2D, w: number, h: number, a:
   ctx.restore()
 }
 
+const m = new Matrix4()
+
 /**
  * Moving units (trays, bins) drawn as one instanced fill, one hairline
  * draw rewritten while they move, label quads from one atlas, and the
- * active unit's outline in the accent. `tick` advances the variant's own
+ * active unit's outline in the accent (`outline`, else the unit's own
+ * edges). `tick` advances the variant's own
  * state and says whether anything moved; `place` writes unit i's matrix.
- * While moving it asks for the next frame itself, so motion stays smooth
- * between the line's busy windows.
+ * While anything moves it keeps the line animating.
  */
-export function Units({ n, pieces, quads, atlas, uv, texture, place, tick, active, sphere, c, events, keyId }: {
+export function Units({ n, pieces, outline, quads, atlas, texture, place, tick, active, sphere, c, events, keyId }: {
   n: number
   pieces: Piece[]
+  outline?: Piece[]
   quads: Quad[]
-  atlas?: Atlas
-  uv?: (i: number, k: number) => [number, number, number, number]
+  atlas: Atlas
   texture: Texture | null
   place: (i: number, m: Matrix4) => void
   tick: (dt: number) => boolean
   active: number
   sphere: Sphere
   c: Tokens
-  events: ReturnType<typeof aisleEvents>
+  events: ReturnType<typeof useAisleEvents>['events']
   keyId: string
 }) {
-  const invalidate = useThree((s) => s.invalidate)
   const body = useRef<InstancedMesh>(null)
   const edges = useRef<LineSegments>(null)
   const hi = useRef<LineSegments>(null)
   const labels = useRef<Mesh>(null)
   const K = quads.length
-  const geo = useMemo(() => {
-    const fill = mergeFills(pieces)
+  const geo = useDisposable(() => {
     const edge = mergeEdges(pieces)
     const base = edge.getAttribute('position').array as Float32Array
     const eg = new BufferGeometry()
     eg.setAttribute('position', new Float32BufferAttribute(new Float32Array(base.length * n), 3))
-    const lg = new BufferGeometry()
-    const uvs = new Float32Array(n * K * 8), idx: number[] = []
-    const cell = uv ?? atlas?.uv
-    for (let i = 0; i < n; i++)
-      for (let k = 0; k < K; k++) {
-        const j = i * K + k
-        const [u0, v0, u1, v1] = cell ? cell(i, k) : [0, 0, 1, 1]
-        uvs.set([u0, v0, u1, v0, u1, v1, u0, v1], j * 8)
-        idx.push(j * 4, j * 4 + 1, j * 4 + 2, j * 4, j * 4 + 2, j * 4 + 3)
-      }
-    lg.setAttribute('position', new Float32BufferAttribute(new Float32Array(n * K * 12), 3))
-    lg.setAttribute('uv', new Float32BufferAttribute(uvs, 2))
-    lg.setIndex(idx)
-    return { fill, edge, base, eg, lg }
+    const lg = quadGeometry(Array.from({ length: n * K }, (_, j) => atlas.uv(Math.floor(j / K), j % K)))
+    return { fill: mergeFills(pieces), edge, base, eg, lg, hi: outline ? mergeEdges(outline) : edge }
   }, [n, keyId])
-  useEffect(() => () => { geo.fill.dispose(); geo.edge.dispose(); geo.eg.dispose(); geo.lg.dispose() }, [geo])
   useLayoutEffect(() => {
     if (body.current) body.current.boundingSphere = sphere
   }, [n, sphere])
-  const m = useMemo(() => new Matrix4(), [])
   const dirty = useRef(true)
   useEffect(() => { dirty.current = true }, [geo, active, texture])
   useFrame((_, dt) => {
@@ -184,7 +182,7 @@ export function Units({ n, pieces, quads, atlas, uv, texture, place, tick, activ
     const moving = tick(Math.min(dt, 0.05))
     if (!moving && !dirty.current) return
     dirty.current = false
-    if (moving) invalidate()
+    if (moving) keepAnimating()
     const ep = em.geometry.getAttribute('position') as Float32BufferAttribute
     const out = ep.array as Float32Array
     const base = geo.base, per = base.length
@@ -214,14 +212,13 @@ export function Units({ n, pieces, quads, atlas, uv, texture, place, tick, activ
     if (hi.current) { hi.current.visible = active >= 0 && active < n; hi.current.matrixWorldNeedsUpdate = true }
     bm.instanceMatrix.needsUpdate = true
     ep.needsUpdate = true
-    em.geometry.computeBoundingSphere()
-    if (lp && lm) { lp.needsUpdate = true; lm.geometry.computeBoundingSphere() }
+    if (lp) lp.needsUpdate = true
   })
   return (
     <group>
       <instancedMesh key={`${n}-${keyId}`} ref={body} args={[geo.fill, undefined, n]} material={fillMat(c.surface, c.flat, c.rough)} frustumCulled={false} {...events} />
       <lineSegments ref={edges} geometry={geo.eg} material={lineMat(c.edge)} frustumCulled={false} />
-      <lineSegments ref={hi} geometry={geo.edge} material={lineMat(c.accent)} matrixAutoUpdate={false} renderOrder={1} frustumCulled={false} />
+      <lineSegments ref={hi} geometry={geo.hi} material={lineMat(c.accent)} matrixAutoUpdate={false} renderOrder={1} frustumCulled={false} />
       {texture && K > 0 && (
         <mesh ref={labels} geometry={geo.lg} frustumCulled={false}>
           <meshBasicMaterial map={texture} toneMapped={false} />
@@ -231,11 +228,8 @@ export function Units({ n, pieces, quads, atlas, uv, texture, place, tick, activ
   )
 }
 
-/** Damps `x` toward `to` at `rate`, returning the new value. */
-export const damp = (x: number, to: number, rate: number, dt: number) => x + (to - x) * (1 - Math.exp(-dt * rate))
-
 /** A fixed sphere for raycasting moving instances (three.js caches the first one it computes). */
 export const sphereAt = (x: number, y: number, z: number, r: number) => new Sphere(new Vector3(x, y, z), r)
 
 /** Instance colors multiply the material, so tinted instances start from whichever of the theme's surface and ink is paler. */
-export const paler = (c: Tokens) => (new Color(c.surface).getHSL({ h: 0, s: 0, l: 0 }).l >= new Color(c.fg).getHSL({ h: 0, s: 0, l: 0 }).l ? c.surface : c.fg)
+export const paler = (c: Tokens) => (luminance(c.surface) >= luminance(c.fg) ? c.surface : c.fg)

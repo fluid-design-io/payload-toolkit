@@ -3,13 +3,12 @@ import { FONT, MONO } from '../../../core/three'
 import { BANDS } from '../shared/pack'
 import { frameTexture } from '../shared/paint'
 import type { Painter } from '../shared/paint'
+import { pmLabel } from '../pcb/art'
 import { DECK, HEADER, R, R0, SECTOR, mid, polar, streetOf } from './plan'
 
 export const DISC = { x0: -R, x1: R, z0: -R, z1: R }
 /** Where the wafer's flat is cut, toward the camera. */
 export const FLAT = R - 0.3
-
-const pmLabel: Record<Setup['packageManager'], string> = { pnpm: 'VRM · pnpm · 6-phase', npm: 'LDO · npm · linear', bun: 'BUCK · bun · compact' }
 
 function wedge(p: Painter, b: number) {
   const { ctx, px, PX } = p
@@ -26,7 +25,7 @@ function wedge(p: Painter, b: number) {
  * between sectors, the core's keep-out ring, the edge exclusion with each
  * band's number and name around the rim, and the lot line along the flat.
  */
-export function waferArt(setup: Setup, silk: string, accent: string, activeBand: number, pitch: number) {
+export function waferArt(setup: Pick<Setup, 'target' | 'name' | 'framework'>, silk: string, accent: string, activeBand: number, pitch: number) {
   return frameTexture(DISC, 2048, (p) => {
     const { ctx, px, PX, text } = p
     const [cx, cz] = px(0, 0)
@@ -105,7 +104,7 @@ export function waferArt(setup: Setup, silk: string, accent: string, activeBand:
 }
 
 /** The prober deck's silk: memory, power, the bays, J1 and the stage plate. */
-export function deckSilk(setup: Setup, silk: string) {
+export function deckSilk(setup: Pick<Setup, 'database' | 'packageManager' | 'agent'>, silk: string) {
   return frameTexture(DECK, 2560, (p) => {
     const { ctx, text } = p
     ctx.fillStyle = silk

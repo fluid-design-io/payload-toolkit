@@ -2,10 +2,10 @@ import { Color, RepeatWrapping } from 'three'
 import type { CanvasTexture } from 'three'
 
 import type { CatalogItem } from '@/routes/workspace/-workspace/workspace.types'
-import type { Tokens } from '../core/contract'
+import type { ChipMarking, Tokens } from '../core/contract'
 import { groupOf, PKG_NAME } from '../core/spec'
 import type { Spec } from '../core/spec'
-import { FONT, MONO, textTexture } from '../core/three'
+import { FONT, MONO, seeded, textTexture } from '../core/three'
 import type { Floorplan, PadAt, Placed } from './floorplan'
 import type { Guts } from './guts'
 
@@ -34,48 +34,55 @@ export function variantWord(item: Pick<CatalogItem, 'name' | 'category' | 'label
 /**
  * The lid print, built to read from the overview: the item's variant word
  * as large as the lid allows, a hue edge for its group, and the pick code
- * small underneath. Up close the title and source are still there.
+ * small underneath. Up close the title and source are still there. Paints
+ * `W` (512) by `H` logical units, `H` from the lid's aspect.
  */
-export function chipMarking(item: CatalogItem, code: string, spec: Spec, body: string, ink: string) {
-  const W = 512
-  const H = Math.max(176, Math.round((W * spec.d) / spec.w))
-  return textTexture(W, H, (ctx) => {
-    ctx.fillStyle = body
-    ctx.fillRect(0, 0, W, H)
-    ctx.fillStyle = `hsl(${item.hue}, 58%, 56%)`
-    ctx.fillRect(0, 0, 18, H)
-    ctx.strokeStyle = ink
-    ctx.globalAlpha = 0.6
-    ctx.lineWidth = 4
-    ctx.beginPath()
-    ctx.arc(48, 30, 9, 0, Math.PI * 2)
-    ctx.stroke()
-    ctx.globalAlpha = 1
-    const word = variantWord(item)
-    const parts = word.includes(' ') && word.length > 9 && H > 300 ? [word.slice(0, word.lastIndexOf(' ')), word.slice(word.lastIndexOf(' ') + 1)] : [word]
-    const bold = (px: number) => `700 ${px}px ${FONT}`
-    const big = Math.min(...parts.map((p) => sizeFor(ctx, p, bold, W - 64, (H * 0.56) / parts.length, 40)))
-    ctx.fillStyle = ink
-    ctx.font = bold(big)
-    ctx.textBaseline = 'alphabetic'
-    const base = H * 0.62 - ((parts.length - 1) * big * 0.98) / 2
-    parts.forEach((p, k) => ctx.fillText(fit(ctx, p, W - 64), 36, base + k * big * 0.98 + big * 0.34))
-    const small = Math.max(22, Math.min(30, H * 0.11))
-    ctx.font = `500 ${small}px ${MONO}`
-    ctx.globalAlpha = 0.75
-    ctx.fillText(fit(ctx, `${code} · ${PKG_NAME[spec.pkg]}`, W - 64), 36, H - small * 0.7)
-    ctx.globalAlpha = 0.55
-    ctx.font = `500 ${small * 0.8}px ${MONO}`
-    ctx.fillText(fit(ctx, item.title, W - 96), 70, 30 + small * 0.28)
-  })
+export const chipMarking: ChipMarking = (ctx, W, H, item, code, spec, { body, ink }) => {
+  ctx.fillStyle = body
+  ctx.fillRect(0, 0, W, H)
+  ctx.fillStyle = `hsl(${item.hue}, 58%, 56%)`
+  ctx.fillRect(0, 0, 18, H)
+  ctx.strokeStyle = ink
+  ctx.globalAlpha = 0.6
+  ctx.lineWidth = 4
+  ctx.beginPath()
+  ctx.arc(48, 30, 9, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.globalAlpha = 1
+  const word = variantWord(item)
+  const parts = word.includes(' ') && word.length > 9 && H > 300 ? [word.slice(0, word.lastIndexOf(' ')), word.slice(word.lastIndexOf(' ') + 1)] : [word]
+  const bold = (px: number) => `700 ${px}px ${FONT}`
+  const big = Math.min(...parts.map((p) => sizeFor(ctx, p, bold, W - 64, (H * 0.56) / parts.length, 40)))
+  ctx.fillStyle = ink
+  ctx.font = bold(big)
+  ctx.textBaseline = 'alphabetic'
+  const base = H * 0.62 - ((parts.length - 1) * big * 0.98) / 2
+  parts.forEach((p, k) => ctx.fillText(fit(ctx, p, W - 64), 36, base + k * big * 0.98 + big * 0.34))
+  const small = Math.max(22, Math.min(30, H * 0.11))
+  ctx.font = `500 ${small}px ${MONO}`
+  ctx.globalAlpha = 0.75
+  ctx.fillText(fit(ctx, `${code} · ${PKG_NAME[spec.pkg]}`, W - 64), 36, H - small * 0.7)
+  ctx.globalAlpha = 0.55
+  ctx.font = `500 ${small * 0.8}px ${MONO}`
+  ctx.fillText(fit(ctx, item.title, W - 96), 70, 30 + small * 0.28)
+  ctx.globalAlpha = 1
 }
 
+/**
+ * Least recently used first, capped at four. At most two close-ups are mounted at once (one handing over to the next),
+ * each holding its current print and at most one replacing it, so eviction never disposes a print on screen.
+ */
 const dieCache = new Map<string, Promise<CanvasTexture>>()
+const DIE_CACHE_SIZE = 4
 /** The die's top metal: the block's screenshot printed as silicon, gridded, inside the pad ring. Cached per image and theme. */
 export function dieArt(image: string | undefined, hue: number, title: string, c: Pick<Tokens, 'die' | 'gold'>) {
   const key = `${image}|${hue}|${c.die}|${c.gold}`
   const hit = dieCache.get(key)
-  if (hit) return hit
+  if (hit) {
+    dieCache.delete(key)
+    dieCache.set(key, hit)
+    return hit
+  }
   const promise = new Promise<CanvasTexture>((resolve) => {
     const draw = (img: HTMLImageElement | null) =>
       resolve(
@@ -122,6 +129,11 @@ export function dieArt(image: string | undefined, hue: number, title: string, c:
     img.src = image
   })
   dieCache.set(key, promise)
+  for (const [old, evicted] of dieCache) {
+    if (dieCache.size <= DIE_CACHE_SIZE) break
+    dieCache.delete(old)
+    void evicted.then((t) => t.dispose())
+  }
   return promise
 }
 /** Where the core starts inside the die, shared by the screenshot and the circuit so one wipes into the other. */
@@ -134,11 +146,8 @@ const lum = (hex: string) => {
 /** Of the theme's foreground and surface, the one that reads on `ground`. */
 export const inkOn = (ground: string, c: Pick<Tokens, 'fg' | 'surface'>) => (Math.abs(lum(c.fg) - lum(ground)) > Math.abs(lum(c.surface) - lum(ground)) ? c.fg : c.surface)
 
-let seed = 1
-const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
-
 /** A unit's fill pattern, one per kind, so the floorplan reads like silicon: ROM dots, cell rows, SRAM mesh, arrays, hatch. */
-function pattern(ctx: CanvasRenderingContext2D, u: Placed, x: number, y: number, w: number, h: number) {
+function pattern(ctx: CanvasRenderingContext2D, u: Placed, x: number, y: number, w: number, h: number, rnd: () => number) {
   ctx.save()
   ctx.beginPath()
   ctx.rect(x, y, w, h)
@@ -180,7 +189,7 @@ function pattern(ctx: CanvasRenderingContext2D, u: Placed, x: number, y: number,
 /** The die's circuit layer: the floorplan's units with labels and patterns, the signal wires in the lit color, and the pads. */
 export function circuitArt(guts: Guts, plan: Floorplan, c: Tokens) {
   const N = 2048
-  seed = guts.name.length * 7919 + 13
+  const rnd = seeded(guts.name.length * 7919 + 13)
   const ink = inkOn(c.die, c)
   return textTexture(N, N, (ctx) => {
     ctx.fillStyle = c.die
@@ -204,7 +213,7 @@ export function circuitArt(guts: Guts, plan: Floorplan, c: Tokens) {
       ctx.globalAlpha = 0.2
       ctx.strokeStyle = ink
       ctx.lineWidth = 2
-      pattern(ctx, u, x + 10, y + 10, w - 20, h - 20)
+      pattern(ctx, u, x + 10, y + 10, w - 20, h - 20, rnd)
       ctx.globalAlpha = 0.95
       ctx.lineWidth = 4
       ctx.strokeRect(x, y, w, h)

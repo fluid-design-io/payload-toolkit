@@ -1,0 +1,8 @@
+{
+  "fabmod": 1,
+  "id": "tower",
+  "name": "Tower",
+  "author": "fab-line samples",
+  "description": "A Tower layout that lifts the cabinet and table onto a mezzanine, and a Pachinko transport whose drop is simulated once with rapier. Pick both.",
+  "main": "mod.js"
+}

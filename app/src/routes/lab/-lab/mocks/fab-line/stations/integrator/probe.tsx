@@ -1,14 +1,14 @@
 import { useFrame } from '@react-three/fiber'
 import { Line } from '@react-three/drei'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Vector3 } from 'three'
+import { useRef, useState } from 'react'
+import { Color, Vector3 } from 'three'
 import type { Mesh, MeshBasicMaterial } from 'three'
 
 import type { Agent } from '@/routes/workspace/-workspace/workspace.types'
-import type { IntegratorProps, IntegratorVariant, Part, Sim, Tokens } from '../../core/contract'
+import type { IntegratorProps, Part, Sim, Tokens } from '../../core/contract'
 import { makeRoute } from '../../core/route'
 import { Body, TraceLine, pickable, useDrop } from '../../core/scene'
-import { FONT, MONO, box, lineMat, segs, textTexture } from '../../core/three'
+import { FONT, MONO, box, lineMat, segs, textTexture, useDisposable } from '../../core/three'
 
 type V3 = [number, number, number]
 
@@ -56,18 +56,18 @@ function Probe({ agent, sim, board, c, onCycle, tip, guard }: IntegratorProps) {
   const BY = by
   const edge = hz + 0.75
   const led = useRef<Mesh>(null)
-  const art = useMemo(() => (agent === 'none' ? null : probeArt(agent, c)), [agent, c])
-  useEffect(() => () => art?.dispose(), [art])
-  const [pod, drop] = useDrop(2, 6)
+  const art = useDisposable(() => (agent === 'none' ? null : probeArt(agent, c)), [agent, c])
+  const [pod, bounce] = useDrop(2, 6)
+  const leds = { idle: new Color(c.led), on: new Color(c.ledBusy), off: new Color(c.ledOff) }
   useFrame(({ clock }) => {
     if (led.current) {
       const busy = !!sim.work.job
       const m = led.current.material as MeshBasicMaterial
-      m.color.set(busy ? (Math.sin(clock.elapsedTime * 15) > 0 ? c.ledBusy : c.ledOff) : c.led)
+      m.color.copy(busy ? (Math.sin(clock.elapsedTime * 15) > 0 ? leds.on : leds.off) : leds.idle)
     }
   })
-  const h = pickable(tip, guard, agent === 'none' ? 'J1 debug header' : `${agent === 'claude' ? 'Claude Code' : 'Codex'} probe`, 'Agent · click to clip on a different probe', () => { drop.current = 1.6; onCycle() })
-  const pins = useMemo(() => {
+  const h = pickable(tip, guard, agent === 'none' ? 'J1 debug header' : `${agent === 'claude' ? 'Claude Code' : 'Codex'} probe`, 'Agent · click to clip on a different probe', () => { bounce(1.6); onCycle() })
+  const pins = useDisposable(() => {
     const l: number[] = []
     for (let i = 0; i < 5; i++) for (const r of [-0.12, 0.12]) l.push(HEADER.x - 0.3 + i * 0.15, BY, HEADER.z + r, HEADER.x - 0.3 + i * 0.15, BY + 0.3, HEADER.z + r)
     return segs(l)
@@ -117,28 +117,18 @@ function Flash({ sim, agent, c, dock }: { sim: Sim; agent: Agent; c: Tokens; doc
     const p = sim.work.job?.part ?? null
     if (p !== part) setPart(p)
   })
-  const route = useMemo(() => {
-    if (!part?.slot) return null
-    const y = dock[1] + 0.35
-    const s = part.slot
-    return makeRoute([new Vector3(dock[0], y, dock[2]), new Vector3(dock[0], y, s.z), new Vector3(s.x, y, s.z)], 'manhattan', [])
-  }, [part, dock])
-  if (!route) return null
+  if (!part?.slot) return null
+  const y = dock[1] + 0.35
+  const s = part.slot
+  const route = makeRoute([new Vector3(dock[0], y, dock[2]), new Vector3(dock[0], y, s.z), new Vector3(s.x, y, s.z)], [], true)
   return <TraceLine route={route} color={agent === 'codex' ? c.codexInk : c.claude} width={2.4} progress={() => sim.work.job?.t ?? 0} />
 }
 
-function ProbeStation(props: IntegratorProps) {
+export function ProbeStation(props: IntegratorProps) {
   return (
     <>
       <Probe key={props.agent} {...props} />
       <Flash sim={props.sim} agent={props.agent} c={props.c} dock={props.board.dock} />
     </>
   )
-}
-
-export const probe: IntegratorVariant = {
-  id: 'probe',
-  label: 'Debug probe',
-  workTime: (agent) => (agent === 'none' ? 0 : 1.1),
-  Component: ProbeStation,
 }

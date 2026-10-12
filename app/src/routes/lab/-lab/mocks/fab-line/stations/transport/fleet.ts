@@ -4,7 +4,7 @@ import {
 import type { Material } from 'three'
 
 import type { Part } from '../../core/contract'
-import { mergeEdges, mergeFills, reducedMotion } from '../../core/three'
+import { damp, mergeEdges, mergeFills, reducedMotion } from '../../core/three'
 import type { Piece } from '../../core/three'
 
 /**
@@ -69,6 +69,11 @@ export class Fleet {
     }))
   }
 
+  /** False once every carrier is home and docked in the idle queue. */
+  get moving() {
+    return this.carriers.some((c) => c.state !== 'back' || !c.docked)
+  }
+
   step(carried: readonly Part[], dt: number, on: FleetEvents) {
     const s = this.spec
     for (const c of this.carriers) {
@@ -81,7 +86,7 @@ export class Fleet {
       on.release?.(c)
     }
     for (const p of carried) {
-      if (this.carriers.some((c) => c.part === p)) continue
+      if (this.carrying(p)) continue
       let pick: Carrier | null = null
       for (const c of this.carriers) if (c.state === 'back' && (!pick || c.b > pick.b)) pick = c
       if (!pick) continue
@@ -122,7 +127,7 @@ export class Fleet {
       const target = Math.max(c.b, Math.min(s.back - i * s.spacing, i ? queue[i - 1].b - s.spacing : head))
       const d = target - c.b
       const want = Math.min(s.vmax, Math.sqrt(2 * s.accel * Math.max(0, d)))
-      c.v += (want - c.v) * (1 - Math.exp(-dt * 10))
+      c.v += (want - c.v) * damp(dt, 10)
       c.b = Math.min(target, c.b + Math.max(0, c.v) * dt)
       const still = target - c.b < 1e-3
       if (still && !c.docked && c.t > 0.05) {
@@ -133,17 +138,17 @@ export class Fleet {
     })
   }
 
+  private carrying(p: Part) {
+    for (const c of this.carriers) if (c.part === p) return true
+    return false
+  }
+
   private toBack(c: Carrier) {
     c.state = 'back'
     c.b = 0
     c.v = 0
     c.t = 0
     c.docked = false
-  }
-
-  /** True while any carrier still moves on its own (returning, coasting or holding). */
-  busy() {
-    return this.carriers.some((c) => c.state === 'coast' || c.state === 'hold' || (c.state === 'back' && !c.docked))
   }
 }
 
@@ -168,7 +173,8 @@ export function tintMat(flat: boolean, rough = 1) {
 /**
  * `n` copies of one rigid body as two draws: an instanced fill and one
  * hairline buffer rewritten from the instance matrices. Hide a copy by
- * giving it a zero-scale matrix.
+ * giving it `hidden`. Only copies whose matrix or colour changed are
+ * rewritten, and `commit` uploads just the span they cover.
  */
 export class Batch {
   readonly mesh: InstancedMesh
@@ -176,6 +182,10 @@ export class Batch {
   private readonly base: Float32Array | null
   private readonly out: Float32Array | null
   private readonly owned: BufferGeometry[] = []
+  /** The matrix each copy last got, so an unchanged copy costs one comparison. */
+  private readonly last: Float64Array
+  private readonly moved = { lo: Infinity, hi: -1 }
+  private readonly tinted = { lo: Infinity, hi: -1 }
 
   constructor(pieces: Piece[], n: number, fill: Material, line: Material | null) {
     const geo = mergeFills(pieces)
@@ -183,6 +193,7 @@ export class Batch {
     this.mesh = new InstancedMesh(geo, fill, n)
     this.mesh.instanceMatrix.setUsage(DynamicDrawUsage)
     this.mesh.frustumCulled = false
+    this.last = new Float64Array(n * 16).fill(NaN)
     if (line) {
       const edges = mergeEdges(pieces)
       this.base = Float32Array.from(edges.getAttribute('position').array)
@@ -201,12 +212,23 @@ export class Batch {
   }
 
   set(i: number, m: Matrix4) {
+    const e = m.elements
+    const last = this.last
+    const at = i * 16
+    let same = true
+    for (let k = 0; k < 16 && same; k++) same = last[at + k] === e[k]
+    if (same) return
+    last.set(e, at)
     this.mesh.setMatrixAt(i, m)
+    grow(this.moved, i)
     const base = this.base
     const out = this.out
     if (!base || !out) return
-    const e = m.elements
     const o = i * base.length
+    if (m === hidden) {
+      out.fill(0, o, o + base.length)
+      return
+    }
     for (let j = 0; j < base.length; j += 3) {
       const x = base[j], y = base[j + 1], z = base[j + 2]
       out[o + j] = e[0] * x + e[4] * y + e[8] * z + e[12]
@@ -216,19 +238,53 @@ export class Batch {
   }
 
   color(i: number, c: Color) {
+    const col = this.mesh.instanceColor?.array
+    if (col && col[i * 3] === Math.fround(c.r) && col[i * 3 + 1] === Math.fround(c.g) && col[i * 3 + 2] === Math.fround(c.b)) return
     this.mesh.setColorAt(i, c)
+    grow(this.tinted, i)
   }
 
+  skin(fill: Material, line?: Material) {
+    this.mesh.material = fill
+    if (line && this.lines) this.lines.material = line
+  }
+
+  /** Uploads the copies changed since the last commit, if any. */
   commit() {
-    this.mesh.instanceMatrix.needsUpdate = true
-    if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true
-    if (this.lines) this.lines.geometry.getAttribute('position').needsUpdate = true
+    const { moved, tinted } = this
+    if (moved.hi >= 0) {
+      upload(this.mesh.instanceMatrix, moved, 16)
+      if (this.lines && this.base) upload(this.lines.geometry.getAttribute('position') as BufferAttribute, moved, this.base.length)
+    }
+    if (tinted.hi >= 0 && this.mesh.instanceColor) upload(this.mesh.instanceColor, tinted, 3)
+    moved.lo = tinted.lo = Infinity
+    moved.hi = tinted.hi = -1
   }
 
   dispose() {
     for (const g of this.owned) g.dispose()
     this.mesh.dispose()
   }
+}
+
+const grow = (span: { lo: number; hi: number }, i: number) => {
+  span.lo = Math.min(span.lo, i)
+  span.hi = Math.max(span.hi, i)
+}
+/**
+ * Marks copies `lo..hi` of `attr`, `stride` floats each, for upload. A range still pending from a commit no frame
+ * drew is folded in, since the renderer clears the ranges only once it uploads them.
+ */
+function upload(attr: BufferAttribute, span: { lo: number; hi: number }, stride: number) {
+  let start = span.lo * stride
+  let end = (span.hi + 1) * stride
+  for (const r of attr.updateRanges) {
+    start = Math.min(start, r.start)
+    end = Math.max(end, r.start + r.count)
+  }
+  attr.clearUpdateRanges()
+  attr.addUpdateRange(start, end - start)
+  attr.needsUpdate = true
 }
 
 export const hidden = new Matrix4().makeScale(0, 0, 0)

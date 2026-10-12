@@ -1,16 +1,16 @@
-import type { Setup } from '@/routes/workspace/-workspace/workspace.types'
 import type { Tokens } from '../../../core/contract'
 import { MONO } from '../../../core/three'
 import { BANDS } from '../shared/pack'
 import { frameTexture } from '../shared/paint'
 import { coreSilk } from '../pcb/art'
+import type { Printed } from '../pcb/art'
 import { BOARD, PAGE, bandZ } from '../pcb/plan'
 import { BB, DEV, PITCH, STRIP } from './plan'
 
 export const ATLAS = { x0: BB.x0, x1: BB.x1, z0: PAGE.z0 - 0.35, z1: PAGE.z1 + 0.35 }
 
 /** The dev board's silk: the PCB's core labels, with the app's name printed on the breadboard's foot. */
-export function devSilk(setup: Setup, silk: string) {
+export function devSilk(setup: Printed, silk: string) {
   return frameTexture(BOARD, 2560, (p) => {
     p.ctx.fillStyle = silk
     coreSilk(p, setup, 'PAYLOAD/DEV  REV 4.2  ·  BREADBOARD', { x: BB.x1 - 0.2, z: ATLAS.z1 - 0.04, size: 0.3 })

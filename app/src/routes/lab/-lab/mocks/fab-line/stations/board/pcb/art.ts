@@ -4,10 +4,14 @@ import { frameTexture, pageHints } from '../shared/paint'
 import type { Painter } from '../shared/paint'
 import { BANDS, BOARD, CPU, HEADER, PAGE, bandZ } from './plan'
 
-const pmLabel: Record<Setup['packageManager'], string> = { pnpm: 'VRM · pnpm · 6-phase', npm: 'LDO · npm · linear', bun: 'BUCK · bun · compact' }
+/** The setup fields a board's silk prints. The selection is left out, so toggling an item does not repaint the silk. */
+export type Printed = Omit<Setup, 'items'>
+
+/** The power stage's silk label per package manager. */
+export const pmLabel: Record<Setup['packageManager'], string> = { pnpm: 'VRM · pnpm · 6-phase', npm: 'LDO · npm · linear', bun: 'BUCK · bun · compact' }
 
 /** The silk of the PCB's core half: CPU, memory, power, bays, the J1 header and the board's title block. */
-export function coreSilk(p: Painter, setup: Setup, rev: string, title = { x: BOARD.x1 - 0.4, z: BOARD.z1, size: 0.62 }) {
+export function coreSilk(p: Painter, setup: Printed, rev: string, title = { x: BOARD.x1 - 0.4, z: BOARD.z1, size: 0.62 }) {
   const { text, ctx } = p
   text('BUS', -0.55, CPU.z - 1.65, 0.2, 600, MONO, 'center')
   text(`CPU0 · ${setup.framework === 'next' ? 'Next.js' : 'TanStack Start'}`, CPU.x, CPU.z + 2.35, 0.2, 600, MONO, 'center')
@@ -29,7 +33,7 @@ export function coreSilk(p: Painter, setup: Setup, rev: string, title = { x: BOA
   text(rev, BOARD.x0 + 0.4, BOARD.z1 - 0.3, 0.2, 600)
 }
 
-export function silkArt(setup: Setup, silk: string, accent: string, activeBand: number) {
+export function silkArt(setup: Printed, silk: string, accent: string, activeBand: number) {
   return frameTexture(BOARD, 2560, (p) => {
     const { ctx, text } = p
     ctx.fillStyle = silk

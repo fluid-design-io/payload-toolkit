@@ -1,15 +1,14 @@
 import { Line } from '@react-three/drei'
-import { useEffect, useMemo } from 'react'
 import { ExtrudeGeometry, Shape } from 'three'
 
 import type { BoardProps, V3 } from '../../../core/contract'
 import { Body, TraceBundle } from '../../../core/scene'
-import { box, cyl, lineMat, segs } from '../../../core/three'
+import { box, cyl, lineMat, segs, useDisposable } from '../../../core/three'
 import { BY } from '../shared/dims'
-import { Footprints, Ghosts, Pulses, Routes } from '../shared/live'
-import { bandOf } from '../shared/pack'
+import { BoardLive, atVersion } from '../shared/live'
+import { focusedBand } from '../shared/pack'
 import { hatchSegs } from '../shared/paint'
-import { Cpu, Memory, Power } from '../shared/sockets'
+import { postsOf } from '../pcb/board'
 import { DISC, FLAT, deckSilk, waferArt } from './art'
 import { DECK, R, R0, SECTOR, WY, grid, polar, staticRoutes, streetOf } from './plan'
 
@@ -52,20 +51,19 @@ function sectorOutline(b: number, y: number): V3[] {
  * bands are its eight sectors, read clockwise from twelve o'clock, and each
  * package's trace drops onto its sector's spoke and runs it into the core.
  */
-export function Wafer({ lab, sim, c, routing, version, chip, cycle, tip, guard }: BoardProps) {
-  const activeBand = lab.focus.category.startsWith('block:') ? bandOf(lab.focus.category) : -1
-  const statics = useMemo(() => staticRoutes(routing, lab.setup.framework), [routing, lab.setup.framework])
-  const face = useMemo(
-    () => waferArt(lab.setup, c.silk, c.lit, activeBand, grid.pitch),
-    [lab.setup.target, lab.setup.name, lab.setup.framework, c.silk, c.lit, activeBand, version],
+export function Wafer(props: BoardProps) {
+  const { lab, sim, c, version } = props
+  const activeBand = focusedBand(lab)
+  const { target, name, framework, database, packageManager, agent } = lab.setup
+  const statics = staticRoutes(framework)
+  const face = useDisposable(
+    () => waferArt({ target, name, framework }, c.silk, c.lit, activeBand, atVersion(grid, version).pitch),
+    [target, name, framework, c.silk, c.lit, activeBand, version],
   )
-  useEffect(() => () => face.dispose(), [face])
-  const deck = useMemo(() => deckSilk(lab.setup, c.silk), [lab.setup.database, lab.setup.packageManager, lab.setup.agent, c.silk])
-  useEffect(() => () => deck.dispose(), [deck])
-  const wafer = useMemo(waferGeometry, [])
-  const hatches = useMemo(() => segs(sim.plan.hatches.flatMap((h) => hatchSegs(h, WY + 0.008))), [version])
-  useEffect(() => () => hatches.dispose(), [hatches])
-  const posts: V3[] = [[DECK.x0 + 0.35, 0, DECK.z0 + 0.35], [DECK.x1 - 0.35, 0, DECK.z0 + 0.35], [DECK.x0 + 0.35, 0, DECK.z1 - 0.35], [DECK.x1 - 0.35, 0, DECK.z1 - 0.35], [-7.0, 0, DECK.z0 + 0.35], [-7.0, 0, DECK.z1 - 0.35]]
+  const deck = useDisposable(() => deckSilk({ database, packageManager, agent }, c.silk), [database, packageManager, agent, c.silk])
+  const wafer = useDisposable(waferGeometry, [])
+  const hatches = useDisposable(() => segs(atVersion(sim.plan.hatches, version).flatMap((h) => hatchSegs(h, WY + 0.008))), [sim.plan.hatches, version])
+  const posts = postsOf(DECK, -7.0)
   const cx = (DECK.x0 + DECK.x1) / 2, cz = (DECK.z0 + DECK.z1) / 2
   return (
     <>
@@ -85,13 +83,7 @@ export function Wafer({ lab, sim, c, routing, version, chip, cycle, tip, guard }
       {activeBand >= 0 && <Line points={sectorOutline(activeBand, WY + 0.012)} color={c.lit} lineWidth={2} />}
       <TraceBundle routes={statics.power} color={c.trace} width={4.5} />
       <TraceBundle routes={statics.memory} color={c.trace} width={1.6} />
-      <Ghosts key={lab.setup.target} sim={sim} c={c} chip={chip} version={version} />
-      <Routes sim={sim} c={c} version={version} />
-      <Cpu key={lab.setup.framework} framework={lab.setup.framework} at={[0, WY, 0]} c={c} onClick={cycle.framework} tip={tip} guard={guard} />
-      <Memory key={lab.setup.database} database={lab.setup.database} offset={[-4.1, 0, -0.4]} c={c} onClick={cycle.database} tip={tip} guard={guard} />
-      <Power key={lab.setup.packageManager} pm={lab.setup.packageManager} offset={[-4.6, 0, 0]} c={c} onClick={cycle.pm} tip={tip} guard={guard} />
-      <Pulses sim={sim} c={c} statics={statics} />
-      <Footprints sim={sim} c={c} />
+      <BoardLive {...props} statics={statics} cpu={[0, WY, 0]} memory={[-4.1, 0, -0.4]} power={[-4.6, 0, 0]} />
     </>
   )
 }

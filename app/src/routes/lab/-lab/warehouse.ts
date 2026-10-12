@@ -63,7 +63,11 @@ export function toWarehouse(catalog: Catalog): Warehouse {
       const zone = zoneOf(category.id)
       const members = catalog.items.filter((item) => item.category === category.id)
       const bySource = new Map<string, CatalogItem[]>()
-      for (const item of members) bySource.set(item.source, [...(bySource.get(item.source) ?? []), item])
+      for (const item of members) {
+        const group = bySource.get(item.source)
+        if (group) group.push(item)
+        else bySource.set(item.source, [item])
+      }
       let bay = 0
       const racks = [...bySource]
         .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))

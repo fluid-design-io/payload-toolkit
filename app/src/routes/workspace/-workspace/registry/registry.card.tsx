@@ -1,6 +1,6 @@
 import { ToggleButton, Tooltip, Typography } from '@heroui/react'
 import { RiAddLine, RiCheckLine } from '@remixicon/react'
-import { memo, useId, useRef } from 'react'
+import { useId, useRef } from 'react'
 import { Button as AriaButton } from 'react-aria-components'
 import { useWorkspace, useWorkspaceSelector } from '../workspace.context'
 import type { CatalogItem } from '../workspace.types'
@@ -18,7 +18,7 @@ import { RegistryMat } from './registry.mat'
  * own selection only, so a toggle re-renders that card and nothing else in
  * the grid.
  */
-export const RegistryCard = memo(function RegistryCard({ item }: { item: CatalogItem }) {
+export function RegistryCard({ item }: { item: CatalogItem }) {
   const { actions, meta } = useWorkspace()
   const isSelected = useWorkspaceSelector((state) => state.setup.items.includes(item.ref))
   const isDetailOpen = useWorkspaceSelector((state) => state.detail === item.ref)
@@ -89,4 +89,4 @@ export const RegistryCard = memo(function RegistryCard({ item }: { item: Catalog
       </span>
     </div>
   )
-})
+}
