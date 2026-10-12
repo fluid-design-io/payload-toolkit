@@ -1,6 +1,6 @@
 import { LogoMark } from '@/components/logo.tsx'
 import { Sheet, Sidebar, useSidebar } from '@heroui-pro/react'
-import { Typography, buttonVariants } from '@heroui/react'
+import { Typography, buttonVariants, cn } from '@heroui/react'
 import { RiMenuLine } from '@remixicon/react'
 import { Link } from '@tanstack/react-router'
 import type { PropsWithChildren } from 'react'
@@ -101,9 +101,15 @@ function WorkspaceRailTrigger() {
   )
 }
 
-/** The current category's label beside the trigger, so the closed rail still shows the filter. */
+/**
+ * The current category's label beside the trigger, so the closed rail still
+ * shows the filter. It shrinks and truncates so the search keeps the row's
+ * slack on phones. The factory's floating header shows it on every width, as
+ * the scene hides which rail item is current.
+ */
 function WorkspaceRailCurrent() {
   const { meta } = useWorkspace()
+  const isFactory = useWorkspaceSelector((state) => state.view === 'factory')
   const label = useWorkspaceSelector(
     (state) =>
       [...meta.catalog.kinds, ...meta.catalog.blocks].find(
@@ -117,7 +123,10 @@ function WorkspaceRailCurrent() {
       type="body-sm"
       weight="medium"
       truncate
-      className="min-w-48 shrink min-[769px]:hidden"
+      className={cn(
+        'min-w-0 max-w-24 shrink',
+        isFactory ? 'min-[769px]:max-w-48' : 'min-[769px]:hidden',
+      )}
     >
       {label}
     </Typography>

@@ -1,0 +1,8 @@
+{
+  "fabmod": 1,
+  "id": "cctv",
+  "name": "CCTV",
+  "author": "fab-line samples",
+  "description": "Security cameras on poles around the campus and a CCTV button in the camera toolbar: the feed cuts between them, chases parts on their way to the board, and runs grainy and green with a REC light.",
+  "main": "mod.js"
+}

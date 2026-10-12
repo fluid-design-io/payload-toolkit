@@ -28,6 +28,8 @@ export type RegistryItem = {
   imageDark?: string
   previewUrl?: string
   previewEmbed?: boolean
+  /** Color schemes the preview page renders; absent means both. */
+  previewThemes?: readonly ('light' | 'dark')[]
 }
 
 /** Everything the command needs. It is mirrored into the URL search params. */
@@ -57,6 +59,9 @@ export type Catalog = {
   blocks: readonly Category[]
 }
 
+/** `grid` lists cards; `factory` renders the 3D scene in the grid's place. Both edit one store. */
+export type View = 'grid' | 'factory'
+
 export type Output = 'command' | 'prompt'
 export type Panel = 'install' | 'build' | null
 
@@ -64,12 +69,16 @@ export type Option<T extends string> = { value: T; label: string }
 
 export type WorkspaceState = {
   setup: Setup
+  /** Mirrored into the URL beside `setup`. */
+  view: View
   query: string
   category: CategoryId
   output: Output
   panel: Panel
   /** The ref whose detail card is open. */
   detail: string | null
+  /** The factory scene's settings sheet is open; the bar steps aside for it. */
+  sceneSheet: boolean
 }
 
 export type WorkspaceActions = {
@@ -81,6 +90,7 @@ export type WorkspaceActions = {
   setAgent: (agent: Agent) => void
   toggleItem: (ref: string, isSelected: boolean) => void
   clearItems: () => void
+  setView: (view: View) => void
   setQuery: (query: string) => void
   setCategory: (category: CategoryId) => void
   setOutput: (output: Output) => void
@@ -89,6 +99,7 @@ export type WorkspaceActions = {
   closePanel: (panel: Exclude<Panel, null>) => void
   openDetail: (ref: string) => void
   closeDetail: () => void
+  setSceneSheet: (open: boolean) => void
 }
 
 /** Stable for the provider's lifetime; leaves subscribe to slices of `store`. */

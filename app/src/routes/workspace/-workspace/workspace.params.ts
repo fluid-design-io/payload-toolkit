@@ -3,16 +3,19 @@ import {
   agents,
   databases,
   defaultSetup,
+  defaultView,
   frameworks,
   packageManagers,
   targets,
+  views,
 } from './workspace.constants'
-import type { Option, RegistryItem, Setup } from './workspace.types'
+import type { Option, RegistryItem, Setup, View, WorkspaceState } from './workspace.types'
 
 /** `/workspace` search params. Each one is optional and omitted while it equals the default. */
 export type WorkspaceSearch = Partial<Omit<Setup, 'items'>> & {
   /** Comma-separated refs in catalog order. */
   items?: string
+  view?: View
 }
 
 /** The router parses `name=123` as a number, so scalars come back as strings. */
@@ -47,6 +50,7 @@ export function parseWorkspaceSearch(
     packageManager: choice(raw.packageManager, packageManagers),
     agent: choice(raw.agent, agents),
     items: selected.length ? selected.join(',') : undefined,
+    view: choice(raw.view, views),
   }
 }
 
@@ -60,6 +64,10 @@ export function setupFromSearch(search: WorkspaceSearch): Setup {
     agent: search.agent ?? defaultSetup.agent,
     items: search.items ? search.items.split(',') : [],
   }
+}
+
+export function viewFromSearch(search: WorkspaceSearch): View {
+  return search.view ?? defaultView
 }
 
 /**
@@ -76,5 +84,12 @@ export function searchFromSetup(setup: Setup): WorkspaceSearch {
     search.packageManager = setup.packageManager
   if (setup.agent !== defaultSetup.agent) search.agent = setup.agent
   if (setup.items.length) search.items = setup.items.join(',')
+  return search
+}
+
+/** Everything the URL mirrors: the setup, then the view unless it is the grid. */
+export function searchFromState({ setup, view }: Pick<WorkspaceState, 'setup' | 'view'>): WorkspaceSearch {
+  const search = searchFromSetup(setup)
+  if (view !== defaultView) search.view = view
   return search
 }

@@ -85,11 +85,21 @@ export function previewFields(meta: Json, configured: unknown, name: string, bas
   const embed = item.embed ?? upstream.embed ?? defaults.embed
   if (embed !== undefined && typeof embed !== 'boolean')
     throw new Error('preview.embed must be a boolean')
+  const themes = item.themes ?? upstream.themes ?? defaults.themes
+  if (
+    themes !== undefined &&
+    (!Array.isArray(themes) ||
+      !themes.length ||
+      new Set(themes).size !== themes.length ||
+      themes.some((theme) => theme !== 'light' && theme !== 'dark'))
+  )
+    throw new Error('preview.themes must list light and/or dark once each')
   return {
     ...(url && { previewUrl: url }),
     ...(image && { image }),
     ...(imageDark && imageDark !== image && { imageDark }),
     ...(embed !== undefined && { previewEmbed: embed }),
+    ...(url && themes?.length === 1 && { previewThemes: themes as ['light' | 'dark'] }),
   }
 }
 
@@ -220,7 +230,7 @@ async function sync() {
     const dark = capturedImage(item, captures, 'dark')
     for (const [field, image] of [
       ['image', light],
-      ['imageDark', dark],
+      ['imageDark', dark === light ? undefined : dark],
     ] as const) {
       if (
         image &&

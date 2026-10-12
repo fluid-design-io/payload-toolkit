@@ -3,7 +3,7 @@ import { AnimatePresence, LazyMotion, domAnimation, useReducedMotion } from 'mot
 import * as m from 'motion/react-m'
 import type { JSX, PropsWithChildren } from 'react'
 import { useEffect, useRef } from 'react'
-import { morph, morphContentDelay } from '../workspace.constants'
+import { morph, morphContentDelay, morphSpan } from '../workspace.constants'
 import { useWorkspace, useWorkspaceSelector } from '../workspace.context'
 import type { Panel } from '../workspace.types'
 import { useViewport } from '../workspace.viewport'
@@ -21,6 +21,31 @@ const views: Record<Exclude<Panel, null>, { title: string; View: () => JSX.Eleme
 const card = { width: 448, height: 530 }
 const rail = 240
 
+/**
+ * The glass's gradient deepens with the morph's default settle, while its
+ * frost and dimming span the whole morph, not just its first leg. It mounts
+ * closed, so only the bar's entrance plays on load.
+ */
+const glass = {
+  closed: {
+    '--bar-glass-factor': 1,
+    '--bar-glass-blur': '4px',
+    '--bar-glass-saturate': '180%',
+    '--bar-glass-brightness': 0.85,
+  },
+  open: {
+    '--bar-glass-factor': 1.5,
+    '--bar-glass-blur': '24px',
+    '--bar-glass-saturate': '150%',
+    '--bar-glass-brightness': 0.8,
+  },
+}
+const frostKeys = ['--bar-glass-blur', '--bar-glass-saturate', '--bar-glass-brightness']
+const glassMorph = {
+  open: { ...morph.open, ...Object.fromEntries(frostKeys.map((key) => [key, morphSpan.open])) },
+  close: { ...morph.close, ...Object.fromEntries(frostKeys.map((key) => [key, morphSpan.close])) },
+}
+
 function useCardSize() {
   const viewport = useViewport(card)
   const column = viewport.width > 768 ? viewport.width - rail : viewport.width
@@ -36,11 +61,13 @@ function useCardSize() {
  * footer, and closing morphs it back. The row is the only part in normal
  * flow, so the closed glass sizes to it with `auto`. The wrapper centers it
  * on the main column, past the 240px rail. Escape and the scrim close the
- * card; if focus was inside, it returns to the row's call to action.
+ * card; if focus was inside, it returns to the row's call to action. While
+ * the factory scene's settings sheet is open the bar sinks out of the way.
  */
 function BarRoot({ children }: PropsWithChildren) {
   const { actions } = useWorkspace()
   const panel = useWorkspaceSelector((state) => state.panel)
+  const isAside = useWorkspaceSelector((state) => state.sceneSheet)
   const size = useCardSize()
   const isReduced = useReducedMotion() ?? false
   const shell = useRef<HTMLDivElement>(null)
@@ -74,21 +101,23 @@ function BarRoot({ children }: PropsWithChildren) {
         aria-hidden="true"
         data-open={isOpen}
         onClick={close}
-        className="pointer-events-none fixed inset-0 z-40 bg-black/20 opacity-0 transition-opacity duration-300 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100"
+        className="pointer-events-none fixed inset-0 z-40 bg-backdrop opacity-0 transition-opacity duration-300 data-[open=true]:pointer-events-auto data-[open=true]:opacity-100 motion-reduce:transition-none"
       />
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 min-[769px]:left-[240px]">
         <m.div
           ref={shell}
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 8, ...glass.closed }}
           animate={{
-            opacity: 1,
-            y: 0,
+            opacity: isAside ? 0 : 1,
+            y: isAside ? 32 : 0,
             width: isOpen ? size.width : 'auto',
             height: isOpen ? size.height : 'auto',
-            '--bar-glass-factor': isOpen ? 1.5 : 1,
+            ...glass[isOpen ? 'open' : 'closed'],
           }}
-          transition={isReduced ? { duration: 0 } : morph[isOpen ? 'open' : 'close']}
-          className="pointer-events-auto relative flex flex-col justify-end overflow-hidden rounded-[1.875rem] glass text-white ring-1 ring-white/10"
+          transition={isReduced ? { duration: 0 } : glassMorph[isOpen ? 'open' : 'close']}
+          inert={isAside}
+          data-aside={isAside}
+          className="pointer-events-auto relative flex flex-col justify-end overflow-hidden rounded-[1.875rem] glass text-white ring-1 ring-white/10 data-[aside=true]:pointer-events-none"
         >
           <AnimatePresence mode="wait" custom={entry}>
             {view && (
@@ -100,6 +129,7 @@ function BarRoot({ children }: PropsWithChildren) {
           <Toolbar
             aria-label="Build actions"
             className="flex w-full items-center justify-between gap-1 p-2"
+            data-scene-chrome
           >
             {children}
           </Toolbar>

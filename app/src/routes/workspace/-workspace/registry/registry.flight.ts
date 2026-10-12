@@ -3,15 +3,13 @@
  * never re-renders the grid. Each one does nothing under reduced motion.
  */
 
-const spring = 'cubic-bezier(.34,1.6,.5,1)'
+import { prefersReducedMotion } from '@/routes/lab/-lab/kit/env'
 
-function isReduced(): boolean {
-  return matchMedia('(prefers-reduced-motion: reduce)').matches
-}
+const spring = 'cubic-bezier(.34,1.6,.5,1)'
 
 /** The page drops back onto its mat. */
 export function stamp(page: Element | null) {
-  if (!page || isReduced()) return
+  if (!page || prefersReducedMotion()) return
   page.animate([{ transform: 'translateY(-12px) scale(1.04)' }, { transform: 'none' }], {
     duration: 450,
     easing: spring,
@@ -20,7 +18,7 @@ export function stamp(page: Element | null) {
 
 /** A small no, for a removed item. */
 export function shake(mat: Element | null) {
-  if (!mat || isReduced()) return
+  if (!mat || prefersReducedMotion()) return
   mat.animate(
     [
       { transform: 'none' },
@@ -39,7 +37,7 @@ export function shake(mat: Element | null) {
  * starts exactly as the page looks.
  */
 export function flyToBar(page: HTMLElement | null, clip: Element | null, target: HTMLElement | null) {
-  if (!page || !target || isReduced()) return
+  if (!page || !target || prefersReducedMotion()) return
   const from = page.getBoundingClientRect()
   const bottom = Math.min(from.bottom, clip?.getBoundingClientRect().bottom ?? from.bottom)
   const to = target.getBoundingClientRect()

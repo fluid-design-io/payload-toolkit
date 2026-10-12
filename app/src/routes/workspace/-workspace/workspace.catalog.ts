@@ -26,8 +26,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/hero-basic.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-basic",
     "previewEmbed": false,
-    "image": "/registry-previews/53e7f523f4dd818f890b4a5b3375edb2ec4d6924a66213ee1d5aa4142609f14f-light.webp",
-    "imageDark": "/registry-previews/53e7f523f4dd818f890b4a5b3375edb2ec4d6924a66213ee1d5aa4142609f14f-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/53e7f523f4dd818f890b4a5b3375edb2ec4d6924a66213ee1d5aa4142609f14f-light.webp"
   },
   {
     "ref": "@payload-components/hero-split",
@@ -41,8 +43,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/hero-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-split",
     "previewEmbed": false,
-    "image": "/registry-previews/1ec18fdc1d40295addc02e8e2f29ef42be343ff0f5f9b8d8d4fe1983fb330db6-light.webp",
-    "imageDark": "/registry-previews/1ec18fdc1d40295addc02e8e2f29ef42be343ff0f5f9b8d8d4fe1983fb330db6-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/1ec18fdc1d40295addc02e8e2f29ef42be343ff0f5f9b8d8d4fe1983fb330db6-light.webp"
   },
   {
     "ref": "@payload-components/hero-video",
@@ -56,8 +60,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/hero-video.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-video",
     "previewEmbed": false,
-    "image": "/registry-previews/5e24aadf94a74124574f8429123f479c3f98bfd1f74763998ea9f18516cf9875-light.webp",
-    "imageDark": "/registry-previews/5e24aadf94a74124574f8429123f479c3f98bfd1f74763998ea9f18516cf9875-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/5e24aadf94a74124574f8429123f479c3f98bfd1f74763998ea9f18516cf9875-light.webp"
   },
   {
     "ref": "@payload-components/hero-product-tilt",
@@ -71,8 +77,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/hero-product-tilt.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-product-tilt",
     "previewEmbed": false,
-    "image": "/registry-previews/98a073c3a9df87df5c62463189e40136f9e716b098d79455005c3fbc60dcd183-light.webp",
-    "imageDark": "/registry-previews/98a073c3a9df87df5c62463189e40136f9e716b098d79455005c3fbc60dcd183-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/98a073c3a9df87df5c62463189e40136f9e716b098d79455005c3fbc60dcd183-light.webp"
   },
   {
     "ref": "@payload-components/hero-aurora",
@@ -86,8 +94,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/hero-aurora.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-aurora",
     "previewEmbed": false,
-    "image": "/registry-previews/cc2c57e3ed617e69bfa3795e5703e3f6139bfa151ecb8256b91b7f1f4d0c9295-light.webp",
-    "imageDark": "/registry-previews/cc2c57e3ed617e69bfa3795e5703e3f6139bfa151ecb8256b91b7f1f4d0c9295-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/cc2c57e3ed617e69bfa3795e5703e3f6139bfa151ecb8256b91b7f1f4d0c9295-light.webp"
   },
   {
     "ref": "@payload-components/hero-kinetic",
@@ -101,8 +111,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/hero-kinetic.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/hero-kinetic",
     "previewEmbed": false,
-    "image": "/registry-previews/600d9c85883eddc996d1c629b0bffce70d9c210747018382bb834099f7df3f68-light.webp",
-    "imageDark": "/registry-previews/600d9c85883eddc996d1c629b0bffce70d9c210747018382bb834099f7df3f68-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/600d9c85883eddc996d1c629b0bffce70d9c210747018382bb834099f7df3f68-light.webp"
   },
   {
     "ref": "@payload-components/feature-grid-basic",
@@ -116,8 +128,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/feature-grid-basic.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-grid-basic",
     "previewEmbed": false,
-    "image": "/registry-previews/c54dee2f6ec5a41ff5ff34cf63403deb593d663028c6fd8171894a67c5f094e8-light.webp",
-    "imageDark": "/registry-previews/c54dee2f6ec5a41ff5ff34cf63403deb593d663028c6fd8171894a67c5f094e8-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/c54dee2f6ec5a41ff5ff34cf63403deb593d663028c6fd8171894a67c5f094e8-light.webp"
   },
   {
     "ref": "@payload-components/feature-split",
@@ -131,8 +145,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/feature-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-split",
     "previewEmbed": false,
-    "image": "/registry-previews/ba96b7134404490a84e7f05531bdfe56be1f44cffff312da4ad36a3cd0e4d722-light.webp",
-    "imageDark": "/registry-previews/ba96b7134404490a84e7f05531bdfe56be1f44cffff312da4ad36a3cd0e4d722-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/ba96b7134404490a84e7f05531bdfe56be1f44cffff312da4ad36a3cd0e4d722-light.webp"
   },
   {
     "ref": "@payload-components/feature-bento",
@@ -146,8 +162,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/feature-bento.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-bento",
     "previewEmbed": false,
-    "image": "/registry-previews/1255925b22fdd3c5840c75dc649ba69b1d9f3b1eda71eaee11806403c4da4012-light.webp",
-    "imageDark": "/registry-previews/1255925b22fdd3c5840c75dc649ba69b1d9f3b1eda71eaee11806403c4da4012-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/1255925b22fdd3c5840c75dc649ba69b1d9f3b1eda71eaee11806403c4da4012-light.webp"
   },
   {
     "ref": "@payload-components/feature-steps",
@@ -161,8 +179,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/feature-steps.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-steps",
     "previewEmbed": false,
-    "image": "/registry-previews/ad9cde2c00559acb3a2e53d7b2b6654ff18f3c089929207aa1ebe83279e46330-light.webp",
-    "imageDark": "/registry-previews/ad9cde2c00559acb3a2e53d7b2b6654ff18f3c089929207aa1ebe83279e46330-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/ad9cde2c00559acb3a2e53d7b2b6654ff18f3c089929207aa1ebe83279e46330-light.webp"
   },
   {
     "ref": "@payload-components/feature-accordion",
@@ -176,8 +196,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/feature-accordion.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-accordion",
     "previewEmbed": false,
-    "image": "/registry-previews/659a0701d0ce9ad41f519a897a3ec6c0e39c22597270f24f7eb0a1a68028c555-light.webp",
-    "imageDark": "/registry-previews/659a0701d0ce9ad41f519a897a3ec6c0e39c22597270f24f7eb0a1a68028c555-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/659a0701d0ce9ad41f519a897a3ec6c0e39c22597270f24f7eb0a1a68028c555-light.webp"
   },
   {
     "ref": "@payload-components/feature-cards-media",
@@ -191,8 +213,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/feature-cards-media.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-cards-media",
     "previewEmbed": false,
-    "image": "/registry-previews/2b5c8619340bc38d9a8a4516f8e9b88d478a6a3b06aa200fc9f652a206fbbd4a-light.webp",
-    "imageDark": "/registry-previews/2b5c8619340bc38d9a8a4516f8e9b88d478a6a3b06aa200fc9f652a206fbbd4a-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/2b5c8619340bc38d9a8a4516f8e9b88d478a6a3b06aa200fc9f652a206fbbd4a-light.webp"
   },
   {
     "ref": "@payload-components/feature-icon-grid",
@@ -206,8 +230,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/feature-icon-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/feature-icon-grid",
     "previewEmbed": false,
-    "image": "/registry-previews/84c2a20bc0b5ba57c833e2222bd6686eb1b9d7883e1fa854b5f83ea944dfc031-light.webp",
-    "imageDark": "/registry-previews/84c2a20bc0b5ba57c833e2222bd6686eb1b9d7883e1fa854b5f83ea944dfc031-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/84c2a20bc0b5ba57c833e2222bd6686eb1b9d7883e1fa854b5f83ea944dfc031-light.webp"
   },
   {
     "ref": "@payload-components/embed-basic",
@@ -221,8 +247,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/embed-basic.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/embed-basic",
     "previewEmbed": false,
-    "image": "/registry-previews/796b431e817abcddb1b2526f701030fb426d8fa94f62b44217e8c58d5e2bddad-light.webp",
-    "imageDark": "/registry-previews/796b431e817abcddb1b2526f701030fb426d8fa94f62b44217e8c58d5e2bddad-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/796b431e817abcddb1b2526f701030fb426d8fa94f62b44217e8c58d5e2bddad-light.webp"
   },
   {
     "ref": "@payload-components/logo-cloud-grid",
@@ -236,8 +264,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/logo-cloud-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/logo-cloud-grid",
     "previewEmbed": false,
-    "image": "/registry-previews/11a8c16a9f4ff9c5e624465a681dc455cc3a4d385dcb5edb1ae6fe21e4af1c4c-light.webp",
-    "imageDark": "/registry-previews/11a8c16a9f4ff9c5e624465a681dc455cc3a4d385dcb5edb1ae6fe21e4af1c4c-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/11a8c16a9f4ff9c5e624465a681dc455cc3a4d385dcb5edb1ae6fe21e4af1c4c-light.webp"
   },
   {
     "ref": "@payload-components/logo-cloud-hover",
@@ -251,8 +281,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/logo-cloud-hover.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/logo-cloud-hover",
     "previewEmbed": false,
-    "image": "/registry-previews/58d172fe8df18718c8c991b2280c366a024f2c031de1081e642e706e95d369ba-light.webp",
-    "imageDark": "/registry-previews/58d172fe8df18718c8c991b2280c366a024f2c031de1081e642e706e95d369ba-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/58d172fe8df18718c8c991b2280c366a024f2c031de1081e642e706e95d369ba-light.webp"
   },
   {
     "ref": "@payload-components/logo-cloud-marquee",
@@ -266,8 +298,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/logo-cloud-marquee.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/logo-cloud-marquee",
     "previewEmbed": false,
-    "image": "/registry-previews/1a1806c6a700b78396b08dfa8497e3168202563c4e8ee6ef05452cdb1a92a110-light.webp",
-    "imageDark": "/registry-previews/1a1806c6a700b78396b08dfa8497e3168202563c4e8ee6ef05452cdb1a92a110-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/1a1806c6a700b78396b08dfa8497e3168202563c4e8ee6ef05452cdb1a92a110-light.webp"
   },
   {
     "ref": "@payload-components/logo-cloud-inline",
@@ -281,8 +315,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/logo-cloud-inline.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/logo-cloud-inline",
     "previewEmbed": false,
-    "image": "/registry-previews/28164ed861cf57e61e5fa1eced145781a8dd33e13e072e032a0da1e979b0cd24-light.webp",
-    "imageDark": "/registry-previews/28164ed861cf57e61e5fa1eced145781a8dd33e13e072e032a0da1e979b0cd24-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/28164ed861cf57e61e5fa1eced145781a8dd33e13e072e032a0da1e979b0cd24-light.webp"
   },
   {
     "ref": "@payload-components/logo-cloud-inline-wrap",
@@ -296,8 +332,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/logo-cloud-inline-wrap.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/logo-cloud-inline-wrap",
     "previewEmbed": false,
-    "image": "/registry-previews/0c33b7dbca2365d8b13cba92806ab9398cb42ac186630daa43d944b737c2c577-light.webp",
-    "imageDark": "/registry-previews/0c33b7dbca2365d8b13cba92806ab9398cb42ac186630daa43d944b737c2c577-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/0c33b7dbca2365d8b13cba92806ab9398cb42ac186630daa43d944b737c2c577-light.webp"
   },
   {
     "ref": "@payload-components/content-columns",
@@ -311,8 +349,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-columns.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-columns",
     "previewEmbed": false,
-    "image": "/registry-previews/7dc7f37a4c6f23d3b2e0add16def2f44750364a11942a9cee723bd93fabe6fd4-light.webp",
-    "imageDark": "/registry-previews/7dc7f37a4c6f23d3b2e0add16def2f44750364a11942a9cee723bd93fabe6fd4-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/7dc7f37a4c6f23d3b2e0add16def2f44750364a11942a9cee723bd93fabe6fd4-light.webp"
   },
   {
     "ref": "@payload-components/content-image-lead",
@@ -326,8 +366,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-image-lead.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-image-lead",
     "previewEmbed": false,
-    "image": "/registry-previews/6e592c1c977563537044af448fb86649b167a9368b02d94c5cb676f9c0f61307-light.webp",
-    "imageDark": "/registry-previews/6e592c1c977563537044af448fb86649b167a9368b02d94c5cb676f9c0f61307-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/6e592c1c977563537044af448fb86649b167a9368b02d94c5cb676f9c0f61307-light.webp"
   },
   {
     "ref": "@payload-components/content-feature-media",
@@ -341,8 +383,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-feature-media.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-feature-media",
     "previewEmbed": false,
-    "image": "/registry-previews/47e44d381f24471f38a0256f27ba5c7010e98cf29c247e3c91e98e698253e537-light.webp",
-    "imageDark": "/registry-previews/47e44d381f24471f38a0256f27ba5c7010e98cf29c247e3c91e98e698253e537-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/47e44d381f24471f38a0256f27ba5c7010e98cf29c247e3c91e98e698253e537-light.webp"
   },
   {
     "ref": "@payload-components/content-feature-split",
@@ -356,8 +400,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-feature-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-feature-split",
     "previewEmbed": false,
-    "image": "/registry-previews/ab84a079d551dcb16718f64c3c1f26b052694f92eec6df87d01d43e8355af799-light.webp",
-    "imageDark": "/registry-previews/ab84a079d551dcb16718f64c3c1f26b052694f92eec6df87d01d43e8355af799-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/ab84a079d551dcb16718f64c3c1f26b052694f92eec6df87d01d43e8355af799-light.webp"
   },
   {
     "ref": "@payload-components/content-showcase",
@@ -371,8 +417,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-showcase.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-showcase",
     "previewEmbed": false,
-    "image": "/registry-previews/e9e8de526ba56729a86230f8d3abea807422c062fd56ac4cb92a143062d36a67-light.webp",
-    "imageDark": "/registry-previews/e9e8de526ba56729a86230f8d3abea807422c062fd56ac4cb92a143062d36a67-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/e9e8de526ba56729a86230f8d3abea807422c062fd56ac4cb92a143062d36a67-light.webp"
   },
   {
     "ref": "@payload-components/content-quote",
@@ -386,8 +434,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-quote.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-quote",
     "previewEmbed": false,
-    "image": "/registry-previews/43792bd9801013484a768233b73d66e4e582bcde0abb7e3cb1e42ea13f5cca1d-light.webp",
-    "imageDark": "/registry-previews/43792bd9801013484a768233b73d66e4e582bcde0abb7e3cb1e42ea13f5cca1d-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/43792bd9801013484a768233b73d66e4e582bcde0abb7e3cb1e42ea13f5cca1d-light.webp"
   },
   {
     "ref": "@payload-components/content-community",
@@ -401,8 +451,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-community.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-community",
     "previewEmbed": false,
-    "image": "/registry-previews/07c291fb0304862faecc9cfcdd06981de99212958e5721d42490e124e3e119f4-light.webp",
-    "imageDark": "/registry-previews/07c291fb0304862faecc9cfcdd06981de99212958e5721d42490e124e3e119f4-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/07c291fb0304862faecc9cfcdd06981de99212958e5721d42490e124e3e119f4-light.webp"
   },
   {
     "ref": "@payload-components/integration-grid",
@@ -416,8 +468,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/integration-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-grid",
     "previewEmbed": false,
-    "image": "/registry-previews/75482c0e9e35d58a6ad34f6e7dddcf257b343d5b2170945f94a11bf73adf028d-light.webp",
-    "imageDark": "/registry-previews/75482c0e9e35d58a6ad34f6e7dddcf257b343d5b2170945f94a11bf73adf028d-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/75482c0e9e35d58a6ad34f6e7dddcf257b343d5b2170945f94a11bf73adf028d-light.webp"
   },
   {
     "ref": "@payload-components/integration-cluster",
@@ -431,8 +485,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/integration-cluster.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-cluster",
     "previewEmbed": false,
-    "image": "/registry-previews/553088f2ac5abbfb01a1fb362396174eee57178cb24ab5fe3f173577c78ff120-light.webp",
-    "imageDark": "/registry-previews/553088f2ac5abbfb01a1fb362396174eee57178cb24ab5fe3f173577c78ff120-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/553088f2ac5abbfb01a1fb362396174eee57178cb24ab5fe3f173577c78ff120-light.webp"
   },
   {
     "ref": "@payload-components/integration-split",
@@ -446,8 +502,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/integration-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-split",
     "previewEmbed": false,
-    "image": "/registry-previews/2a036437e4085721c9fc1c9f6acab7017aa290ea15cb7109ad5f27a52e3676db-light.webp",
-    "imageDark": "/registry-previews/2a036437e4085721c9fc1c9f6acab7017aa290ea15cb7109ad5f27a52e3676db-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/2a036437e4085721c9fc1c9f6acab7017aa290ea15cb7109ad5f27a52e3676db-light.webp"
   },
   {
     "ref": "@payload-components/integration-connect",
@@ -461,8 +519,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/integration-connect.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-connect",
     "previewEmbed": false,
-    "image": "/registry-previews/c52ed247b238a5e497cd8c6235f344f1894232d83747f81200a01ddd172aa8f7-light.webp",
-    "imageDark": "/registry-previews/c52ed247b238a5e497cd8c6235f344f1894232d83747f81200a01ddd172aa8f7-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/c52ed247b238a5e497cd8c6235f344f1894232d83747f81200a01ddd172aa8f7-light.webp"
   },
   {
     "ref": "@payload-components/integration-orbit",
@@ -476,8 +536,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/integration-orbit.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-orbit",
     "previewEmbed": false,
-    "image": "/registry-previews/f97568b51951fa2c43e1e8132c23235fb7ccf8863cec942c10b97d7e6235c6a0-light.webp",
-    "imageDark": "/registry-previews/f97568b51951fa2c43e1e8132c23235fb7ccf8863cec942c10b97d7e6235c6a0-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/f97568b51951fa2c43e1e8132c23235fb7ccf8863cec942c10b97d7e6235c6a0-light.webp"
   },
   {
     "ref": "@payload-components/integration-list",
@@ -491,8 +553,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/integration-list.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-list",
     "previewEmbed": false,
-    "image": "/registry-previews/14d55ea9159747fdfa8397706d54a860932324e92ec40c649f32e9e0bbe524ea-light.webp",
-    "imageDark": "/registry-previews/14d55ea9159747fdfa8397706d54a860932324e92ec40c649f32e9e0bbe524ea-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/14d55ea9159747fdfa8397706d54a860932324e92ec40c649f32e9e0bbe524ea-light.webp"
   },
   {
     "ref": "@payload-components/integration-marquee",
@@ -506,8 +570,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/integration-marquee.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-marquee",
     "previewEmbed": false,
-    "image": "/registry-previews/dc63a00a98653936aeb26cd898de45c6ce68b06548377a99cc7ec435264c6bed-light.webp",
-    "imageDark": "/registry-previews/dc63a00a98653936aeb26cd898de45c6ce68b06548377a99cc7ec435264c6bed-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/dc63a00a98653936aeb26cd898de45c6ce68b06548377a99cc7ec435264c6bed-light.webp"
   },
   {
     "ref": "@payload-components/integration-testimonial",
@@ -521,8 +587,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/integration-testimonial.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/integration-testimonial",
     "previewEmbed": false,
-    "image": "/registry-previews/0fc70031617e56cd49dc4bbed6c8f5466f278a7dad66bf5742018fe3609d9485-light.webp",
-    "imageDark": "/registry-previews/0fc70031617e56cd49dc4bbed6c8f5466f278a7dad66bf5742018fe3609d9485-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/0fc70031617e56cd49dc4bbed6c8f5466f278a7dad66bf5742018fe3609d9485-light.webp"
   },
   {
     "ref": "@payload-components/content-split-rows",
@@ -536,8 +604,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-split-rows.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-split-rows",
     "previewEmbed": false,
-    "image": "/registry-previews/f3dcb1f3cabeb62f70b3389a43ed1a3f34dc1b8704e214f5c3caea40707d9423-light.webp",
-    "imageDark": "/registry-previews/f3dcb1f3cabeb62f70b3389a43ed1a3f34dc1b8704e214f5c3caea40707d9423-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/f3dcb1f3cabeb62f70b3389a43ed1a3f34dc1b8704e214f5c3caea40707d9423-light.webp"
   },
   {
     "ref": "@payload-components/content-rows",
@@ -551,8 +621,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-rows.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-rows",
     "previewEmbed": false,
-    "image": "/registry-previews/a1887c9dea48a72adc6f8671c733e288088876301ebb61372a3fb11699cff4f6-light.webp",
-    "imageDark": "/registry-previews/a1887c9dea48a72adc6f8671c733e288088876301ebb61372a3fb11699cff4f6-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/a1887c9dea48a72adc6f8671c733e288088876301ebb61372a3fb11699cff4f6-light.webp"
   },
   {
     "ref": "@payload-components/content-image-frame",
@@ -566,8 +638,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-image-frame.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-image-frame",
     "previewEmbed": false,
-    "image": "/registry-previews/cd17bd1f281a6f8667f678a491020a7d1fbb97cf8c447b4ed5e9c88bcf2bc0d0-light.webp",
-    "imageDark": "/registry-previews/cd17bd1f281a6f8667f678a491020a7d1fbb97cf8c447b4ed5e9c88bcf2bc0d0-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/cd17bd1f281a6f8667f678a491020a7d1fbb97cf8c447b4ed5e9c88bcf2bc0d0-light.webp"
   },
   {
     "ref": "@payload-components/content-stats",
@@ -581,8 +655,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-stats.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-stats",
     "previewEmbed": false,
-    "image": "/registry-previews/e156efe209c223823c346006f223e70443bf6fff214ec998d906683099aaee6d-light.webp",
-    "imageDark": "/registry-previews/e156efe209c223823c346006f223e70443bf6fff214ec998d906683099aaee6d-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/e156efe209c223823c346006f223e70443bf6fff214ec998d906683099aaee6d-light.webp"
   },
   {
     "ref": "@payload-components/content-list",
@@ -596,8 +672,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-list.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-list",
     "previewEmbed": false,
-    "image": "/registry-previews/b8ed217fb0c2c5ff47e3ac469266908e1ae21aaeb536ba1d3dd9cfbf46ee6c92-light.webp",
-    "imageDark": "/registry-previews/b8ed217fb0c2c5ff47e3ac469266908e1ae21aaeb536ba1d3dd9cfbf46ee6c92-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/b8ed217fb0c2c5ff47e3ac469266908e1ae21aaeb536ba1d3dd9cfbf46ee6c92-light.webp"
   },
   {
     "ref": "@payload-components/content-list-columns",
@@ -611,8 +689,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-list-columns.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-list-columns",
     "previewEmbed": false,
-    "image": "/registry-previews/f317c72499411075f599a139d4f8bf26a08c403222b6d201d3c6297774b6a822-light.webp",
-    "imageDark": "/registry-previews/f317c72499411075f599a139d4f8bf26a08c403222b6d201d3c6297774b6a822-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/f317c72499411075f599a139d4f8bf26a08c403222b6d201d3c6297774b6a822-light.webp"
   },
   {
     "ref": "@payload-components/content-list-icons",
@@ -626,8 +706,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/content-list-icons.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/content-list-icons",
     "previewEmbed": false,
-    "image": "/registry-previews/d1e14d713fe281322f134b6a654a47839bd11055b12d777eb72061d6512cbe03-light.webp",
-    "imageDark": "/registry-previews/d1e14d713fe281322f134b6a654a47839bd11055b12d777eb72061d6512cbe03-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/d1e14d713fe281322f134b6a654a47839bd11055b12d777eb72061d6512cbe03-light.webp"
   },
   {
     "ref": "@payload-components/call-to-action-centered",
@@ -641,8 +723,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/call-to-action-centered.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/call-to-action-centered",
     "previewEmbed": false,
-    "image": "/registry-previews/b2bc772dc1267f7da7d06f4723dda2846ec5fc2e1bf26f83ee17b83e16e205b3-light.webp",
-    "imageDark": "/registry-previews/b2bc772dc1267f7da7d06f4723dda2846ec5fc2e1bf26f83ee17b83e16e205b3-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/b2bc772dc1267f7da7d06f4723dda2846ec5fc2e1bf26f83ee17b83e16e205b3-light.webp"
   },
   {
     "ref": "@payload-components/call-to-action-boxed",
@@ -656,8 +740,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/call-to-action-boxed.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/call-to-action-boxed",
     "previewEmbed": false,
-    "image": "/registry-previews/f32a1eefada8a387e74f44e0a5daec5c6a1a873934e73c4454219d7c442e1796-light.webp",
-    "imageDark": "/registry-previews/f32a1eefada8a387e74f44e0a5daec5c6a1a873934e73c4454219d7c442e1796-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/f32a1eefada8a387e74f44e0a5daec5c6a1a873934e73c4454219d7c442e1796-light.webp"
   },
   {
     "ref": "@payload-components/call-to-action-split",
@@ -671,8 +757,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/call-to-action-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/call-to-action-split",
     "previewEmbed": false,
-    "image": "/registry-previews/00399a4259df7add7a472a04134dd203f174c18ef15b85bb1d6959463a993d8e-light.webp",
-    "imageDark": "/registry-previews/00399a4259df7add7a472a04134dd203f174c18ef15b85bb1d6959463a993d8e-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/00399a4259df7add7a472a04134dd203f174c18ef15b85bb1d6959463a993d8e-light.webp"
   },
   {
     "ref": "@payload-components/call-to-action-signup",
@@ -686,8 +774,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/call-to-action-signup.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/call-to-action-signup",
     "previewEmbed": false,
-    "image": "/registry-previews/52c210c060260417d0ad8949fced38ab5654f204c19e2acf92c6e366f1997f62-light.webp",
-    "imageDark": "/registry-previews/52c210c060260417d0ad8949fced38ab5654f204c19e2acf92c6e366f1997f62-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/52c210c060260417d0ad8949fced38ab5654f204c19e2acf92c6e366f1997f62-light.webp"
   },
   {
     "ref": "@payload-components/contact-routing-form",
@@ -701,8 +791,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/contact-routing-form.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/contact-routing-form",
     "previewEmbed": false,
-    "image": "/registry-previews/c6c36f1febcf7efbdb5d6548b65ca3940b4fc975248d7a27e0cbd46236f970f7-light.webp",
-    "imageDark": "/registry-previews/c6c36f1febcf7efbdb5d6548b65ca3940b4fc975248d7a27e0cbd46236f970f7-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/c6c36f1febcf7efbdb5d6548b65ca3940b4fc975248d7a27e0cbd46236f970f7-light.webp"
   },
   {
     "ref": "@payload-components/contact-channels",
@@ -716,8 +808,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/contact-channels.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/contact-channels",
     "previewEmbed": false,
-    "image": "/registry-previews/ecfcb52eb072c06724b8a5c4fb729e5130a9d216b5f801fe789e03febc6ce9f2-light.webp",
-    "imageDark": "/registry-previews/ecfcb52eb072c06724b8a5c4fb729e5130a9d216b5f801fe789e03febc6ce9f2-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/ecfcb52eb072c06724b8a5c4fb729e5130a9d216b5f801fe789e03febc6ce9f2-light.webp"
   },
   {
     "ref": "@payload-components/team-roster",
@@ -731,8 +825,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/team-roster.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/team-roster",
     "previewEmbed": false,
-    "image": "/registry-previews/da68e3a1f188be478e1fdf897b26ae05464f8f4fa40005c06353dc4f9a234f6e-light.webp",
-    "imageDark": "/registry-previews/da68e3a1f188be478e1fdf897b26ae05464f8f4fa40005c06353dc4f9a234f6e-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/da68e3a1f188be478e1fdf897b26ae05464f8f4fa40005c06353dc4f9a234f6e-light.webp"
   },
   {
     "ref": "@payload-components/team-grid",
@@ -746,8 +842,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/team-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/team-grid",
     "previewEmbed": false,
-    "image": "/registry-previews/2b551978867e4bb4c06102514247d540d5b3950e747a00a18379dc7968e97495-light.webp",
-    "imageDark": "/registry-previews/2b551978867e4bb4c06102514247d540d5b3950e747a00a18379dc7968e97495-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/2b551978867e4bb4c06102514247d540d5b3950e747a00a18379dc7968e97495-light.webp"
   },
   {
     "ref": "@payload-components/team-bios",
@@ -761,8 +859,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/team-bios.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/team-bios",
     "previewEmbed": false,
-    "image": "/registry-previews/3ed5ff4589851f95f3da66fa81b4e955ced8dd4c6583afbaceb84c1478bdb6ac-light.webp",
-    "imageDark": "/registry-previews/3ed5ff4589851f95f3da66fa81b4e955ced8dd4c6583afbaceb84c1478bdb6ac-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/3ed5ff4589851f95f3da66fa81b4e955ced8dd4c6583afbaceb84c1478bdb6ac-light.webp"
   },
   {
     "ref": "@payload-components/faq-accordion",
@@ -776,8 +876,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/faq-accordion.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-accordion",
     "previewEmbed": false,
-    "image": "/registry-previews/bc9dc86af008b3ded38a884f90e27db9147be6d6204dd4273e03dc8d85d40e1b-light.webp",
-    "imageDark": "/registry-previews/bc9dc86af008b3ded38a884f90e27db9147be6d6204dd4273e03dc8d85d40e1b-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/bc9dc86af008b3ded38a884f90e27db9147be6d6204dd4273e03dc8d85d40e1b-light.webp"
   },
   {
     "ref": "@payload-components/faq-split",
@@ -791,8 +893,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/faq-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-split",
     "previewEmbed": false,
-    "image": "/registry-previews/8aa4ceea81126798a010e7829b54827450441354fee951c469e9f0cfc2c4bac8-light.webp",
-    "imageDark": "/registry-previews/8aa4ceea81126798a010e7829b54827450441354fee951c469e9f0cfc2c4bac8-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/8aa4ceea81126798a010e7829b54827450441354fee951c469e9f0cfc2c4bac8-light.webp"
   },
   {
     "ref": "@payload-components/faq-card",
@@ -806,8 +910,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/faq-card.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-card",
     "previewEmbed": false,
-    "image": "/registry-previews/de1af9e470b0a9040d536399ecf59db37b2a4c83e2d18d6622569e191d47b8d0-light.webp",
-    "imageDark": "/registry-previews/de1af9e470b0a9040d536399ecf59db37b2a4c83e2d18d6622569e191d47b8d0-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/de1af9e470b0a9040d536399ecf59db37b2a4c83e2d18d6622569e191d47b8d0-light.webp"
   },
   {
     "ref": "@payload-components/faq-icons",
@@ -821,8 +927,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/faq-icons.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-icons",
     "previewEmbed": false,
-    "image": "/registry-previews/7adc3cee0a60d06d2c16afddb682d16136735aebe19390d4b11bb93ff59e76d0-light.webp",
-    "imageDark": "/registry-previews/7adc3cee0a60d06d2c16afddb682d16136735aebe19390d4b11bb93ff59e76d0-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/7adc3cee0a60d06d2c16afddb682d16136735aebe19390d4b11bb93ff59e76d0-light.webp"
   },
   {
     "ref": "@payload-components/faq-grouped",
@@ -836,8 +944,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/faq-grouped.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-grouped",
     "previewEmbed": false,
-    "image": "/registry-previews/39ca9e7ae10c7c6c296b1fa311d74b52b56854d7a41822dcb49e634266e4c6e4-light.webp",
-    "imageDark": "/registry-previews/39ca9e7ae10c7c6c296b1fa311d74b52b56854d7a41822dcb49e634266e4c6e4-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/39ca9e7ae10c7c6c296b1fa311d74b52b56854d7a41822dcb49e634266e4c6e4-light.webp"
   },
   {
     "ref": "@payload-components/faq-grid",
@@ -851,8 +961,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/faq-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/faq-grid",
     "previewEmbed": false,
-    "image": "/registry-previews/92a2e9d9d956534bcf86ecaee55d45b31fc5d110b93853ef4538764c22ec848b-light.webp",
-    "imageDark": "/registry-previews/92a2e9d9d956534bcf86ecaee55d45b31fc5d110b93853ef4538764c22ec848b-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/92a2e9d9d956534bcf86ecaee55d45b31fc5d110b93853ef4538764c22ec848b-light.webp"
   },
   {
     "ref": "@payload-components/comparator-table",
@@ -866,8 +978,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/comparator-table.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/comparator-table",
     "previewEmbed": false,
-    "image": "/registry-previews/f14f5f77361b38e167e998739379972789bb297e2ba9788266ef28562b986820-light.webp",
-    "imageDark": "/registry-previews/f14f5f77361b38e167e998739379972789bb297e2ba9788266ef28562b986820-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/f14f5f77361b38e167e998739379972789bb297e2ba9788266ef28562b986820-light.webp"
   },
   {
     "ref": "@payload-components/comparator-grid",
@@ -881,8 +995,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/comparator-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/comparator-grid",
     "previewEmbed": false,
-    "image": "/registry-previews/430dfe9e5a1cef8cd8384b49251b92da1f2dba15bbe367762337cbf44274ef7d-light.webp",
-    "imageDark": "/registry-previews/430dfe9e5a1cef8cd8384b49251b92da1f2dba15bbe367762337cbf44274ef7d-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/430dfe9e5a1cef8cd8384b49251b92da1f2dba15bbe367762337cbf44274ef7d-light.webp"
   },
   {
     "ref": "@payload-components/comparator-stack",
@@ -896,8 +1012,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/comparator-stack.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/comparator-stack",
     "previewEmbed": false,
-    "image": "/registry-previews/bea0ec49cedacafdd132778ab1a10a134dc5ef0f95aafea15ff89971a6b5ef0a-light.webp",
-    "imageDark": "/registry-previews/bea0ec49cedacafdd132778ab1a10a134dc5ef0f95aafea15ff89971a6b5ef0a-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/bea0ec49cedacafdd132778ab1a10a134dc5ef0f95aafea15ff89971a6b5ef0a-light.webp"
   },
   {
     "ref": "@payload-components/testimonials-quote",
@@ -911,8 +1029,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/testimonials-quote.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-quote",
     "previewEmbed": false,
-    "image": "/registry-previews/fe2286515963a59ba18a421d24c60f5ce1d5822df1b31ff7e066124466fddd2c-light.webp",
-    "imageDark": "/registry-previews/fe2286515963a59ba18a421d24c60f5ce1d5822df1b31ff7e066124466fddd2c-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/fe2286515963a59ba18a421d24c60f5ce1d5822df1b31ff7e066124466fddd2c-light.webp"
   },
   {
     "ref": "@payload-components/testimonials-spotlight",
@@ -926,8 +1046,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/testimonials-spotlight.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-spotlight",
     "previewEmbed": false,
-    "image": "/registry-previews/5e2fdcbb76b645cd32f8524541783fcb6be5ec0e5661c57b27a3cb9dadc8db26-light.webp",
-    "imageDark": "/registry-previews/5e2fdcbb76b645cd32f8524541783fcb6be5ec0e5661c57b27a3cb9dadc8db26-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/5e2fdcbb76b645cd32f8524541783fcb6be5ec0e5661c57b27a3cb9dadc8db26-light.webp"
   },
   {
     "ref": "@payload-components/testimonials-grid",
@@ -941,8 +1063,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/testimonials-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-grid",
     "previewEmbed": false,
-    "image": "/registry-previews/5d480edc22329b2729e7d9fca9f1185c5238fb3324c34966d9aaaa66b455cad8-light.webp",
-    "imageDark": "/registry-previews/5d480edc22329b2729e7d9fca9f1185c5238fb3324c34966d9aaaa66b455cad8-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/5d480edc22329b2729e7d9fca9f1185c5238fb3324c34966d9aaaa66b455cad8-light.webp"
   },
   {
     "ref": "@payload-components/testimonials-rating",
@@ -956,8 +1080,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/testimonials-rating.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-rating",
     "previewEmbed": false,
-    "image": "/registry-previews/d92dc91d1fa2d245a6df98d438154921eba524732fdae045fd8157265dc82da3-light.webp",
-    "imageDark": "/registry-previews/d92dc91d1fa2d245a6df98d438154921eba524732fdae045fd8157265dc82da3-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/d92dc91d1fa2d245a6df98d438154921eba524732fdae045fd8157265dc82da3-light.webp"
   },
   {
     "ref": "@payload-components/testimonials-bento",
@@ -971,8 +1097,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/testimonials-bento.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-bento",
     "previewEmbed": false,
-    "image": "/registry-previews/eb5df84d09af837a695974b7d4f551f424b3d9d95c9c8d9323098174fdeac3ea-light.webp",
-    "imageDark": "/registry-previews/eb5df84d09af837a695974b7d4f551f424b3d9d95c9c8d9323098174fdeac3ea-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/eb5df84d09af837a695974b7d4f551f424b3d9d95c9c8d9323098174fdeac3ea-light.webp"
   },
   {
     "ref": "@payload-components/testimonials-wall",
@@ -986,8 +1114,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/testimonials-wall.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/testimonials-wall",
     "previewEmbed": false,
-    "image": "/registry-previews/a5aba520b8ff8d17f673aabec2a28a4fbf74ef895b40b5bb2f8122bd9b4e2137-light.webp",
-    "imageDark": "/registry-previews/a5aba520b8ff8d17f673aabec2a28a4fbf74ef895b40b5bb2f8122bd9b4e2137-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/a5aba520b8ff8d17f673aabec2a28a4fbf74ef895b40b5bb2f8122bd9b4e2137-light.webp"
   },
   {
     "ref": "@payload-components/stats-proof",
@@ -1001,8 +1131,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/stats-proof.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/stats-proof",
     "previewEmbed": false,
-    "image": "/registry-previews/f9ad58f97102b75e401012af99f9a120db2f3d6843d100cfe3a64f8f850817c0-light.webp",
-    "imageDark": "/registry-previews/f9ad58f97102b75e401012af99f9a120db2f3d6843d100cfe3a64f8f850817c0-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/f9ad58f97102b75e401012af99f9a120db2f3d6843d100cfe3a64f8f850817c0-light.webp"
   },
   {
     "ref": "@payload-components/stats-grid",
@@ -1016,8 +1148,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/stats-grid.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/stats-grid",
     "previewEmbed": false,
-    "image": "/registry-previews/d9fec9744d7b21043abd0862895e694e86c5c2c91891fe41159e502778b42b83-light.webp",
-    "imageDark": "/registry-previews/d9fec9744d7b21043abd0862895e694e86c5c2c91891fe41159e502778b42b83-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/d9fec9744d7b21043abd0862895e694e86c5c2c91891fe41159e502778b42b83-light.webp"
   },
   {
     "ref": "@payload-components/stats-card",
@@ -1031,8 +1165,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/stats-card.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/stats-card",
     "previewEmbed": false,
-    "image": "/registry-previews/e6555cd6b8608e2c0ad1c183ce25dbe33a8209e0d7e18768705877b53a406319-light.webp",
-    "imageDark": "/registry-previews/e6555cd6b8608e2c0ad1c183ce25dbe33a8209e0d7e18768705877b53a406319-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/e6555cd6b8608e2c0ad1c183ce25dbe33a8209e0d7e18768705877b53a406319-light.webp"
   },
   {
     "ref": "@payload-components/stats-inline",
@@ -1046,8 +1182,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/stats-inline.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/stats-inline",
     "previewEmbed": false,
-    "image": "/registry-previews/c54aca443ed9ba357ccd0eaabd366ccb383fe057a858abf32786da1c61212e67-light.webp",
-    "imageDark": "/registry-previews/c54aca443ed9ba357ccd0eaabd366ccb383fe057a858abf32786da1c61212e67-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/c54aca443ed9ba357ccd0eaabd366ccb383fe057a858abf32786da1c61212e67-light.webp"
   },
   {
     "ref": "@payload-components/pricing-cards",
@@ -1061,8 +1199,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/pricing-cards.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/pricing-cards",
     "previewEmbed": false,
-    "image": "/registry-previews/93bf98d2bcedadd11d33e8b10f5a6a272f51184ec07d819e63cdd303f5463c17-light.webp",
-    "imageDark": "/registry-previews/93bf98d2bcedadd11d33e8b10f5a6a272f51184ec07d819e63cdd303f5463c17-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/93bf98d2bcedadd11d33e8b10f5a6a272f51184ec07d819e63cdd303f5463c17-light.webp"
   },
   {
     "ref": "@payload-components/pricing-cards-muted",
@@ -1076,8 +1216,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/pricing-cards-muted.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/pricing-cards-muted",
     "previewEmbed": false,
-    "image": "/registry-previews/60b876a3a0205bf57851f30a9f75b7abe65e4a43805c396cac45e4df5450c513-light.webp",
-    "imageDark": "/registry-previews/60b876a3a0205bf57851f30a9f75b7abe65e4a43805c396cac45e4df5450c513-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/60b876a3a0205bf57851f30a9f75b7abe65e4a43805c396cac45e4df5450c513-light.webp"
   },
   {
     "ref": "@payload-components/pricing-cards-cta",
@@ -1091,8 +1233,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/pricing-cards-cta.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/pricing-cards-cta",
     "previewEmbed": false,
-    "image": "/registry-previews/00af2a602df2987fcbac6e0f02463572d3bf3439aa379453a595323b5676a1d4-light.webp",
-    "imageDark": "/registry-previews/00af2a602df2987fcbac6e0f02463572d3bf3439aa379453a595323b5676a1d4-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/00af2a602df2987fcbac6e0f02463572d3bf3439aa379453a595323b5676a1d4-light.webp"
   },
   {
     "ref": "@payload-components/pricing-split",
@@ -1106,8 +1250,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/pricing-split.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/pricing-split",
     "previewEmbed": false,
-    "image": "/registry-previews/f131d0babaf190f5619751d5ae3a6c8aed8b43d023dabce1e39f52267e0842bb-light.webp",
-    "imageDark": "/registry-previews/f131d0babaf190f5619751d5ae3a6c8aed8b43d023dabce1e39f52267e0842bb-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/f131d0babaf190f5619751d5ae3a6c8aed8b43d023dabce1e39f52267e0842bb-light.webp"
   },
   {
     "ref": "@payload-components/pricing-enterprise",
@@ -1121,8 +1267,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/pricing-enterprise.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/pricing-enterprise",
     "previewEmbed": false,
-    "image": "/registry-previews/c8e1f008b63babc2492cc8796f6a97062a2ba87d92330f96992134fb03e4a7b1-light.webp",
-    "imageDark": "/registry-previews/c8e1f008b63babc2492cc8796f6a97062a2ba87d92330f96992134fb03e4a7b1-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/c8e1f008b63babc2492cc8796f6a97062a2ba87d92330f96992134fb03e4a7b1-light.webp"
   },
   {
     "ref": "@payload-components/collection-query",
@@ -1136,8 +1284,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/collection-query.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/collection-query",
     "previewEmbed": false,
-    "image": "/registry-previews/2d2e8a4248f6cb41da8a86ada6328e7c49862b7b814dee5cee63301b04173c47-light.webp",
-    "imageDark": "/registry-previews/2d2e8a4248f6cb41da8a86ada6328e7c49862b7b814dee5cee63301b04173c47-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/2d2e8a4248f6cb41da8a86ada6328e7c49862b7b814dee5cee63301b04173c47-light.webp"
   },
   {
     "ref": "@payload-components/footer-columns",
@@ -1151,8 +1301,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/footer-columns.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/footer-columns",
     "previewEmbed": false,
-    "image": "/registry-previews/534715b5ae5489f0b4fd308dedb84e590c360949f21ae4f0e8f94d2bf5925350-light.webp",
-    "imageDark": "/registry-previews/534715b5ae5489f0b4fd308dedb84e590c360949f21ae4f0e8f94d2bf5925350-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/534715b5ae5489f0b4fd308dedb84e590c360949f21ae4f0e8f94d2bf5925350-light.webp"
   },
   {
     "ref": "@payload-components/footer-simple",
@@ -1166,8 +1318,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/footer-simple.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/footer-simple",
     "previewEmbed": false,
-    "image": "/registry-previews/e518a0621b93a6d278f31e01fbd01fda29fac5f9da9ea3abcce43f6a40c05ce7-light.webp",
-    "imageDark": "/registry-previews/e518a0621b93a6d278f31e01fbd01fda29fac5f9da9ea3abcce43f6a40c05ce7-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/e518a0621b93a6d278f31e01fbd01fda29fac5f9da9ea3abcce43f6a40c05ce7-light.webp"
   },
   {
     "ref": "@payload-components/footer-centered",
@@ -1181,8 +1335,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/footer-centered.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/footer-centered",
     "previewEmbed": false,
-    "image": "/registry-previews/ac104f18b3909655e7e20de93ed9d5f17a7bb2798f3a388c3c534419ff1bebd7-light.webp",
-    "imageDark": "/registry-previews/ac104f18b3909655e7e20de93ed9d5f17a7bb2798f3a388c3c534419ff1bebd7-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/ac104f18b3909655e7e20de93ed9d5f17a7bb2798f3a388c3c534419ff1bebd7-light.webp"
   },
   {
     "ref": "@payload-components/contact-form-basic",
@@ -1196,8 +1352,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/contact-form-basic.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/contact-form-basic",
     "previewEmbed": false,
-    "image": "/registry-previews/36e78531f6634bfaa9829687125cdd0928a7c4960fe2cf3a6a5f5e58d43d6c89-light.webp",
-    "imageDark": "/registry-previews/36e78531f6634bfaa9829687125cdd0928a7c4960fe2cf3a6a5f5e58d43d6c89-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/36e78531f6634bfaa9829687125cdd0928a7c4960fe2cf3a6a5f5e58d43d6c89-light.webp"
   },
   {
     "ref": "@payload-components/post-hero",
@@ -1211,8 +1369,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/post-hero.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/post-hero",
     "previewEmbed": false,
-    "image": "/registry-previews/2cbf6bd3fe0cdef8b39e53eec6ca5ca14cc1682b25f41c816612966f75f60757-light.webp",
-    "imageDark": "/registry-previews/2cbf6bd3fe0cdef8b39e53eec6ca5ca14cc1682b25f41c816612966f75f60757-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/2cbf6bd3fe0cdef8b39e53eec6ca5ca14cc1682b25f41c816612966f75f60757-light.webp"
   },
   {
     "ref": "@payload-components/author-card",
@@ -1226,8 +1386,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/author-card.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/author-card",
     "previewEmbed": false,
-    "image": "/registry-previews/275c4e26458eb27c9e7793a3378adc174004a913779262c4ff47bba68ccb38cc-light.webp",
-    "imageDark": "/registry-previews/275c4e26458eb27c9e7793a3378adc174004a913779262c4ff47bba68ccb38cc-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/275c4e26458eb27c9e7793a3378adc174004a913779262c4ff47bba68ccb38cc-light.webp"
   },
   {
     "ref": "@payload-components/newsletter-callout",
@@ -1241,8 +1403,10 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/newsletter-callout.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/newsletter-callout",
     "previewEmbed": false,
-    "image": "/registry-previews/221ce10a3abf7d161217bf54d54dd3b89004e1bbec2c0da40739f708949624e4-light.webp",
-    "imageDark": "/registry-previews/221ce10a3abf7d161217bf54d54dd3b89004e1bbec2c0da40739f708949624e4-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/221ce10a3abf7d161217bf54d54dd3b89004e1bbec2c0da40739f708949624e4-light.webp"
   },
   {
     "ref": "@payload-components/related-posts",
@@ -1256,7 +1420,9 @@ export const catalog: readonly RegistryItem[] = [
     "itemUrl": "https://www.payload-components.xyz/r/related-posts.json",
     "previewUrl": "https://www.payload-components.xyz/components/preview/related-posts",
     "previewEmbed": false,
-    "image": "/registry-previews/5f151125d9f34bacb38be4c2c84ce62c49ed3a3d27fb3f9836a2381723d9b716-light.webp",
-    "imageDark": "/registry-previews/5f151125d9f34bacb38be4c2c84ce62c49ed3a3d27fb3f9836a2381723d9b716-dark.webp"
+    "previewThemes": [
+      "light"
+    ],
+    "image": "/registry-previews/5f151125d9f34bacb38be4c2c84ce62c49ed3a3d27fb3f9836a2381723d9b716-light.webp"
   }
 ]

@@ -127,6 +127,9 @@ const kindLabels: Record<Exclude<ItemKind, 'block'>, string> = {
   component: 'Component',
 }
 
+/** The registry's category hues: golden-angle steps, so neighbours never share a tint. */
+export const hueAt = (index: number) => Math.round((20 + index * 137.508) % 360)
+
 /**
  * Tags every item with its category, group label and hue, and counts the
  * categories. Blocks group by name prefix, largest group first, with small
@@ -161,12 +164,7 @@ export function toCatalog(items: readonly RegistryItem[]): Catalog {
   ]
   const blocks = other ? [...groups, { id: 'block:other' as const, label: 'Other', count: other }] : groups
 
-  const hues = new Map(
-    [...kinds.slice(1), ...blocks].map((category, index) => [
-      category.id,
-      Math.round((20 + index * 137.508) % 360),
-    ]),
-  )
+  const hues = new Map([...kinds.slice(1), ...blocks].map((category, index) => [category.id, hueAt(index)]))
   const tagged = items.map((item) => {
     const category = categoryOf(item)
     const label = item.kind === 'block' ? groupLabel(blockGroup(item.name)) : kindLabels[item.kind]

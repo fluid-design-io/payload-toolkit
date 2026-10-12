@@ -8,6 +8,7 @@ import type {
   PackageManager,
   Setup,
   Target,
+  View,
 } from './workspace.types'
 
 export const defaultSetup: Setup = {
@@ -19,6 +20,13 @@ export const defaultSetup: Setup = {
   agent: 'claude',
   items: [],
 }
+
+export const defaultView: View = 'grid'
+
+export const views: readonly Option<View>[] = [
+  { value: 'grid', label: 'Grid' },
+  { value: 'factory', label: 'Factory' },
+]
 
 export const frameworks: readonly Option<Framework>[] = [
   { value: 'next', label: 'Next.js' },
@@ -72,13 +80,37 @@ const settle: Transition = { type: 'spring', bounce: 0, duration: 0.3 }
 /**
  * The bar and the registry detail share one morph. Opening stretches sideways,
  * then springs upward; closing lowers first, then narrows. Content waits for
- * the rise with `morphContentDelay`.
+ * the rise with `morphContentDelay`. Corners follow the height, and a swipe's
+ * offset lowers home with the top.
  */
 export const morph: Record<'open' | 'close', Transition> = {
-  open: { width: stretch, left: stretch, height: rise, top: rise, default: settle },
-  close: { height: lower, top: lower, width: narrow, left: narrow, default: settle },
+  open: {
+    width: stretch,
+    left: stretch,
+    height: rise,
+    top: rise,
+    borderRadius: rise,
+    '--page-radius': rise,
+    default: settle,
+  },
+  close: {
+    height: lower,
+    top: lower,
+    y: lower,
+    borderRadius: lower,
+    '--page-radius': lower,
+    width: narrow,
+    left: narrow,
+    default: settle,
+  },
 }
 export const morphContentDelay = 0.4
+
+/** Each morph end to end, the rise's delay and length or the narrow's, for values that change across all of it. */
+export const morphSpan: Record<'open' | 'close', Transition> = {
+  open: { type: 'tween', ease: 'easeInOut', duration: 0.77 },
+  close: { type: 'tween', ease: 'easeInOut', duration: 0.62 },
+}
 
 /** One row of morphed content, rising in after the shape settles. */
 export const riseIn: Variants = {

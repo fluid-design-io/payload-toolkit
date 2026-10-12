@@ -21,9 +21,17 @@ export function useWorkspaceTheme(): Theme {
   return useSyncExternalStore(subscribe, currentTheme, () => 'light' as const)
 }
 
+/** Storing the choice stops the root script following the system preference. */
+export function toggleTheme() {
+  const next: Theme = currentTheme() === 'dark' ? 'light' : 'dark'
+  document.documentElement.dataset.theme = `mouve-${next}`
+  try {
+    localStorage.setItem('theme', next)
+  } catch {}
+}
+
 /**
- * The icon and label name the theme a press switches to. Storing the choice
- * stops the root script following the system preference. Inside the mobile
+ * The icon and label name the theme a press switches to. Inside the mobile
  * rail sheet the tooltip portals into the sheet, which keeps it on screen
  * while Safari fixes the body.
  */
@@ -42,12 +50,7 @@ export function WorkspaceTheme() {
         variant="ghost"
         aria-label={label}
         className="shrink-0"
-        onPress={() => {
-          document.documentElement.dataset.theme = `mouve-${next}`
-          try {
-            localStorage.setItem('theme', next)
-          } catch {}
-        }}
+        onPress={toggleTheme}
       >
         <Icon size={16} aria-hidden="true" />
       </Button>

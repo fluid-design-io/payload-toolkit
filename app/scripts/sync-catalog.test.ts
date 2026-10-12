@@ -174,6 +174,18 @@ describe('themed preview metadata', () => {
     ).toEqual({ image: 'https://example.com/hero-dark.webp' })
     expect(() => previewFields({ preview: { embed: 'yes' } }, undefined, 'hero', base)).toThrow()
   })
+  test('preview themes limit captures, with item overrides and both themes left implicit', () => {
+    const configured = { url: 'https://example.com/{name}', themes: ['light'] }
+    expect(previewFields({}, configured, 'hero', base)).toEqual({
+      previewUrl: 'https://example.com/hero',
+      previewThemes: ['light'],
+    })
+    expect(
+      previewFields({}, { ...configured, items: { hero: { themes: ['light', 'dark'] } } }, 'hero', base),
+    ).toEqual({ previewUrl: 'https://example.com/hero' })
+    for (const themes of [[], ['light', 'light'], ['sepia'], 'light'])
+      expect(() => previewFields({ preview: { themes } }, configured, 'hero', base)).toThrow()
+  })
   test('dark captures are selected, while a single available capture works in both themes', () => {
     const item = {
       ref: 'hero',

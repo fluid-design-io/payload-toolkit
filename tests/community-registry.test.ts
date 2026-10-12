@@ -116,7 +116,8 @@ test('preview images support light/dark variants and explicit embedding', () => 
       dark: 'https://example.com/{name}-dark.webp',
     },
     embed: true,
-    items: { helper: { embed: false } },
+    themes: ['light'],
+    items: { helper: { embed: false, themes: ['light', 'dark'] } },
   }
   assert.deepEqual(
     parseCommunityDirectory(directory([{ ...registry, preview }])).registries[0]?.preview,
@@ -132,4 +133,6 @@ test('preview images support light/dark variants and explicit embedding', () => 
   assert.throws(() =>
     parseCommunityDirectory(directory([{ ...registry, preview: { embed: 'true' } }])),
   )
+  for (const themes of [[], ['light', 'light'], ['sepia']])
+    assert.throws(() => parseCommunityDirectory(directory([{ ...registry, preview: { themes } }])))
 })

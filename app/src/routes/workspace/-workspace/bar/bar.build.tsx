@@ -128,7 +128,7 @@ function BuildStack() {
  * concentric.
  */
 export function BarBuild() {
-  const { actions, meta } = useWorkspace()
+  const { actions, meta: { buildCount } } = useWorkspace()
   const count = useWorkspaceSelector((state) => state.setup.items.length)
   const isOpen = useWorkspaceSelector((state) => state.panel === 'build')
 
@@ -145,7 +145,7 @@ export function BarBuild() {
       >
         <BuildStack />
         <span
-          ref={meta.buildCount}
+          ref={buildCount}
           data-empty={count === 0}
           className="min-w-6 rounded-full bg-white px-2 text-center text-sm leading-6 font-semibold text-black tabular-nums data-[empty=true]:bg-white/15 data-[empty=true]:text-white/60"
         >

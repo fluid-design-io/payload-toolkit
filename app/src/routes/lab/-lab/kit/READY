@@ -1,0 +1,13 @@
+The scene kit, shared by the fab line. Import from '../kit/<file>'.
+
+env.ts: browser queries with no 3D dependencies, so the workspace grid shares them. `prefersReducedMotion()`, `useReducedMotion()`, `reducedMotion` (read once at load), `coarsePointer()`, and `isTyping(target)`, the one guard for keyboard shortcuts: true in a text input, a textarea, a select or editable content.
+
+sound.ts: call `useSound()` once in your entry; it arms the gesture gate and does not subscribe to the mute choice (`useMuted()` and `setMuted()` do). Sound defaults on, off under reduced motion; the choice is localStorage `lab-sound`. Then `play(name)` anywhere, including inside sim steps and useFrame; `SOUND_NAMES` lists the names, each throttled. `hum(level 0..1)` drives the belt patter. `play` is a no-op before the first pointerdown/keydown and while muted; the AudioContext is created on the first unmuted play. `document.documentElement.dataset.sound` reads off | armed | on for harnesses. Do not play on camera moves.
+
+a11y.tsx: render `<Mirror lab={lab} title="Your scene" />` last inside your root div (sr-only until it holds focus, then docks at the right). Call `announce(text)` from your seat event; `parts(n)` words a part count. `const keys = useSceneKeys({ lab, label, items, cols })`, spread `keys.props` on the scene container, and add `<FocusRing focus={keys.focusRef} locate={...} color={accent} />` inside the Canvas. Put `sceneFocusClass` on the scene container, which needs its own position.
+
+perf.tsx: inside the Canvas add `<FrameGovernor busy={() => boolean} />` (demand frameloop, full rate while busy() or within 700 ms of input, else 30 Hz, 4 Hz under reduced motion; adapts dpr from hot frames only) and `<PerfProbe />` (writes calls, tris, frame, fps, dpr onto the canvas element's dataset every 0.5 s). Give the Canvas `dpr={dprRange()}`.
+
+touch.ts: `const { guard, props } = useSceneGestures({ onOrbit(dx, dy, e), onZoom(factor, x, y), onPan, onTap, onLongPress, onReset, onInteract })`; spread `props` on the scene container. `guard.moved` is true after a drag or long press, so mesh clicks can ignore the click that follows. `Guard` is the type the fab line's contract re-exports.
+
+mobile.tsx: `useViewport()` gives { phone }. `<Sheet label peek actions open onToggle>children</Sheet>` is a bottom sheet with the home-indicator safe area.
