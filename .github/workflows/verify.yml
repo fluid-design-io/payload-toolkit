@@ -1,9 +1,12 @@
 name: Verify Payload Toolkit
 on:
   workflow_call:
+  # The web app has its own Vercel build; app-only changes cannot affect the CLI.
   pull_request:
+    paths-ignore: ['app/**']
   push:
     branches: [main]
+    paths-ignore: ['app/**']
 permissions:
   contents: read
 concurrency:
