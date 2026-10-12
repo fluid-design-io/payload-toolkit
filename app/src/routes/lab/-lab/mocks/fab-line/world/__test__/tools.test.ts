@@ -93,7 +93,7 @@ describe('mod tools', () => {
       icon: 'tools[0].icon must be SVG path data on a 24 × 24 grid.',
       twins: 'tools[0].variants need distinct ids.',
       nolabel: 'tools[0].label must be a non-empty string.',
-      slot: 'Unknown slot "views". Slots: theme, fx, layout, cabinet, table, transport, board, swap, signals, integrator, chip, tools.',
+      slot: 'Unknown slot "views". Slots: theme, layout, cabinet, table, transport, board, swap, fx, signals, integrator, chip, tools.',
     })
     expect(ids(world)).toEqual([])
   })

@@ -72,11 +72,6 @@ export const paletteOf = (t: Tokens): Palette => ({ bg: t.bg, floor: t.floor, ma
 
 const table = {
   theme: { label: 'Theme', Icon: RiPaletteLine, builtins: THEMES, pick: 'one', aliases: ['world'], fields: { Stage: 'component' }, palette: (t, mode) => paletteOf(t.tokens[mode]) },
-  fx: { label: 'Effects', Icon: RiSparkling2Line, builtins: FX, pick: 'one', fields: { Component: 'component?' } },
-  follow: {
-    label: 'Follow', Icon: RiFocus3Line, pick: 'one',
-    builtins: [{ id: 'chase', label: 'Chase' }, { id: 'ride', label: 'Ride' }, { id: 'off', label: 'Off' }],
-  },
   layout: { label: 'Layout', Icon: RiLayoutMasonryLine, builtins: LAYOUTS, pick: 'one', fields: { place: 'fn', Scenery: 'component?' } },
   cabinet: { label: 'Cabinet', Icon: RiArchiveDrawerLine, builtins: CABINETS, pick: 'one', fields: { drawer: 'fn', Component: 'component' } },
   table: { label: 'Pick table', Icon: RiLayoutGridLine, builtins: TABLES, pick: 'one', fields: { pocket: 'fn', Component: 'component' } },
@@ -99,6 +94,11 @@ const table = {
   },
   board: { label: 'Board', Icon: RiCpuLine, builtins: BOARDS, pick: 'one', fields: { plan: 'fn', route: 'fn', Component: 'component' } },
   swap: { label: 'Swap', Icon: RiArrowLeftRightLine, builtins: SWAPS, pick: 'one', fields: {}, adopt: guardSwap },
+  fx: { label: 'Effects', Icon: RiSparkling2Line, builtins: FX, pick: 'one', fields: { Component: 'component?' } },
+  follow: {
+    label: 'Follow', Icon: RiFocus3Line, pick: 'one',
+    builtins: [{ id: 'chase', label: 'Chase' }, { id: 'ride', label: 'Ride' }, { id: 'off', label: 'Off' }],
+  },
   signals: { label: 'Signals', Icon: RiPulseLine, builtins: SIGNALS, pick: 'one', fields: { Component: 'component' } },
   integrator: {
     label: 'Integrator', Icon: RiRobot2Line, builtins: INTEGRATORS, pick: 'one', fields: { workTime: 'fn', footprint: 'fn?', Component: 'component' },

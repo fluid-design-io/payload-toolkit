@@ -18,7 +18,7 @@ const memory = () => {
 
 describe('world sheet categories', () => {
   test('a slot with one variant is hidden until a mod adds a second', () => {
-    expect(visibleCategories(BUILTIN)).toEqual(['theme', 'fx', 'follow', 'cabinet', 'table', 'transport', 'board', 'swap', 'signals', 'integrator'])
+    expect(visibleCategories(BUILTIN)).toEqual(['theme', 'cabinet', 'table', 'transport', 'board', 'swap', 'fx', 'follow', 'signals', 'integrator'])
     const withLayout: Lists = { ...BUILTIN, layout: [...BUILTIN.layout, { ...BUILTIN.layout[0], id: 'tower.tower', label: 'Tower' }] }
     expect(visibleCategories(withLayout)).toContain('layout')
   })

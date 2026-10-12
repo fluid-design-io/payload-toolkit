@@ -93,7 +93,7 @@ describe('slot table', () => {
       'A label well over twenty',
       'https://example.com/glow.png',
     ])
-    expect(refusal('follow', { id: 'spin', label: 'Spin' })).toBe('Unknown slot "follow". Slots: theme, fx, layout, cabinet, table, transport, board, swap, signals, integrator, chip, tools.')
+    expect(refusal('follow', { id: 'spin', label: 'Spin' })).toBe('Unknown slot "follow". Slots: theme, layout, cabinet, table, transport, board, swap, fx, signals, integrator, chip, tools.')
   })
 
   test('a mod function that throws returns what the slot default returns, and the mod reports the first throw once', async () => {
