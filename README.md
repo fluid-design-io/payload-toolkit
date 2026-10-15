@@ -4,6 +4,8 @@
 
 Start a Payload v4 project from the official starter, then add features whose source code you own. The toolkit can also hand each feature to Codex or Claude Code to wire into your app.
 
+https://github.com/user-attachments/assets/9322a980-a3f1-47dd-8f28-797f33658ef0
+
 > Alpha: Payload Toolkit targets a pinned Payload v4 canary. For Payload v3, use [payload-better-auth-starter](https://github.com/fluid-design-io/payload-better-auth-starter).
 
 ## Quick start
