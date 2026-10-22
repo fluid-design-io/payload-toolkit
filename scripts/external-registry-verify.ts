@@ -109,13 +109,13 @@ try {
   evidence.source.dirty = !!(await run('git', ['status', '--porcelain'])).stdout.trim()
   evidence.source.sha256 = await sourceDigest()
   evidence.node = (await run('node', ['-p', 'process.versions.node'])).stdout.trim()
-  if (evidence.node !== '24.21.0' || Bun.version !== '1.4.3')
-    throw new Blocked('Select Node 24.21.0 and Bun 1.4.3 before external acceptance')
+  if (evidence.node !== '24.22.1' || Bun.version !== '1.4.4')
+    throw new Blocked('Select Node 24.22.1 and Bun 1.4.4 before external acceptance')
   evidence.identities.packageManagerVersion = (
     await run('pnpm', ['--version'], workspace)
   ).stdout.trim()
-  if (evidence.identities.packageManagerVersion !== '10.34.6')
-    throw new Blocked('External acceptance requires pnpm 10.34.6')
+  if (evidence.identities.packageManagerVersion !== '10.34.7')
+    throw new Blocked('External acceptance requires pnpm 10.34.7')
   if (values.runtime && !(await exists(chromium.executablePath())))
     throw new Blocked('Install Chromium with bun x playwright install chromium')
   const inherited = await command('git', ['rev-parse', '--show-toplevel'], {

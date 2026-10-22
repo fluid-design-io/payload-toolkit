@@ -42,10 +42,10 @@ test('identical installed feature is repeatable and agent failure only changes s
         type: 'module',
         packageManager: 'npm@10.9.2',
         dependencies: {
-          payload: '4.0.0-canary.38',
+          payload: '4.0.0-beta.4',
           next: '16.4.0',
-          '@payloadcms/db-postgres': '4.0.0-canary.38',
-          '@payloadcms/plugin-form-builder': '4.0.0-canary.38',
+          '@payloadcms/db-postgres': '4.0.0-beta.4',
+          '@payloadcms/plugin-form-builder': '4.0.0-beta.4',
         },
       }),
       { createPath: false },
@@ -56,7 +56,7 @@ test('identical installed feature is repeatable and agent failure only changes s
       path.join(installed, 'package.json'),
       JSON.stringify({
         name: '@payloadcms/plugin-form-builder',
-        version: '4.0.0-canary.38',
+        version: '4.0.0-beta.4',
         main: 'index.js',
       }),
       { createPath: false },

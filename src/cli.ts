@@ -85,7 +85,7 @@ function common(command: Command) {
 }
 
 async function main() {
-  if (!satisfies(Bun.version, '>=1.4.2')) throw new Error('Payload Toolkit requires Bun >=1.4.2')
+  if (!satisfies(Bun.version, '>=1.4.4')) throw new Error('Payload Toolkit requires Bun >=1.4.4')
   const metadata = z
     .object({ version: z.string() })
     .parse(JSON.parse(await Bun.file(new URL('../package.json', import.meta.url)).text()))

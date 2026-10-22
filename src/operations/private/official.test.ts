@@ -55,14 +55,14 @@ test.skipIf(process.platform === 'win32')(
       process.env.PATH = directory
       assert.throws(requireNode, { code: 'node-version', message: /unavailable/ })
       const executable = path.join(directory, 'node')
-      for (const version of ['22.0.0', 'invalid', '24.21.0']) {
+      for (const version of ['22.0.0', 'invalid', '24.21.0', '24.22.0', '24.22.1']) {
         await Bun.write(
           executable,
           `#!${process.execPath}\nconsole.log(${JSON.stringify(version)})\n`,
           { createPath: false },
         )
         await chmod(executable, 0o755)
-        if (version === '24.21.0') assert.doesNotThrow(requireNode)
+        if (version === '24.22.1') assert.doesNotThrow(requireNode)
         else assert.throws(requireNode, { code: 'node-version' })
       }
     } finally {

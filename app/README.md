@@ -2,7 +2,7 @@
 
 React 19 / TanStack Start app that turns registry choices into a Payload Toolkit
 command or a paste-ready agent prompt. It is an independent Bun project; use
-Node 24.21.0 and Bun 1.4.3.
+Node 24.22.1 and Bun 1.4.4.
 
 ```sh
 cd app

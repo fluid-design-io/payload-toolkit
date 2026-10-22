@@ -5,7 +5,7 @@ import path from 'node:path'
 import { afterEach, test } from 'bun:test'
 import { add } from '../index.js'
 import type { Result } from '../model.js'
-const payloadVersion = '4.0.0-canary.38'
+const payloadVersion = '4.0.0-beta.4'
 const owned: string[] = []
 afterEach(async () => {
   for (const directory of owned.splice(0)) await rm(directory, { recursive: true, force: true })
@@ -95,7 +95,7 @@ test('external URL without metadata or guide installs frozen source and returns 
     assert.equal(result.agent.status, 'not-requested')
     if ('prompt' in result.agent) {
       assert.match(result.agent.prompt!, /missing prerequisites/)
-      assert.match(result.agent.prompt!, /4.0.0-canary.38/)
+      assert.match(result.agent.prompt!, /4.0.0-beta.4/)
     }
     assert.ok(result.advisories.length)
     assert.equal(

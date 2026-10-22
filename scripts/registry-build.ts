@@ -18,8 +18,8 @@ const executable = createRequire(import.meta.url).resolve('shadcn')
 const installedShadcn = JSON.parse(
   await Bun.file(join(dirname(executable), '../package.json')).text(),
 )
-if (installedShadcn.version !== '4.21.4')
-  throw new Error('Registry qualification requires shadcn 4.21.4')
+if (installedShadcn.version !== '4.22.1')
+  throw new Error('Registry qualification requires shadcn 4.22.1')
 await rm(output, { recursive: true, force: true })
 const build = spawnSync(
   process.execPath,
@@ -138,7 +138,7 @@ try {
   }
   await Bun.write(
     join(output, 'catalog.json'),
-    `${JSON.stringify({ schemaVersion: 1, shadcn: '4.21.4', items: entries }, null, 2)}\n`,
+    `${JSON.stringify({ schemaVersion: 1, shadcn: '4.22.1', items: entries }, null, 2)}\n`,
     { createPath: false },
   )
   console.log(

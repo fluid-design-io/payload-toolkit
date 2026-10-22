@@ -2,7 +2,7 @@
 
 Payload Toolkit creates Payload v4 projects from the official starter and installs features whose source the project owns. These pages ship with the package, so they match the installed version. Print one with `payload-toolkit docs <page>`.
 
-Requires Bun 1.4.2+; `init` also needs Node 24.15+ for the official generator. Alpha releases target the exact Payload v4 canary pinned in the package's `catalog/bootstrap.json`.
+Requires Bun 1.4.4+; `init` also needs Node 24.22.1+ for the official generator. Alpha releases target the exact Payload v4 beta pinned in the package's `catalog/bootstrap.json`.
 
 ```sh
 payload-toolkit init acme --framework next --database postgres --package-manager pnpm

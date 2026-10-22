@@ -16,7 +16,7 @@ const host: Host = {
   framework: 'next',
   database: 'postgres',
   packageManager: 'npm',
-  payloadVersion: '4.0.0-canary.38',
+  payloadVersion: '4.0.0-beta.4',
 }
 const hash = (bytes: string) => createHash('sha256').update(bytes).digest('hex')
 const errorCode = (code: string) => (error: unknown) =>

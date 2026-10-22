@@ -6,11 +6,11 @@ Start a Payload v4 project from the official starter, then add features whose so
 
 https://github.com/user-attachments/assets/9322a980-a3f1-47dd-8f28-797f33658ef0
 
-> Alpha: Payload Toolkit targets a pinned Payload v4 canary. For Payload v3, use [payload-better-auth-starter](https://github.com/fluid-design-io/payload-better-auth-starter).
+> Alpha: Payload Toolkit targets a pinned Payload v4 beta. For Payload v3, use [payload-better-auth-starter](https://github.com/fluid-design-io/payload-better-auth-starter).
 
 ## Quick start
 
-Requires Bun 1.4.2+ and Node 24.15+.
+Requires Bun 1.4.4+ and Node 24.22.1+.
 
 ```sh
 bunx --bun payload-toolkit@alpha init my-app

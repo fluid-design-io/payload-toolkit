@@ -7,12 +7,12 @@ pipelines there.
 
 ## Setup and checks
 
-Use Node 24.21.0 and Bun 1.4.3. Run `bun install --frozen-lockfile`,
+Use Node 24.22.1 and Bun 1.4.4. Run `bun install --frozen-lockfile`,
 `bun run check` and `bun run agent:doctor`. Tests use `bun:test`. Typecheck with
 `bun --check`: at the root `bun check` runs the `check` script, and `tsc` only
 emits the build. Run the CLI from source with `bun src/cli.ts` or the build with
 `bun dist/cli.js`. Generated projects install with npm, pnpm or Bun; fixtures
-default to pnpm 10.34.6.
+default to pnpm 10.34.7.
 
 For behavior or runtime changes, follow
 `.agents/skills/verify-payload-toolkit/SKILL.md`. Report static, installer,

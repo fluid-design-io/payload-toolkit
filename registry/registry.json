@@ -8,12 +8,12 @@
       "type": "registry:item",
       "title": "Payload forms",
       "description": "Native Payload forms, persisted submissions, a React example and console notifications.",
-      "dependencies": ["@payloadcms/plugin-form-builder@4.0.0-canary.38"],
+      "dependencies": ["@payloadcms/plugin-form-builder@4.0.0-beta.4"],
       "meta": {
         "payloadToolkit": {
           "schemaVersion": 1,
-          "version": "0.1.0",
-          "payloadVersions": ["4.0.0-canary.38"],
+          "version": "0.1.1",
+          "payloadVersions": ["4.0.0-beta.4"],
           "frameworks": ["next", "tanstack"],
           "databases": ["postgres", "mongodb"],
           "auth": "native-payload",

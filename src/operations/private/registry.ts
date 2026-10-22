@@ -40,7 +40,7 @@ const expectedFile = z
 const catalogSchema = z
   .object({
     schemaVersion: z.literal(1),
-    shadcn: z.literal('4.21.4'),
+    shadcn: z.literal('4.22.1'),
     items: z.array(
       z
         .object({
