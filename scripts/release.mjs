@@ -177,7 +177,7 @@ async function filesBelow(root) {
   ).flat()
 }
 
-async function smoke(specifier, label) {
+async function smoke(specifier, version, label) {
   const consumer = await mkdtemp(path.join(tmpdir(), 'toolkit-release-'))
   try {
     await Bun.write(
@@ -191,6 +191,7 @@ async function smoke(specifier, label) {
         'install',
         '--no-audit',
         '--no-fund',
+        '--ignore-scripts',
         '--registry',
         registry,
         '--cache',
@@ -203,14 +204,17 @@ async function smoke(specifier, label) {
     const help = command(process.execPath, [cli, '--help'], consumer)
     assert.match(help, /init/)
     assert.match(help, /add/)
+    const docs = command(process.execPath, [cli, 'docs'], consumer)
+    assert.match(docs, /^# Payload Toolkit\b/)
     command(process.execPath, [cli, 'unknown-command', '--json'], consumer, 2)
     const manifest = await json(path.join(consumer, 'node_modules/payload-toolkit/package.json'))
-    assert.equal(manifest.version, process.env.RELEASE_VERSION)
+    assert.equal(manifest.version, version)
     await save(`${label}.json`, {
       version: manifest.version,
       status: 'passed',
       install,
       help,
+      docs,
       invalidCommandExit: 2,
     })
   } finally {
@@ -218,26 +222,39 @@ async function smoke(specifier, label) {
   }
 }
 
-async function prepare() {
-  const identity = await source()
+async function packArtifact(version) {
   await mkdir(directory, { recursive: true })
   const [pack] = JSON.parse(
     command('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', directory]),
   )
   await save('pack.json', pack)
-  validatePack(pack, identity.version)
-  const bytes = await Bun.file(path.join(directory, pack.filename)).bytes()
+  validatePack(pack, version)
+  const tarball = path.join(directory, pack.filename)
+  const bytes = await Bun.file(tarball).bytes()
   const sha256 = digest(bytes, 'sha256')
   const integrity = `sha512-${digest(bytes, 'sha512', 'base64')}`
   assert.equal(integrity, pack.integrity)
+  return { filename: pack.filename, tarball, sha256, integrity }
+}
+
+async function packLocal() {
+  const manifest = await json('package.json')
+  const { filename, tarball, sha256, integrity } = await packArtifact(manifest.version)
+  await smoke(tarball, manifest.version, 'packed-consumer')
+  console.log(JSON.stringify({ tarball, filename, sha256, integrity }, null, 2))
+}
+
+async function prepare() {
+  const identity = await source()
+  const { filename, tarball, sha256, integrity } = await packArtifact(identity.version)
   const receiptPaths = (await filesBelow('.scratch/release-verification')).filter(
     (file) => path.basename(file) === 'evidence.json',
   )
   const receipts = await Promise.all(receiptPaths.map(json))
   validateReceipts(receipts, identity.sha, sha256)
   await save('verification.json', receipts)
-  await save('artifact.json', { ...identity, filename: pack.filename, sha256, integrity })
-  await smoke(path.join(directory, pack.filename), 'packed-consumer')
+  await save('artifact.json', { ...identity, filename, sha256, integrity })
+  await smoke(tarball, identity.version, 'packed-consumer')
   await source()
 }
 
@@ -354,7 +371,7 @@ export async function publish() {
     before.latest,
     'npm changed latest; inspect manually, never rewrite it automatically',
   )
-  await smoke(`${identity.name}@${identity.version}`, 'registry-consumer')
+  await smoke(`${identity.name}@${identity.version}`, identity.version, 'registry-consumer')
   const { tag, ref, release } = await tagState(identity)
   if (!ref)
     await github(identity.repository, 'git/refs', 'POST', {
@@ -394,7 +411,10 @@ export async function publish() {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const mode = process.argv[2]
-  assert(['source', 'prepare', 'publish'].includes(mode), 'Use source, prepare or publish')
+  assert(
+    ['source', 'pack', 'prepare', 'publish'].includes(mode),
+    'Use source, pack, prepare or publish',
+  )
   if (mode === 'source') await checkEnvironment(await source())
-  else await { prepare, publish }[mode]()
+  else await { pack: packLocal, prepare, publish }[mode]()
 }

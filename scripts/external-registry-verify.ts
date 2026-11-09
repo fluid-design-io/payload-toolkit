@@ -114,8 +114,8 @@ try {
   evidence.identities.packageManagerVersion = (
     await run('pnpm', ['--version'], workspace)
   ).stdout.trim()
-  if (evidence.identities.packageManagerVersion !== '10.34.7')
-    throw new Blocked('External acceptance requires pnpm 10.34.7')
+  if (evidence.identities.packageManagerVersion !== '10.34.9')
+    throw new Blocked('External acceptance requires pnpm 10.34.9')
   if (values.runtime && !(await exists(chromium.executablePath())))
     throw new Blocked('Install Chromium with bun x playwright install chromium')
   const inherited = await command('git', ['rev-parse', '--show-toplevel'], {

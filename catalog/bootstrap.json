@@ -1,7 +1,7 @@
 {
-  "generator": "create-payload-app@4.0.0-beta.4",
-  "payload": "4.0.0-beta.4",
-  "templateCommit": "b3789b73cd115522e004d9f04eed2ddbe153a952",
+  "generator": "create-payload-app@4.0.0-beta.7",
+  "payload": "4.0.0-beta.7",
+  "templateCommit": "27abc28e1dc9a4716407a75c042950b21350ff01",
   "nodeMinimum": "24.22.1",
   "templates": { "next": "blank", "tanstack": "blank-tanstack" }
 }

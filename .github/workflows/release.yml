@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Exact committed package version (for example 0.1.0-alpha.1)
+        description: Exact committed package version (for example 0.1.0-alpha.2)
         required: true
         type: string
 permissions:
@@ -77,7 +77,7 @@ jobs:
         with: { node-version: 24.22.1 }
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: 1.4.4 }
-      - run: npm install --global npm@12.2.0 --ignore-scripts --no-audit --no-fund
+      - run: npm install --global npm@12.2.2 --ignore-scripts --no-audit --no-fund
       - uses: actions/download-artifact@v4
         with: { name: alpha-release-package, path: .scratch/release/ }
       - run: bun scripts/release.mjs publish
