@@ -16,22 +16,22 @@ jobs:
   checks:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           {
             ref: '${{ github.event.pull_request.head.sha || github.sha }}',
             persist-credentials: false,
           }
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with: { version: 10.34.9 }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 24.22.1 }
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: 1.4.4 }
       - run: bun install --frozen-lockfile
       - run: bun run check
       - run: bun run agent:verify --cli-only
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with: { name: toolkit-cli-evidence, path: '.scratch/verification/', retention-days: 7 }
   runtime:
@@ -43,15 +43,15 @@ jobs:
         framework: [next, tanstack]
         database: [postgres, mongodb]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           {
             ref: '${{ github.event.pull_request.head.sha || github.sha }}',
             persist-credentials: false,
           }
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with: { version: 10.34.9 }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 24.22.1 }
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: 1.4.4 }
@@ -60,7 +60,7 @@ jobs:
       - run: bun run agent:verify --framework ${{ matrix.framework }} --database ${{ matrix.database }}
       - run: bun run agent:cleanup
         if: always()
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: toolkit-evidence-${{ matrix.framework }}-${{ matrix.database }}
@@ -78,15 +78,15 @@ jobs:
       matrix: { os: [windows-latest, macos-latest] }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           {
             ref: '${{ github.event.pull_request.head.sha || github.sha }}',
             persist-credentials: false,
           }
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with: { version: 10.34.9 }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 24.22.1 }
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: 1.4.4 }
@@ -99,7 +99,7 @@ jobs:
         run: bun run agent:verify --installation-only
       - run: bun run agent:cleanup
         if: always() && steps.installation.outcome != 'skipped'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: toolkit-installation-${{ matrix.os }}
@@ -117,13 +117,13 @@ jobs:
       fail-fast: false
       matrix: { package-manager: [npm, bun] }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           {
             ref: '${{ github.event.pull_request.head.sha || github.sha }}',
             persist-credentials: false,
           }
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 24.22.1 }
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: 1.4.4 }
@@ -131,7 +131,7 @@ jobs:
       - run: bun run agent:verify --installation-only --package-manager ${{ matrix.package-manager }}
       - run: bun run agent:cleanup
         if: always()
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: toolkit-installation-${{ matrix.package-manager }}
