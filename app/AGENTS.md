@@ -100,17 +100,18 @@ is authoritative for runtime values; `DESIGN.md` disagrees on some resolved
 values, so keep the source exports rather than guessing corrections. Monospace
 code typography and the Hairline artwork stay local.
 
-`@heroui/react` and `@heroui/styles` are pinned to 3.2.6 with peers
+`@heroui/react` and `@heroui/styles` are pinned to 3.2.7 with peers
 `react-aria` 3.53.1, `react-aria-components` 1.22.1, `@internationalized/date`
 3.12.4, `@react-aria/ssr` 3.10.1 and `@react-aria/utils` 3.34.1 (the last two
 come from the published peer manifest; the MCP guides omit them). HeroUI v3
 needs no provider. `@heroui-pro/react@1.0.0-beta.10` supplies the mouve theme
 and runs a trusted, authenticated postinstall; it must install inside this app
-without relying on parent dependencies.
+without relying on parent dependencies. Keep beta.10 while the app uses the Pro
+`Sheet` component; beta.11 removes it.
 
 `src/styles.css` imports Tailwind first, then HeroUI styles. Pro component CSS
 (`sidebar.css`, `sheet.css`, `action-bar.css`, `empty-state.css`) is imported
-into the `components` layer so utilities can override it. `motion` 14.6.0 is
+into the `components` layer so utilities can override it. `motion` 14.11.1 is
 pinned because Pro Sidebar, Sheet and ActionBar import it as a peer; without it
 SSR resolves the parent repository's copy and a second React.
 

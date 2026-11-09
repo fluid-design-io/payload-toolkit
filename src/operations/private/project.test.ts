@@ -75,7 +75,7 @@ test('manager markers must agree; nearest markers determine dispatch', async () 
   try {
     await Bun.write(
       path.join(directory, 'package.json'),
-      JSON.stringify({ packageManager: 'pnpm@10.34.7' }),
+      JSON.stringify({ packageManager: 'pnpm@10.34.9' }),
       { createPath: false },
     )
     const project = path.join(directory, 'app')

@@ -240,6 +240,7 @@ test('publication gates precede writes and matching publication can resume safel
             fs.writeFileSync(path.join(target, 'package.json'), JSON.stringify({ version }));
             return { status: 0, stdout: 'installed', stderr: '' };
           }
+          if (args.includes('docs')) return { status: 0, stdout: '# Payload Toolkit', stderr: '' };
           return { status: args.includes('unknown-command') ? 2 : 0, stdout: 'init add', stderr: '' };
         };
         globalThis.fetch = async (url, options = {}) => {

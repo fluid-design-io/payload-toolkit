@@ -1,6 +1,6 @@
 # Integrate Payload forms
 
-Guide version 0.1.1. This item targets Payload 4.0.0-beta.4, Next.js or TanStack Start, and MongoDB or PostgreSQL. It installs source and the official form-builder dependency. Your application's configuration and routes still need integration.
+Guide version 0.1.2. This item targets Payload 4.0.0-beta.7, Next.js or TanStack Start, and MongoDB or PostgreSQL. It installs source and the official form-builder dependency. Your application's configuration and routes still need integration.
 
 ## Inspect the application
 

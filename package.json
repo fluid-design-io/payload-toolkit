@@ -51,24 +51,25 @@
     "agent:verify:external": "bun scripts/external-registry-verify.ts",
     "agent:evidence": "bun scripts/agent.ts evidence",
     "agent:cleanup": "bun scripts/agent.ts cleanup",
+    "release:pack": "bun run build && bun scripts/release.mjs pack",
     "prepack": "bun run build"
   },
   "dependencies": {
-    "@clack/prompts": "1.8.1",
-    "commander": "15.0.0",
-    "semver": "7.8.5",
-    "shadcn": "4.22.1",
+    "@clack/prompts": "1.9.0",
+    "commander": "15.1.0",
+    "semver": "7.8.6",
+    "shadcn": "4.23.0",
     "validate-npm-package-name": "8.0.0",
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@playwright/test": "1.64.1",
-    "@types/bun": "1.4.3",
+    "@playwright/test": "1.65.0",
+    "@types/bun": "1.4.4",
     "@types/node": "24.19.2",
     "@types/semver": "7.8.0",
     "@types/validate-npm-package-name": "4.0.2",
-    "oxfmt": "0.74.0",
-    "oxlint": "1.89.0",
+    "oxfmt": "0.78.0",
+    "oxlint": "1.93.0",
     "typescript": "6.0.3"
   },
   "engines": {

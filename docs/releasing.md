@@ -2,6 +2,8 @@
 
 Releases run through the manual **Release alpha** workflow (`.github/workflows/release.yml`). It never runs on a tag, pull request or merge, and publishing needs maintainer authorization.
 
+Run `bun run release:pack` to build and inspect the candidate locally. It writes the tarball, pack listing and isolated consumer results to `.scratch/release/`, then prints the tarball hashes. This command does not publish or replace the hosted verification matrix.
+
 ## Each release
 
 1. Commit a new `x.y.z-alpha.n` version in `package.json` with the source changes. Published versions are immutable; never reuse one for different bytes.
